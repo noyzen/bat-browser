@@ -74,17 +74,15 @@ async function applyFontSetting(tab, fontFamily) {
 
     // Only inject new CSS if a custom font is selected.
     if (fontFamily && fontFamily !== 'default') {
-        // Use CSS Cascade Layers to inject a low-priority default font.
-        // This ensures our font acts as a new default but never breaks a website's custom typography.
-        // We set the font on :root (the html element) and force form elements to inherit.
+        // Use :where() to inject a zero-specificity default font.
+        // This sets a new base font but allows any website CSS to override it easily.
         const css = `
-            @layer batBrowserDefaults {
-                :root {
-                    font-family: "${fontFamily}", sans-serif;
-                }
-                input, textarea, select, button {
-                    font-family: inherit;
-                }
+            :where(:root) {
+                font-family: "${fontFamily}", sans-serif;
+            }
+            /* Ensure form elements inherit the new default font. */
+            :where(input, textarea, select, button) {
+                font-family: inherit;
             }
         `;
         try {
