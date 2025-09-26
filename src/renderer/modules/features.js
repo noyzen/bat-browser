@@ -2,6 +2,14 @@ import * as DOM from './dom.js';
 
 let allTabsCache = [];
 
+export function applyUiFont(fontFamily) {
+    const font = (fontFamily === 'default' || !fontFamily) 
+        ? '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, sans-serif'
+        : `"${fontFamily}", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, sans-serif`;
+    
+    document.documentElement.style.setProperty('--ui-font-family', font);
+}
+
 // --- Find In Page ---
 export function showFindBar() {
     DOM.findBar.classList.remove('hidden');

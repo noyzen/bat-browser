@@ -44,9 +44,20 @@ async function applyFontSetting(tab, fontFamily) {
     }
 
     if (fontFamily && fontFamily !== 'default') {
-        const css = `* { font-family: "${fontFamily}" !important; }`;
+        const css = `
+            /* Apply font to common text elements */
+            body, p, h1, h2, h3, h4, h5, h6, a, li, span, div, td, th, button, input, select, textarea, label {
+                font-family: "${fontFamily}", sans-serif !important;
+            }
+
+            /* Revert font for common icon selectors to let the page's CSS apply */
+            i, [class^="fa-"], [class*=" fa-"], [class^="icon-"], [class*=" icon-"], .material-icons {
+                font-family: revert !important;
+            }
+        `;
         try {
-            const newKey = await webContents.insertCSS(css);
+            // Sanitize CSS for injection
+            const newKey = await webContents.insertCSS(css.trim().replace(/\s+/g, ' '));
             tab.cssKeys.set('defaultFont', newKey);
         } catch (e) {
             console.error('Failed to insert font CSS:', e);

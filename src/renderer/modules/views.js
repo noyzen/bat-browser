@@ -1,6 +1,7 @@
 import * as DOM from './dom.js';
 import { state, isTabInAnyGroup } from '../renderer.js';
 import { renderTab, renderGroup } from './render.js';
+import { applyUiFont } from './features.js';
 
 let fullRenderCallback;
 let settingsSearchInput;
@@ -189,7 +190,9 @@ export function initViews({ fullRender }) {
 
     // -- Appearance
     DOM.fontSelect.addEventListener('change', () => {
-        window.electronAPI.setDefaultFont(DOM.fontSelect.value);
+        const fontFamily = DOM.fontSelect.value;
+        window.electronAPI.setDefaultFont(fontFamily);
+        applyUiFont(fontFamily);
     });
 
     // -- Search

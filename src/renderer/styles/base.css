@@ -14,6 +14,7 @@
     --tab-color: var(--accent-color);
     --tab-group-color: var(--accent-color);
     --active-tab-indicator-height: 2px;
+    --ui-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Ubuntu, sans-serif;
 }
   
 * { box-sizing: border-box; }
@@ -22,7 +23,7 @@ body {
     margin: 0;
     background: var(--bg-primary);
     color: var(--fg-primary);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Ubuntu, sans-serif;
+    font-family: var(--ui-font-family);
     font-size: 13px;
     -webkit-user-select: none;
     user-select: none;

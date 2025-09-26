@@ -4,7 +4,7 @@ import { initEvents } from './modules/events.js';
 import { initContextMenu } from './modules/context-menu.js';
 import { initDragDrop } from './modules/drag-drop.js';
 import { initViews, renderAllTabsView } from './modules/views.js';
-import { initFeatures } from './modules/features.js';
+import { initFeatures, applyUiFont } from './modules/features.js';
 import { render, updateNavControls } from './modules/render.js';
 
 // --- State ---
@@ -61,6 +61,13 @@ function initialize() {
     initDragDrop(callbacks);
     initViews(callbacks);
     initFeatures(callbacks);
+
+    // Apply custom UI font on startup
+    window.electronAPI.getSettings().then(settings => {
+        if (settings.defaultFont) {
+            applyUiFont(settings.defaultFont);
+        }
+    });
 }
 
 initialize();
