@@ -112,8 +112,14 @@
 .tab-group { display: flex; align-items: flex-end; height: 100%; align-items: stretch; border-radius: 0; position: relative; overflow: hidden; }
 .tab-group.drag-over, .all-tabs-group-header.drag-over, .all-tabs-group-container.drag-over { background-color: rgba(255,255,255,0.1); }
 .group-header { display: flex; align-items: center; padding: 0 8px; gap: 6px; font-weight: bold; height: 100%; border-right: 1px solid var(--border-color); cursor: pointer; }
-.tab-group.collapsed { background-color: var(--tab-group-color); border: 2px solid var(--tab-group-color); box-sizing: border-box; margin-right: 4px; }
-.tab-group.collapsed .group-header { border-right: none; }
+.tab-group.collapsed {
+    box-sizing: border-box;
+    margin-right: 4px;
+}
+.tab-group.collapsed .group-header {
+    background-color: var(--tab-group-color);
+    border: 2px solid var(--tab-group-color);
+}
 .tab-group.collapsed .group-title { color: #fff; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 .group-toggle-icon { font-size: 11px; color: var(--fg-secondary); transition: all 150ms ease-in-out; width: 18px; height: 18px; display: grid; place-items: center; border-radius: 0; flex-shrink: 0; }
 .group-header:hover .group-toggle-icon { color: var(--fg-primary); }
