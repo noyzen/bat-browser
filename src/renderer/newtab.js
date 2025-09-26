@@ -12,12 +12,17 @@ document.addEventListener('DOMContentLoaded', () => {
             let url = urlInput.value.trim();
             if (!url) return;
 
-            // Simple URL detection logic, same as in renderer.js
-            if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url)) {
-                if (url.includes('.') && !url.includes(' ')) {
-                    url = 'http://' + url;
-                } else {
-                    url = `https://www.google.com/search?q=${encodeURIComponent(url)}`;
+            if (e.ctrlKey) {
+                // Ctrl+Enter for www.<input>.com
+                url = `https://www.${url}.com`;
+            } else {
+                // Simple URL detection logic, same as in renderer.js
+                if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url)) {
+                    if (url.includes('.') && !url.includes(' ')) {
+                        url = 'http://' + url;
+                    } else {
+                        url = `https://www.google.com/search?q=${encodeURIComponent(url)}`;
+                    }
                 }
             }
             
