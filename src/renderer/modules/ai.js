@@ -10,7 +10,7 @@ const input = document.getElementById('ai-panel-input');
 const sendBtn = document.getElementById('ai-panel-send-btn');
 const startersContainer = document.querySelector('.ai-panel-starters');
 
-let currentTabId = null;
+let state;
 let currentAIMessageElement = null;
 let currentAIResponseText = '';
 let isAwaitingResponse = false;
@@ -68,14 +68,39 @@ function formatAndAppendMessage(text, sender, elementToUpdate = null) {
     return messageEl;
 }
 
+function renderChatHistory(tabId) {
+    messagesContainer.innerHTML = '';
+    if (!tabId) {
+        welcomeScreen.classList.remove('hidden');
+        return;
+    }
+    const tab = state.tabs.get(tabId);
 
-export async function showAIPanel(tabId) {
+    if (!tab || !tab.aiChatHistory || tab.aiChatHistory.length === 0) {
+        welcomeScreen.classList.remove('hidden');
+        return;
+    }
+
+    welcomeScreen.classList.add('hidden');
+    tab.aiChatHistory.forEach(message => {
+        formatAndAppendMessage(message.text, message.sender);
+    });
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+export function updateAIPanelContext() {
+    if (!state || panel.classList.contains('hidden')) {
+        return; // Do nothing if panel is closed or state not initialized
+    }
+    renderChatHistory(state.activeTabId);
+}
+
+
+export async function showAIPanel() {
     const settings = await window.electronAPI.getSettings();
     const panelWidth = settings?.ai?.panelWidth || 350;
 
-    currentTabId = tabId;
-    welcomeScreen.classList.remove('hidden');
-    messagesContainer.innerHTML = '';
+    renderChatHistory(state.activeTabId);
     
     panel.style.width = `${panelWidth}px`;
     document.documentElement.style.setProperty('--ai-panel-width', `${panelWidth}px`);
@@ -89,15 +114,19 @@ export async function showAIPanel(tabId) {
 export function hideAIPanel() {
     panel.classList.add('hidden');
     resizeHandle.classList.add('hidden');
-    currentTabId = null;
     window.electronAPI.settingsSetAI({ panelOpen: false });
 }
 
 async function handleSendMessage() {
     const prompt = input.value.trim();
-    if (!prompt || !currentTabId || isAwaitingResponse) return;
+    if (!prompt || !state.activeTabId || isAwaitingResponse) return;
+    
+    const activeTab = state.tabs.get(state.activeTabId);
+    if (!activeTab) return;
 
+    activeTab.aiChatHistory.push({ text: prompt, sender: 'user' });
     formatAndAppendMessage(prompt, 'user');
+
     input.value = '';
     input.style.height = 'auto'; // Reset height
     input.disabled = true;
@@ -122,7 +151,7 @@ async function handleSendMessage() {
     messagesContainer.appendChild(messageWrapper);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-    window.electronAPI.aiChatStream({ tabId: currentTabId, prompt });
+    window.electronAPI.aiChatStream({ tabId: state.activeTabId, prompt });
 }
 
 function handleStreamChunk(chunk) {
@@ -148,6 +177,10 @@ function handleStreamChunk(chunk) {
     }
 
     if (chunk.done) {
+        const activeTab = state.tabs.get(state.activeTabId);
+        if (activeTab) {
+            activeTab.aiChatHistory.push({ text: currentAIResponseText, sender: 'assistant' });
+        }
         // Now that the stream is complete, format the full response
         formatAndAppendMessage(currentAIResponseText, 'assistant', currentAIMessageElement);
         isAwaitingResponse = false;
@@ -170,7 +203,8 @@ function throttle(func, limit) {
     }
 }
 
-export function initAI() {
+export function initAI(callbacks) {
+    state = callbacks.getState();
     closeBtn.addEventListener('click', hideAIPanel);
     sendBtn.addEventListener('click', handleSendMessage);
     input.addEventListener('keydown', (e) => {

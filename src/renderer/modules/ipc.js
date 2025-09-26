@@ -3,6 +3,7 @@ import { state, persistState } from '../renderer.js';
 import * as Feat from './features.js';
 import { renderAllTabsView } from './views.js';
 import { scrollToTab } from './events.js';
+import { updateAIPanelContext } from './ai.js';
 
 let fullRenderCallback, updateNavControlsCallback, updateTabScrollButtons;
 
@@ -13,7 +14,7 @@ export function initIpc(callbacks) {
 
     window.electronAPI.onSessionRestoreUI(session => {
         session.tabs.forEach(t => {
-            state.tabs.set(t.id, { ...t, isLoading: false, isLoaded: false });
+            state.tabs.set(t.id, { ...t, isLoading: false, isLoaded: false, aiChatHistory: [] });
         });
         session.groups.forEach(g => state.groups.set(g.id, g));
         state.layout = session.layout;
@@ -26,7 +27,7 @@ export function initIpc(callbacks) {
     });
 
     window.electronAPI.onTabCreated(tabData => {
-        state.tabs.set(tabData.id, { ...tabData });
+        state.tabs.set(tabData.id, { ...tabData, aiChatHistory: [] });
         const existsInLayout = state.layout.includes(tabData.id);
         const existsInGroup = Array.from(state.groups.values()).some(g => g.tabs.includes(tabData.id));
         if (!existsInLayout && !existsInGroup) {
@@ -36,7 +37,7 @@ export function initIpc(callbacks) {
     });
 
     window.electronAPI.onTabCreatedWithLayout(({ newTab, newLayout, newGroups }) => {
-        state.tabs.set(newTab.id, { ...newTab });
+        state.tabs.set(newTab.id, { ...newTab, aiChatHistory: [] });
         state.layout = newLayout;
         state.groups.clear();
         newGroups.forEach(g => state.groups.set(g.id, g));
@@ -47,6 +48,7 @@ export function initIpc(callbacks) {
         state.activeTabId = id;
         fullRenderCallback();
         updateNavControlsCallback(state.tabs.get(id));
+        updateAIPanelContext();
         // scrollToTab(id); // Removed to prevent auto-scrolling on every tab switch
     });
 

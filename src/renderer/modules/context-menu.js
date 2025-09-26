@@ -17,7 +17,7 @@ async function handleContextMenuCommand(command, context) {
             if (!tab) break;
             const newTabData = await window.electronAPI.duplicateTab(tabId);
             if (!newTabData) break;
-            state.tabs.set(newTabData.id, newTabData);
+            state.tabs.set(newTabData.id, { ...newTabData, aiChatHistory: [] });
 
             const parentGroup = Array.from(state.groups.values()).find(g => g.tabs.includes(tabId));
             if (parentGroup) {
@@ -57,7 +57,13 @@ async function handleContextMenuCommand(command, context) {
             break;
         }
         case 'show-ai-assistant': {
-            showAIPanel(tabId);
+            const state = callbacks.getState();
+            // The AI panel is always for the active tab.
+            // If the user right-clicked a different tab, switch to it first.
+            if (state.activeTabId !== context.tabId) {
+                await window.electronAPI.switchTab(context.tabId);
+            }
+            showAIPanel();
             break;
         }
         case 'close-tab':
