@@ -1,0 +1,25 @@
+const { app } = require('electron');
+const path = require('path');
+
+module.exports = {
+    CHROME_HEIGHT: 39, // Height of the unified titlebar/toolbar + 1px border
+    SESSION_PATH: path.join(app.getPath('userData'), 'session.json'),
+    SETTINGS_PATH: path.join(app.getPath('userData'), 'settings.json'),
+    PREDEFINED_COLORS: [
+        '#e57373', '#f06292', '#ba68c8', '#9575cd', '#7986cb',
+        '#64b5f6', '#4fc3f7', '#4dd0e1', '#4db6ac', '#81c784',
+        '#aed581', '#dce775', '#fff176', '#ffd54f', '#ffb74d', '#ff8a65'
+    ],
+    HIBERNATION_THRESHOLD: 5 * 60 * 1000, // 5 minutes
+    HIBERNATION_CHECK_INTERVAL: 30 * 1000, // 30 seconds
+
+    BROWSER_VIEW_WEBCONTENTS_CONFIG: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: true,
+        plugins: true,
+        webSecurity: true,
+        allowRunningInsecureContent: false,
+        preload: path.join(__dirname, 'viewPreload.js'),
+    },
+};

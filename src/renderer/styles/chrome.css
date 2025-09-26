@@ -1,0 +1,96 @@
+/* --- Main Layout --- */
+#app-chrome { 
+    height: var(--titlebar-height); /* Single row height */
+    position: relative; 
+    z-index: 10; 
+    background-color: var(--bg-secondary);
+}
+
+#app-chrome.hidden {
+    display: none;
+}
+    
+/* --- Unified Title Bar Structure --- */
+#titlebar {
+    display: flex;
+    height: 100%;
+    align-items: center; /* Vertically center all items */
+    background-color: var(--bg-secondary);
+    overflow: hidden;
+}
+#window-handle {
+    -webkit-app-region: drag;
+    flex-shrink: 0;
+    width: 24px;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    color: var(--fg-secondary);
+    cursor: grab;
+    font-size: 14px;
+}
+.drag-region { 
+    -webkit-app-region: drag; 
+    height: 100%;
+}
+
+/* --- Window Controls --- */
+.window-controls { 
+    display: flex; 
+    height: 100%;
+    -webkit-app-region: no-drag; 
+    flex-shrink: 0; 
+}
+.window-controls button { 
+    width: 46px; height: 100%; border: none; background: transparent; 
+    color: var(--fg-primary); cursor: pointer; display: grid; 
+    place-items: center; font-size: 12px; border-radius: 0;
+}
+.window-controls button:hover { background: var(--bg-hover); }
+.window-controls #close-btn:hover, .window-controls #all-tabs-close-btn:hover, .window-controls #settings-close-btn:hover { background: var(--window-controls-close-hover); color: white; }
+
+/* --- Toolbar --- */
+#toolbar-wrapper {
+    -webkit-app-region: no-drag;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    flex-shrink: 0;
+    padding: 0 8px;
+    transition: flex-basis 200ms ease-in-out, flex-grow 200ms ease-in-out;
+}
+#toolbar { 
+    display: flex; 
+    align-items: center; 
+    gap: 6px; 
+    width: 100%;
+    height: 100%;
+}
+#toolbar button { width: 28px; height: 28px; border: none; border-radius: 0; font-size: 14px; color: var(--fg-primary); background-color: transparent; display: grid; place-items: center; cursor: pointer; flex-shrink: 0; }
+#toolbar button.loading i { animation: spin 1s linear infinite; }
+#toolbar button:not(:disabled):hover { background-color: var(--bg-hover); }
+#toolbar button:disabled { color: var(--fg-secondary); cursor: not-allowed; opacity: 0.4; }
+
+#toolbar #add-tab-btn {
+    margin-right: 6px;
+    background-color: var(--accent-color);
+    color: #fff;
+}
+#toolbar #add-tab-btn:hover {
+    background-color: #1f8ad2;
+}
+
+#address-bar-container { flex-grow: 1; position: relative; height: 100%; display: flex; align-items: center; min-width: 150px;}
+#address-bar { width: 100%; height: 28px; border-radius: 0; border: 1px solid var(--border-color); background-color: var(--bg-secondary); color: var(--fg-primary); padding: 0 12px; font-size: 14px; outline: none; -webkit-user-select: text; user-select: text; }
+#address-bar:focus { border-color: var(--accent-color); box-shadow: 0 0 0 1px var(--accent-color); }
+
+/* --- Dynamic Address Bar --- */
+#titlebar.address-bar-expanded #toolbar-wrapper {
+    flex-grow: 1;
+}
+#titlebar.address-bar-expanded #tab-bar-wrapper {
+    flex-grow: 0;
+    flex-basis: 0;
+    min-width: 0;
+    opacity: 0;
+}

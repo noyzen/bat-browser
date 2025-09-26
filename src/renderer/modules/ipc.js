@@ -1,0 +1,85 @@
+import { state, persistState } from '../renderer.js';
+import * as Feat from './features.js';
+import { renderAllTabsView } from './views.js';
+import { scrollToTab } from './events.js';
+
+let fullRenderCallback, updateNavControlsCallback, updateTabScrollButtons;
+
+export function initIpc(callbacks) {
+    fullRenderCallback = callbacks.fullRender;
+    updateNavControlsCallback = callbacks.updateNavControls;
+    updateTabScrollButtons = callbacks.updateTabScrollButtons;
+
+    window.electronAPI.onSessionRestoreUI(session => {
+        session.tabs.forEach(t => {
+            state.tabs.set(t.id, { ...t, isLoading: false, isLoaded: false, zoomFactor: 1.0 });
+        });
+        session.groups.forEach(g => state.groups.set(g.id, g));
+        state.layout = session.layout;
+        state.activeTabId = session.activeTabId;
+        fullRenderCallback();
+        if (state.activeTabId) {
+            updateNavControlsCallback(state.tabs.get(state.activeTabId));
+            setTimeout(() => scrollToTab(state.activeTabId), 50);
+        }
+    });
+
+    window.electronAPI.onTabCreated(tabData => {
+        state.tabs.set(tabData.id, { ...tabData, zoomFactor: 1.0 });
+        const existsInLayout = state.layout.includes(tabData.id);
+        const existsInGroup = Array.from(state.groups.values()).some(g => g.tabs.includes(tabData.id));
+        if (!existsInLayout && !existsInGroup) {
+            state.layout.push(tabData.id);
+        }
+        fullRenderCallback();
+    });
+
+    window.electronAPI.onTabCreatedWithLayout(({ newTab, newLayout, newGroups }) => {
+        state.tabs.set(newTab.id, { ...newTab, zoomFactor: 1.0 });
+        state.layout = newLayout;
+        state.groups.clear();
+        newGroups.forEach(g => state.groups.set(g.id, g));
+        fullRenderCallback();
+    });
+
+    window.electronAPI.onTabSwitched(id => {
+        state.activeTabId = id;
+        fullRenderCallback();
+        updateNavControlsCallback(state.tabs.get(id));
+        scrollToTab(id);
+    });
+
+    window.electronAPI.onTabUpdated(update => {
+        const tab = state.tabs.get(update.id);
+        if (tab) {
+            Object.assign(tab, update);
+            if (update.id === state.activeTabId) {
+                updateNavControlsCallback(tab);
+            }
+            fullRenderCallback();
+        }
+    });
+
+    window.electronAPI.onTabClosed(id => {
+        // This is a reconciliation step from main process.
+        if (state.tabs.has(id)) {
+            Feat.handleCloseTab(id, callbacks);
+        }
+    });
+
+    window.electronAPI.onWindowBlurred(() => {
+        const { addressBar } = require('./dom.js');
+        if (document.activeElement === addressBar) {
+            addressBar.blur();
+        }
+    });
+
+    window.electronAPI.onCloseTabFromView((id) => {
+        Feat.handleCloseTab(id, callbacks);
+    });
+
+    window.electronAPI.onFindResult(({ matches, activeMatchOrdinal }) => {
+        const { findMatches } = require('./dom.js');
+        findMatches.textContent = `${activeMatchOrdinal}/${matches}`;
+    });
+}
