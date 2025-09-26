@@ -1,6 +1,5 @@
 const { ipcMain, Menu, clipboard } = require('electron');
 const path = require('path');
-const { GoogleGenAI } = require('@google/genai');
 const state = require('./state');
 const tabsModule = require('./tabs');
 const settingsModule = require('./settings');
@@ -224,6 +223,7 @@ function initializeIpc() {
         }
 
         try {
+            const { GoogleGenAI } = await import('@google/genai');
             const tab = state.tabs.get(tabId);
             if (!tab || !tab.view || tab.view.webContents.isDestroyed()) {
                 return event.sender.send('ai:chat-stream-chunk', { error: 'The target tab is not available.' });
