@@ -607,7 +607,7 @@ async function showPromptDialog(title, message, defaultValue = '') {
 // --- Main Process Listeners ---
 window.electronAPI.onSessionRestoreUI(session => {
     session.tabs.forEach(t => {
-        tabs.set(t.id, { ...t, isLoading: true, isLoaded: false, zoomFactor: 1.0 });
+        tabs.set(t.id, { ...t, isLoading: false, isLoaded: false, zoomFactor: 1.0 });
     });
     session.groups.forEach(g => groups.set(g.id, g));
     layout = session.layout;
