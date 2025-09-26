@@ -64,7 +64,6 @@
     border: none;
     margin: 0;
     transition: all 150ms ease;
-    border-radius: 3px;
 }
 #tabs-container .placeholder, .tab-group-tabs .placeholder {
     width: 3px;

@@ -72,7 +72,7 @@
 .api-key-name { font-weight: 500; display: block; }
 .api-key-partial { color: var(--fg-secondary); font-family: monospace; font-size: 12px; }
 .api-key-item.active .api-key-partial { color: #a4c9e1; }
-.api-key-active-badge { background-color: var(--accent-color); color: white; font-size: 10px; font-weight: bold; padding: 3px 6px; border-radius: 10px; }
+.api-key-active-badge { background-color: var(--accent-color); color: white; font-size: 10px; font-weight: bold; padding: 3px 6px; border-radius: 0; }
 .api-key-controls { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 .api-key-controls button { background: none; border: 1px solid var(--border-color); color: var(--fg-secondary); padding: 6px 10px; border-radius: 0; cursor: pointer; font-size: 12px; transition: all 0.2s ease; }
 .api-key-controls button:hover:not(:disabled) { background-color: var(--bg-hover); color: var(--fg-primary); border-color: var(--fg-primary); }
@@ -90,7 +90,7 @@
 /* --- All Tabs View --- */
 #all-tabs-view { position: fixed; inset: 0; background: var(--bg-primary); z-index: 50; display: flex; flex-direction: column; }
 #all-tabs-view.hidden { display: none; }
-.all-tabs-titlebar { display: flex; align-items: center; height: var(--titlebar-height); background: var(--bg-tertiary); border-bottom: 2px solid var(--border-color); -webkit-app-region: drag; flex-shrink: 0; padding-left: 8px; }
+.all-tabs-titlebar { display: flex; align-items: center; height: var(--titlebar-height); background: var(--bg-tertiary); border-bottom: 2px solid var(--bg-primary); -webkit-app-region: drag; flex-shrink: 0; padding-left: 8px; }
 .all-tabs-titlebar-left { flex-grow: 1; display: flex; align-items: center; gap: 20px; -webkit-app-region: no-drag; }
 #back-to-browser-btn, #settings-back-to-browser-btn { background: var(--accent-color); border: none; color: white; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 0; transition: background-color 150ms ease; }
 #back-to-browser-btn:hover, #settings-back-to-browser-btn:hover { background: #1f8ad2; }

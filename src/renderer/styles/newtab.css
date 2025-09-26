@@ -65,7 +65,7 @@ h1 {
   height: 50px;
   background-color: var(--bg-secondary);
   border: 1px solid var(--bg-tertiary);
-  border-radius: 25px;
+  border-radius: 0;
   color: var(--fg-primary);
   font-size: 16px;
   padding: 0 20px 0 50px;
@@ -98,7 +98,7 @@ h1 {
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  border-radius: 18px;
+  border-radius: 0;
   display: flex;
   align-items: center;
   gap: 8px;

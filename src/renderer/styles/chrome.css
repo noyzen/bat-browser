@@ -3,7 +3,7 @@
     position: relative; 
     z-index: 10; 
     background-color: var(--bg-secondary);
-    border-bottom: 2px solid var(--border-color);
+    border-bottom: 2px solid var(--bg-primary);
 }
     
 /* --- Unified Title Bar Structure --- */
@@ -34,14 +34,23 @@
 /* --- Window Controls --- */
 .window-controls { 
     display: flex; 
+    align-items: center;
     height: 100%;
     -webkit-app-region: no-drag; 
     flex-shrink: 0; 
+    padding: 0 4px;
 }
 .window-controls button { 
-    width: 46px; height: 100%; border: none; background: transparent; 
-    color: var(--fg-primary); cursor: pointer; display: grid; 
-    place-items: center; font-size: 12px; border-radius: 0;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent; 
+    color: var(--fg-primary);
+    cursor: pointer;
+    display: grid; 
+    place-items: center;
+    font-size: 14px;
+    border-radius: 0;
 }
 .window-controls button:hover { background: var(--bg-hover); }
 .window-controls #close-btn:hover, .window-controls #all-tabs-close-btn:hover, .window-controls #settings-close-btn:hover { background: var(--window-controls-close-hover); color: white; }
