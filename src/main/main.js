@@ -510,7 +510,7 @@ ipcMain.handle('tab:duplicate', async (_, id) => {
     return getSerializableTabData(newTab);
 });
 
-ipcMain.handle('tab:close', (_, id) => {
+ipcMain.handle('tab:close', async (_, id) => {
   const tab = tabs.get(id);
   if (tab) {
     if (tab.view) {
@@ -521,7 +521,18 @@ ipcMain.handle('tab:close', (_, id) => {
     }
     tab.session?.clearStorageData().catch(err => console.error("Failed to clear storage:", err));
     tabs.delete(id);
+
+    // Always notify the renderer that the tab is closed for UI cleanup.
     mainWindow.webContents.send('tab:closed', id);
+
+    // If that was the last tab, create a new one to prevent an empty window.
+    if (tabs.size === 0) {
+      const newTab = await createTab();
+      layout = [newTab.id]; // Reset layout in main process
+      groups.clear();
+      mainWindow.webContents.send('tab:created', getSerializableTabData(newTab));
+      await switchTab(newTab.id);
+    }
   }
 });
 

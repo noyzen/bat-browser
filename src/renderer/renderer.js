@@ -497,7 +497,8 @@ function handleCloseTab(id) {
         if (nextTabId) {
             window.electronAPI.switchTab(nextTabId); // Main will broadcast 'tab:switched'
         } else if (tabs.size === 0) {
-             window.electronAPI.newTab();
+             // This is now handled by the main process to avoid race conditions.
+             // The main process will send 'tab:created' and 'tab:switched' events.
         }
     }
     
