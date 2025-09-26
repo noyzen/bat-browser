@@ -81,8 +81,69 @@
 }
 
 #address-bar-container { flex-grow: 1; position: relative; height: 100%; display: flex; align-items: center; min-width: 150px;}
-#address-bar { width: 100%; height: 28px; border-radius: 0; border: 1px solid var(--border-color); background-color: var(--bg-secondary); color: var(--fg-primary); padding: 0 12px; font-size: 14px; outline: none; -webkit-user-select: text; user-select: text; }
+#address-bar { width: 100%; height: 28px; border-radius: 0; border: 1px solid var(--border-color); background-color: var(--bg-secondary); color: var(--fg-primary); padding: 0 40px 0 12px; font-size: 14px; outline: none; -webkit-user-select: text; user-select: text; }
 #address-bar:focus { border-color: var(--accent-color); box-shadow: 0 0 0 1px var(--accent-color); }
+
+/* --- Screenshot Button --- */
+#screenshot-btn-wrapper {
+    position: absolute;
+    right: 1px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: calc(100% - 2px);
+}
+#screenshot-btn {
+    width: 34px;
+    height: 100%;
+    font-size: 14px;
+    color: var(--fg-secondary);
+}
+#screenshot-btn:hover {
+    color: var(--fg-primary);
+    background-color: var(--bg-hover);
+}
+#screenshot-menu {
+    position: absolute;
+    top: calc(100% + 5px);
+    right: 0;
+    width: 220px;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 100;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+}
+#screenshot-menu.hidden {
+    display: none;
+}
+#screenshot-menu button {
+    width: 100%;
+    height: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--fg-primary);
+    text-align: left;
+    -webkit-app-region: no-drag;
+}
+#screenshot-menu button i {
+    width: 16px;
+    font-size: 14px;
+    text-align: center;
+    color: var(--fg-secondary);
+}
+#screenshot-menu button:hover {
+    background-color: var(--accent-color);
+    color: white;
+}
+#screenshot-menu button:hover i {
+    color: white;
+}
+
 
 /* --- Dynamic Address Bar --- */
 #titlebar.address-bar-expanded #toolbar-wrapper {

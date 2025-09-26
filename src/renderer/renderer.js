@@ -5,6 +5,7 @@ import { initContextMenu } from './modules/context-menu.js';
 import { initDragDrop } from './modules/drag-drop.js';
 import { initViews, renderAllTabsView } from './modules/views.js';
 import { initFeatures } from './modules/features.js';
+import { initScreenshot } from './modules/screenshot.js';
 import { render, updateNavControls } from './modules/render.js';
 
 // --- State ---
@@ -61,6 +62,7 @@ function initialize() {
     initDragDrop(callbacks);
     initViews(callbacks);
     initFeatures(callbacks);
+    initScreenshot(callbacks);
 }
 
 initialize();

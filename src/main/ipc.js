@@ -1,4 +1,4 @@
-const { ipcMain, Menu, clipboard, dialog } = require('electron');
+const { ipcMain, Menu, clipboard, dialog, nativeImage } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const state = require('./state');
@@ -7,7 +7,7 @@ const settingsModule = require('./settings');
 const sessionModule = require('./session');
 const utils = require('./utils');
 const { getSerializableTabData } = require('./utils');
-const { SEARCH_ENGINES } = require('./constants');
+const { SEARCH_ENGINES, CHROME_HEIGHT } = require('./constants');
 
 const activeCaptures = new Map();
 
@@ -156,106 +156,113 @@ function initializeIpc() {
         }
     });
 
-    // Screenshot Cancellation
+    // --- Screenshot ---
+
+    // Cancel a full-page capture
     ipcMain.handle('screenshot:cancel', (_, tabId) => {
         if (activeCaptures.has(tabId)) {
             activeCaptures.get(tabId).cancelled = true;
         }
     });
 
-    // Screenshot
-    ipcMain.handle('tab:screenshot', async (_, tabId) => {
+    // Capture the visible area of the page
+    ipcMain.handle('screenshot:capture-visible', async () => {
+        const tab = state.getActiveTab();
+        if (!tab || !tab.view || tab.view.webContents.isDestroyed()) {
+            return { success: false, message: 'Active tab not available for capture.' };
+        }
+        try {
+            const image = await tab.view.webContents.capturePage();
+            return { success: true, dataUrl: image.toDataURL() };
+        } catch (error) {
+            console.error('Visible area capture failed:', error);
+            return { success: false, message: error.message };
+        }
+    });
+    
+    // Capture a specific rectangle of the page
+    ipcMain.handle('screenshot:capture-rect', async (_, rect) => {
+        const tab = state.getActiveTab();
+        if (!tab || !tab.view || tab.view.webContents.isDestroyed()) {
+            return { success: false, message: 'Active tab not available for capture.' };
+        }
+        try {
+            // Adjust coordinates from window-relative to view-relative
+            const viewRect = {
+                x: Math.round(rect.x),
+                y: Math.round(rect.y - CHROME_HEIGHT),
+                width: Math.round(rect.width),
+                height: Math.round(rect.height)
+            };
+    
+            // Ensure the capture rectangle is within the view bounds
+            const [viewWidth, viewHeight] = state.mainWindow.getContentSize();
+            if (viewRect.x < 0 || viewRect.y < 0 || viewRect.x + viewRect.width > viewWidth || viewRect.y + viewRect.height > viewHeight - CHROME_HEIGHT) {
+                // This can happen if the user's selection bleeds outside the view.
+                // We don't need to throw an error, capturePage will clamp it.
+            }
+    
+            const image = await tab.view.webContents.capturePage(viewRect);
+            return { success: true, dataUrl: image.toDataURL() };
+        } catch (error) {
+            console.error('Area capture failed:', error);
+            return { success: false, message: error.message };
+        }
+    });
+
+    // Capture the full scrollable page
+    ipcMain.handle('screenshot:capture-full', async (_, tabId) => {
         const tab = state.tabs.get(tabId);
     
-        // --- Pre-flight Checks ---
-        if (!tab) {
-            return { success: false, message: 'Tab not found.' };
-        }
-        // For simplicity and stability, only allow screenshots of the currently active tab.
-        // Capturing background tabs is complex and can lead to unexpected states.
-        if (tab.id !== state.activeTabId) {
-            return { success: false, message: 'Screenshot can only be taken on the active tab.' };
-        }
-        if (!tab.view || tab.view.webContents.isDestroyed()) {
-            return { success: false, message: 'Tab is not available for capture (hibernated or destroyed).' };
-        }
-        if (activeCaptures.has(tabId)) {
-            return { success: false, message: 'A capture is already in progress for this tab.' };
-        }
+        if (!tab) return { success: false, message: 'Tab not found.' };
+        if (tab.id !== state.activeTabId) return { success: false, message: 'Full page screenshot can only be taken on the active tab.' };
+        if (!tab.view || tab.view.webContents.isDestroyed()) return { success: false, message: 'Tab is not available for capture.' };
+        if (activeCaptures.has(tabId)) return { success: false, message: 'A capture is already in progress for this tab.' };
     
         const webContents = tab.view.webContents;
         activeCaptures.set(tabId, { cancelled: false });
         
-        // Notify the renderer to show the loading/cancel overlay
         if (state.mainWindow && !state.mainWindow.isDestroyed()) {
             state.mainWindow.webContents.send('screenshot:start', { tabId });
         }
     
-        let finalResult = { success: false, message: 'An unknown error occurred during screenshot.' };
+        let finalResult = { success: false, message: 'An unknown error occurred.' };
+        let finalDataUrl = null;
         let debuggerWasAttachedByUs = false;
     
         try {
-            // --- Scrolling Phase ---
-            const pageMetrics = await webContents.executeJavaScript(`
-                Promise.resolve({
-                    contentHeight: Math.max(
-                        document.body.scrollHeight, document.documentElement.scrollHeight,
-                        document.body.offsetHeight, document.documentElement.offsetHeight,
-                        document.body.clientHeight, document.documentElement.clientHeight
-                    ),
-                    viewHeight: window.innerHeight,
-                })
-            `);
-    
+            const pageMetrics = await webContents.executeJavaScript(`Promise.resolve({ contentHeight: Math.max(document.body.scrollHeight, document.documentElement.scrollHeight), viewHeight: window.innerHeight })`);
             const { contentHeight, viewHeight } = pageMetrics;
     
             if (contentHeight > viewHeight) {
                 const scrolls = Math.ceil(contentHeight / viewHeight);
                 for (let i = 0; i < scrolls; i++) {
-                    // Check for cancellation or tab closure before each scroll
                     if (activeCaptures.get(tabId)?.cancelled) throw new Error('CAPTURE_CANCELLED');
                     if (webContents.isDestroyed()) throw new Error('TAB_CLOSED');
     
-                    const scrollPosition = i * viewHeight;
-                    await webContents.executeJavaScript(`window.scrollTo(0, ${scrollPosition})`);
-                    
-                    const percent = Math.round(((i + 1) / scrolls) * 100);
-                    if (state.mainWindow && !state.mainWindow.isDestroyed()) {
-                        state.mainWindow.webContents.send('screenshot:progress', { tabId, percent });
-                    }
-    
-                    // Wait for lazy-loaded content to appear
+                    await webContents.executeJavaScript(`window.scrollTo(0, ${i * viewHeight})`);
+                    if (state.mainWindow) state.mainWindow.webContents.send('screenshot:progress', { tabId, percent: Math.round(((i + 1) / scrolls) * 100) });
                     await new Promise(resolve => setTimeout(resolve, 1500));
                 }
-                // Scroll back to the top before taking the screenshot
                 if (activeCaptures.get(tabId)?.cancelled) throw new Error('CAPTURE_CANCELLED');
                 if (webContents.isDestroyed()) throw new Error('TAB_CLOSED');
                 await webContents.executeJavaScript(`window.scrollTo(0, 0)`);
                 await new Promise(resolve => setTimeout(resolve, 500));
             } else {
-                // Page doesn't need scrolling, but still send progress
-                if (state.mainWindow && !state.mainWindow.isDestroyed()) {
-                    state.mainWindow.webContents.send('screenshot:progress', { tabId, percent: 100 });
-                }
+                if (state.mainWindow) state.mainWindow.webContents.send('screenshot:progress', { tabId, percent: 100 });
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
     
             if (activeCaptures.get(tabId)?.cancelled) throw new Error('CAPTURE_CANCELLED');
             if (webContents.isDestroyed()) throw new Error('TAB_CLOSED');
     
-            // --- Capture Phase ---
-            // Attach debugger only when absolutely necessary
             if (!webContents.debugger.isAttached()) {
                 await webContents.debugger.attach('1.3');
                 debuggerWasAttachedByUs = true;
             }
             
-            // Get precise content dimensions to avoid capturing empty space or app chrome
             const { contentSize } = await webContents.debugger.sendCommand('Page.getLayoutMetrics');
-            
-            if (contentSize.height === 0 || contentSize.width === 0) {
-                throw new Error('Page content has zero dimensions, cannot capture.');
-            }
+            if (contentSize.height === 0 || contentSize.width === 0) throw new Error('Page content has zero dimensions.');
     
             let format = state.settings.screenshotFormat || 'png';
             if (!['jpeg', 'png', 'webp'].includes(format)) format = 'png';
@@ -265,58 +272,77 @@ function initializeIpc() {
                 format: format,
                 quality: (format === 'jpeg' || format === 'webp') ? quality : undefined,
                 captureBeyondViewport: true,
-                // Clip to the exact content size to prevent extra empty space (the black bar issue)
-                clip: {
-                    x: 0,
-                    y: 0,
-                    width: contentSize.width,
-                    height: contentSize.height,
-                    scale: 1,
-                }
+                clip: { x: 0, y: 0, width: contentSize.width, height: contentSize.height, scale: 1 }
             });
-                
-            // --- Save Phase ---
-            const { canceled, filePath } = await dialog.showSaveDialog(state.mainWindow, {
-                title: 'Save Screenshot',
-                defaultPath: `screenshot-${Date.now()}.${format}`,
-                filters: [{ name: 'Images', extensions: [format] }]
-            });
-        
-            if (!canceled && filePath) {
-                const buffer = Buffer.from(screenshotData.data, 'base64');
-                fs.writeFileSync(filePath, buffer);
-                finalResult = { success: true };
-            } else {
-                finalResult = { success: false, message: 'Save dialog was canceled.' };
-            }
+            
+            finalDataUrl = `data:image/${format};base64,${screenshotData.data}`;
+            finalResult = { success: true };
+    
         } catch (error) {
-            console.error('Screenshot capture error:', error);
+            console.error('Full page capture error:', error);
             if (error.message === 'CAPTURE_CANCELLED' || error.message === 'TAB_CLOSED') {
-                finalResult = { success: false, message: `Screenshot was ${error.message === 'TAB_CLOSED' ? 'aborted because tab closed' : 'cancelled by the user'}.` };
+                finalResult = { success: false, message: `Capture was ${error.message === 'TAB_CLOSED' ? 'aborted because tab closed' : 'cancelled'}.` };
             } else {
                 finalResult = { success: false, message: `Failed to capture page: ${error.message}` };
             }
         } finally {
-            // THIS BLOCK IS GUARANTEED TO RUN.
-            // It's critical for restoring the UI and preventing the title bar from disappearing.
             try {
-                // Safely detach the debugger, only if we attached it and the tab still exists.
                 if (debuggerWasAttachedByUs && webContents && !webContents.isDestroyed() && webContents.debugger.isAttached()) {
                     await webContents.debugger.detach();
                 }
             } catch (detachError) {
-                // Log detach errors, but don't let them stop the UI from being restored.
                 console.error('Non-critical error while detaching debugger:', detachError);
             } finally {
-                // THIS IS THE MOST IMPORTANT PART: Always tell the UI that the process is over.
                 if (state.mainWindow && !state.mainWindow.isDestroyed()) {
-                    state.mainWindow.webContents.send('screenshot:end', { tabId, result: finalResult });
+                    state.mainWindow.webContents.send('screenshot:end', { tabId, result: { ...finalResult, dataUrl: finalDataUrl } });
                 }
                 activeCaptures.delete(tabId);
             }
         }
         return finalResult;
     });
+
+    // Save an image from a data URL
+    ipcMain.handle('screenshot:save', async (_, dataUrl) => {
+        const image = nativeImage.createFromDataURL(dataUrl);
+        let format = state.settings.screenshotFormat || 'png';
+        if (!['jpeg', 'png', 'webp'].includes(format)) format = 'png';
+
+        const { canceled, filePath } = await dialog.showSaveDialog(state.mainWindow, {
+            title: 'Save Screenshot',
+            defaultPath: `screenshot-${Date.now()}.${format}`,
+            filters: [{ name: 'Images', extensions: [format] }]
+        });
+    
+        if (!canceled && filePath) {
+            try {
+                let buffer;
+                if (format === 'png') buffer = image.toPNG();
+                else if (format === 'jpeg') buffer = image.toJPEG(state.settings.screenshotQuality || 90);
+                else buffer = image.toBitmap(); // Fallback for webp etc.
+                
+                fs.writeFileSync(filePath, buffer);
+                return { success: true };
+            } catch (error) {
+                console.error('Failed to save screenshot:', error);
+                return { success: false, message: error.message };
+            }
+        }
+        return { success: false, message: 'Save dialog canceled.' };
+    });
+
+    // Copy an image from a data URL to the clipboard
+    ipcMain.handle('screenshot:copy', async (_, dataUrl) => {
+        try {
+            const image = nativeImage.createFromDataURL(dataUrl);
+            clipboard.writeImage(image);
+            return { success: true };
+        } catch (error) {
+            console.error('Failed to copy screenshot to clipboard:', error);
+            return { success: false, message: error.message };
+        }
+    });
+
 
     // View-specific IPC handlers
     ipcMain.on('view:reload-current', (event) => {

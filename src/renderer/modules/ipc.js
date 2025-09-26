@@ -81,37 +81,4 @@ export function initIpc(callbacks) {
     window.electronAPI.onFindResult(({ matches, activeMatchOrdinal }) => {
         DOM.findMatches.textContent = `${activeMatchOrdinal}/${matches}`;
     });
-
-    window.electronAPI.onScreenshotStart(({ tabId }) => {
-        DOM.screenshotProgressBarValue.style.width = '0%';
-        DOM.screenshotProgressPercent.textContent = '0%';
-        DOM.screenshotOverlay.classList.remove('hidden');
-
-        // Define and attach the event listener for the cancel button
-        const cancelHandler = () => window.electronAPI.cancelScreenshot(tabId);
-        DOM.screenshotCancelBtn.addEventListener('click', cancelHandler, { once: true });
-        
-        // Store the handler on the element itself so we can remove it later
-        DOM.screenshotCancelBtn.handler = cancelHandler;
-    });
-
-    window.electronAPI.onScreenshotProgress(({ percent }) => {
-        DOM.screenshotProgressBarValue.style.width = `${percent}%`;
-        DOM.screenshotProgressPercent.textContent = `${percent}%`;
-    });
-    
-    window.electronAPI.onScreenshotEnd(({ result }) => {
-        // IMPORTANT: Clean up the event listener to prevent memory leaks.
-        if (DOM.screenshotCancelBtn.handler) {
-            DOM.screenshotCancelBtn.removeEventListener('click', DOM.screenshotCancelBtn.handler);
-            delete DOM.screenshotCancelBtn.handler;
-        }
-
-        setTimeout(() => {
-            DOM.screenshotOverlay.classList.add('hidden');
-            if (!result.success && result.message) {
-                console.error('Screenshot failed or cancelled:', result.message);
-            }
-        }, 500);
-    });
 }

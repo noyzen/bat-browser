@@ -101,13 +101,13 @@
     border-color: #1f8ad2;
 }
 
-/* --- Screenshot Overlay --- */
+/* --- Screenshot Progress Overlay --- */
 @keyframes screenshot-bg-pan {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
-#screenshot-overlay {
+#screenshot-progress-overlay {
     position: fixed;
     inset: 0;
     z-index: 9999;
@@ -123,7 +123,7 @@
     transition: opacity 200ms ease-in-out;
     pointer-events: none;
 }
-#screenshot-overlay:not(.hidden) {
+#screenshot-progress-overlay:not(.hidden) {
     opacity: 1;
     pointer-events: all;
 }
@@ -176,4 +176,111 @@
 }
 .screenshot-loader .cancel-btn {
     margin-top: 5px;
+}
+
+/* --- Screenshot Selection Overlay --- */
+#screenshot-selection-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background-color: rgba(0,0,0,0.5);
+    cursor: crosshair;
+}
+#screenshot-selection-overlay.hidden {
+    display: none;
+}
+#screenshot-selection-info {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0,0,0,0.8);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 0;
+    font-size: 14px;
+    pointer-events: none;
+    transition: opacity 150ms ease-out;
+}
+#screenshot-selection-info kbd {
+    background-color: #333;
+    padding: 2px 6px;
+    border-radius: 0;
+    border: 1px solid #555;
+    font-size: 12px;
+}
+
+/* --- Screenshot Preview Overlay --- */
+#screenshot-preview-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    background-color: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+}
+#screenshot-preview-overlay.hidden {
+    display: none;
+}
+.preview-toolbar {
+    height: 48px;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    -webkit-app-region: drag;
+}
+.preview-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--fg-secondary);
+}
+.preview-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    -webkit-app-region: no-drag;
+}
+.preview-actions button {
+    border: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
+    color: var(--fg-primary);
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.preview-actions button i {
+    font-size: 12px;
+}
+.preview-actions button:hover {
+    border-color: var(--fg-secondary);
+}
+.preview-actions .ok-btn {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+.preview-actions .ok-btn:hover {
+    background: #1f8ad2;
+    border-color: #1f8ad2;
+}
+.preview-image-container {
+    flex-grow: 1;
+    overflow: auto;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+}
+#screenshot-preview-image {
+    max-width: 100%;
+    height: fit-content;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid var(--border-color);
 }
