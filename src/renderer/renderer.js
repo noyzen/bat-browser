@@ -699,6 +699,10 @@ window.electronAPI.onWindowBlurred(() => {
   }
 });
 
+window.electronAPI.onCloseTabFromView((id) => {
+    handleCloseTab(id);
+});
+
 // --- Event Listeners ---
 addTabBtn.addEventListener('click', () => window.electronAPI.newTab());
 

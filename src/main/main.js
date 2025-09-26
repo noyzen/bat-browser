@@ -126,13 +126,24 @@ function saveSession() {
 
   try {
     const sessionState = {
-      tabs: Array.from(tabs.values()).map(t => ({
-        id: t.id,
-        url: t.isHibernated ? t.url : (t.view?.webContents.getURL() || t.url),
-        title: t.title,
-        color: t.color,
-        isActive: t.id === activeTabId,
-      })),
+      tabs: Array.from(tabs.values()).map(t => {
+        let finalUrl = t.url;
+        if (!t.isHibernated && t.view) {
+          const currentWebContentsUrl = t.view.webContents.getURL();
+          if (currentWebContentsUrl && currentWebContentsUrl.endsWith('newtab.html')) {
+            finalUrl = 'about:blank';
+          } else {
+            finalUrl = currentWebContentsUrl || t.url;
+          }
+        }
+        return {
+          id: t.id,
+          url: finalUrl,
+          title: t.title,
+          color: t.color,
+          isActive: t.id === activeTabId,
+        };
+      }),
       groups: Array.from(groups.values()),
       layout,
       activeTabId,
@@ -233,6 +244,17 @@ function attachViewListenersToTab(tabData) {
       return;
     }
 
+    const isNewTabPage = newUrl.endsWith('newtab.html');
+    if (isNewTabPage) {
+        tabData.url = 'about:blank'; // Store clean URL for session saving
+        tabData.title = 'New Tab';
+        tabData.canGoBack = false;
+        tabData.canGoForward = false;
+        mainWindow.webContents.send('tab:updated', { id, url: '', title: 'New Tab', canGoBack: false, canGoForward: false });
+        // Don't apply font or save session for this transient page
+        return;
+    }
+
     tabData.url = newUrl;
     tabData.canGoBack = view.webContents.canGoBack();
     tabData.canGoForward = view.webContents.canGoForward();
@@ -285,7 +307,11 @@ async function createTab(url = 'about:blank', options = {}) {
 
   attachViewListenersToTab(tabData);
 
-  await view.webContents.loadURL(url);
+  if (url === 'about:blank') {
+    await view.webContents.loadFile(path.join(__dirname, '../renderer/newtab.html'));
+  } else {
+    await view.webContents.loadURL(url);
+  }
   return tabData;
 }
 
@@ -435,7 +461,11 @@ async function switchTab(id) {
 
         // Start loading the URL asynchronously. Do NOT await this call.
         // The page will load in the background after the tab switch is visible.
-        view.webContents.loadURL(newTab.url);
+        if (newTab.url === 'about:blank') {
+          view.webContents.loadFile(path.join(__dirname, '../renderer/newtab.html'));
+        } else {
+          view.webContents.loadURL(newTab.url);
+        }
         newTab.isHibernated = false;
         
         if (!mainWindow || mainWindow.isDestroyed()) return;
@@ -571,16 +601,45 @@ ipcMain.handle('settings:set-default-font', async (_, fontFamily) => {
 });
 
 
-// View Reload from Error Page
-ipcMain.on('view:reload-current', (event) => {
-  const webContents = event.sender;
+// Helper function to find a tab by its webContents
+function findTabByWebContents(webContents) {
+  if (!webContents || webContents.isDestroyed()) return null;
   for (const tab of tabs.values()) {
     if (tab.view && tab.view.webContents === webContents) {
-      webContents.loadURL(tab.url);
-      return;
+      return tab;
+    }
+  }
+  return null;
+}
+
+// View-specific IPC handlers
+ipcMain.on('view:reload-current', (event) => {
+  const tab = findTabByWebContents(event.sender);
+  if (tab) {
+    // Check if the original URL was 'about:blank' (our new tab page)
+    if (tab.url === 'about:blank') {
+      tab.view.webContents.loadFile(path.join(__dirname, '../renderer/newtab.html'));
+    } else {
+      tab.view.webContents.loadURL(tab.url);
     }
   }
 });
+
+ipcMain.on('view:loadURL', (event, url) => {
+    const tab = findTabByWebContents(event.sender);
+    if (tab && tab.view) {
+        tab.view.webContents.loadURL(url);
+    }
+});
+
+ipcMain.on('view:close', (event) => {
+    const tab = findTabByWebContents(event.sender);
+    if (tab) {
+        // Forward the request to the main renderer window, which owns all the UI logic.
+        mainWindow.webContents.send('close-tab-from-view', tab.id);
+    }
+});
+
 
 // Context Menu
 ipcMain.handle('show-context-menu', (event, menuTemplate) => {

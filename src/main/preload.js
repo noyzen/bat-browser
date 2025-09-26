@@ -52,4 +52,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onTabSwitched: (callback) => ipcRenderer.on('tab:switched', (_e, id) => callback(id)),
   onTabUpdated: (callback) => ipcRenderer.on('tab:updated', (_e, update) => callback(update)),
   onTabClosed: (callback) => ipcRenderer.on('tab:closed', (_e, id) => callback(id)),
+  onCloseTabFromView: (callback) => ipcRenderer.on('close-tab-from-view', (_e, id) => callback(id)),
 });
