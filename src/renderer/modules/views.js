@@ -113,17 +113,6 @@ async function populateSettings() {
         <option value="startpage">Startpage</option>
     `;
     searchSelect.value = settings.searchEngine || 'google';
-
-    // Captures
-    const qualitySettingItem = document.getElementById('quality-setting-item');
-    const qualitySlider = document.getElementById('ss-quality-slider');
-    const qualityValue = document.getElementById('ss-quality-value');
-    
-    document.querySelector(`input[name="ss-format"][value="${settings.screenshotFormat || 'png'}"]`).checked = true;
-    qualitySlider.value = settings.screenshotQuality || 90;
-    qualityValue.textContent = settings.screenshotQuality || 90;
-
-    qualitySettingItem.style.display = (settings.screenshotFormat === 'jpeg' || settings.screenshotFormat === 'webp') ? 'flex' : 'none';
 }
 
 function handleSettingsSearch(e) {
@@ -206,24 +195,6 @@ export function initViews({ fullRender }) {
     // -- Search
     document.getElementById('search-engine-select').addEventListener('change', (e) => {
         window.electronAPI.settingsSetSearchEngine(e.target.value);
-    });
-
-    // -- Captures
-    document.querySelectorAll('input[name="ss-format"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            const format = e.target.value;
-            window.electronAPI.settingsSetScreenshotOption({ key: 'screenshotFormat', value: format });
-            document.getElementById('quality-setting-item').style.display = (format === 'jpeg' || format === 'webp') ? 'flex' : 'none';
-        });
-    });
-
-    const qualitySlider = document.getElementById('ss-quality-slider');
-    const qualityValue = document.getElementById('ss-quality-value');
-    qualitySlider.addEventListener('input', () => {
-        qualityValue.textContent = qualitySlider.value;
-    });
-    qualitySlider.addEventListener('change', () => { // only send on release
-        window.electronAPI.settingsSetScreenshotOption({ key: 'screenshotQuality', value: parseInt(qualitySlider.value, 10) });
     });
 
     // -- Sidebar navigation

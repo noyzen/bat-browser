@@ -17,17 +17,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   toggleTabShared: (id) => ipcRenderer.invoke('tab:toggle-shared', id),
   clearCacheAndReload: (id) => ipcRenderer.invoke('tab:clear-cache-and-reload', id),
   
-  // Screenshot
-  captureVisible: () => ipcRenderer.invoke('screenshot:capture-visible'),
-  captureRect: (rect) => ipcRenderer.invoke('screenshot:capture-rect', rect),
-  captureFull: (id) => ipcRenderer.invoke('screenshot:capture-full', id),
-  cancelScreenshot: (id) => ipcRenderer.invoke('screenshot:cancel', id),
-  saveScreenshot: (dataUrl) => ipcRenderer.invoke('screenshot:save', dataUrl),
-  copyScreenshot: (dataUrl) => ipcRenderer.invoke('screenshot:copy', dataUrl),
-  onScreenshotStart: (callback) => ipcRenderer.on('screenshot:start', (_e, data) => callback(data)),
-  onScreenshotProgress: (callback) => ipcRenderer.on('screenshot:progress', (_e, data) => callback(data)),
-  onScreenshotEnd: (callback) => ipcRenderer.on('screenshot:end', (_e, data) => callback(data)),
-
   // View Controls
   hideActiveView: () => ipcRenderer.invoke('view:hide'),
   showActiveView: () => ipcRenderer.invoke('view:show'),
@@ -55,7 +44,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setDefaultFont: (fontFamily) => ipcRenderer.invoke('settings:set-default-font', fontFamily),
   settingsSetSearchEngine: (engine) => ipcRenderer.invoke('settings:set-search-engine', engine),
-  settingsSetScreenshotOption: (option) => ipcRenderer.invoke('settings:set-screenshot-option', option),
 
   // Context Menu
   showContextMenu: (menuTemplate) => ipcRenderer.invoke('show-context-menu', menuTemplate),

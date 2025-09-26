@@ -47,18 +47,3 @@ export const settingsMinBtn = document.getElementById('settings-min-btn');
 export const settingsMaxBtn = document.getElementById('settings-max-btn');
 export const settingsMaxIcon = document.getElementById('settings-max-icon');
 export const settingsCloseBtn = document.getElementById('settings-close-btn');
-
-// Screenshot UI
-export const screenshotProgressOverlay = document.getElementById('screenshot-progress-overlay');
-export const screenshotProgressBarValue = document.getElementById('screenshot-progress-bar-value');
-export const screenshotProgressPercent = document.getElementById('screenshot-progress-percent');
-export const screenshotCancelBtn = document.getElementById('screenshot-cancel-btn');
-export const screenshotSelectionOverlay = document.getElementById('screenshot-selection-overlay');
-export const screenshotSelectionInfo = document.getElementById('screenshot-selection-info');
-export const screenshotPreviewOverlay = document.getElementById('screenshot-preview-overlay');
-export const screenshotCopyBtn = document.getElementById('screenshot-copy-btn');
-export const screenshotSaveBtn = document.getElementById('screenshot-save-btn');
-export const screenshotDiscardBtn = document.getElementById('screenshot-discard-btn');
-export const screenshotPreviewImage = document.getElementById('screenshot-preview-image');
-export const screenshotFilename = document.getElementById('screenshot-filename');
-export const screenshotDimensions = document.getElementById('screenshot-dimensions');

@@ -90,7 +90,6 @@
           <ul>
             <li class="active"><a href="#appearance"><i class="fa-solid fa-palette"></i> Appearance</a></li>
             <li><a href="#search"><i class="fa-solid fa-magnifying-glass"></i> Search</a></li>
-            <li><a href="#captures"><i class="fa-solid fa-camera"></i> Captures</a></li>
             <li><a href="#hotkeys"><i class="fa-solid fa-keyboard"></i> Hotkeys</a></li>
           </ul>
         </nav>
@@ -114,24 +113,6 @@
                   <label for="search-engine-select">Default Search Engine</label>
                   <div class="setting-control">
                       <select id="search-engine-select"></select>
-                  </div>
-                </div>
-              </section>
-              <section id="captures" class="settings-section" style="display: none;" data-keywords="captures screenshot snapshot image format quality png jpeg webp">
-                <h1>Page Captures</h1>
-                <div class="setting-item" data-keywords="screenshot format png jpeg webp">
-                  <label>Screenshot Format</label>
-                  <div class="setting-control radio-group">
-                      <label><input type="radio" name="ss-format" value="png" checked> PNG</label>
-                      <label><input type="radio" name="ss-format" value="jpeg"> JPEG</label>
-                      <label><input type="radio" name="ss-format" value="webp"> WebP</label>
-                  </div>
-                </div>
-                <div class="setting-item" id="quality-setting-item" data-keywords="screenshot quality compression jpeg webp">
-                  <label for="ss-quality-slider">Image Quality</label>
-                  <div class="setting-control">
-                      <input type="range" id="ss-quality-slider" min="1" max="100" value="90">
-                      <span id="ss-quality-value">90</span>
                   </div>
                 </div>
               </section>
@@ -167,49 +148,6 @@
     </div>
     <div id="all-tabs-list-container"></div>
   </div>
-
-  <div id="screenshot-progress-overlay" class="hidden">
-    <div class="screenshot-loader">
-      <i class="fa-solid fa-camera fa-beat"></i>
-      <div class="screenshot-loader-text">
-        <h2>Capturing Page...</h2>
-        <p>Scrolling to load all content. Please wait.</p>
-      </div>
-      <div class="progress-container">
-        <div class="screenshot-progress-bar">
-          <div id="screenshot-progress-bar-value"></div>
-        </div>
-        <span id="screenshot-progress-percent">0%</span>
-      </div>
-      <button id="screenshot-cancel-btn" class="cancel-btn">Cancel</button>
-    </div>
-  </div>
-
-  <div id="screenshot-selection-overlay" class="hidden">
-    <div id="screenshot-selection-info">
-      <p>Click and drag to select an area. Press <kbd>Esc</kbd> to cancel.</p>
-    </div>
-  </div>
-
-  <div id="screenshot-preview-overlay" class="hidden">
-    <div class="preview-image-container">
-      <img id="screenshot-preview-image" alt="Screenshot Preview" />
-    </div>
-    <div class="preview-toolbar">
-      <div class="preview-metadata">
-        <span id="screenshot-filename"></span>
-        <span id="screenshot-dimensions"></span>
-      </div>
-      <div class="preview-actions">
-        <button id="screenshot-copy-btn" title="Copy to Clipboard"><i class="fa-solid fa-copy"></i> Copy</button>
-        <button id="screenshot-save-btn" class="ok-btn" title="Save to File"><i class="fa-solid fa-save"></i> Save As...</button>
-      </div>
-      <div class="preview-close">
-        <button id="screenshot-discard-btn" title="Discard Capture"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-    </div>
-  </div>
-
 
   <script src="renderer.js" type="module"></script>
 </body>
