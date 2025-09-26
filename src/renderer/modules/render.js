@@ -233,18 +233,13 @@ export function renderTab(id, context = 'main') {
         }
         iconEl.innerHTML = iconHTML;
 
-        const urlEl = document.createElement('span');
-        urlEl.className = 'all-tabs-url';
-        const formattedUrl = formatUrlForDisplay(tab.url);
-        urlEl.textContent = formattedUrl || tab.url; // Show original if formatting results in empty
-        
         titleEl.className = 'tab-title';
         titleEl.textContent = tab.title;
         closeBtnEl.className = 'tab-close-btn';
 
         const textWrapper = document.createElement('div');
         textWrapper.className = 'all-tabs-text-wrapper';
-        textWrapper.append(urlEl, titleEl);
+        textWrapper.append(titleEl);
         
         tabEl.append(iconEl, textWrapper, closeBtnEl);
     }
