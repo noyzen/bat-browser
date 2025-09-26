@@ -39,6 +39,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Zoom
   updateTabZoom: (id, factor) => ipcRenderer.invoke('tab:update-zoom', { id, factor }),
+
+  // UI Context Menu
+  showChromeContextMenu: (payload) => ipcRenderer.invoke('chrome:show-context-menu', payload),
+  onContextMenuCommand: (callback) => ipcRenderer.on('chrome:context-menu-command', (_e, action) => callback(action)),
   
   // Settings
   getSettings: () => ipcRenderer.invoke('settings:get'),

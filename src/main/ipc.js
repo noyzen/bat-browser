@@ -126,6 +126,38 @@ function initializeIpc() {
             sessionModule.debouncedSaveSession();
         }
     });
+    
+    // UI Context Menu
+    ipcMain.handle('chrome:show-context-menu', (event, { template, x, y }) => {
+        const buildMenuFromTemplate = (tpl) => {
+            return tpl.map(item => {
+                if (item.visible === false) return null;
+
+                const { action, submenu, ...rest } = item;
+                const newItem = { ...rest };
+                
+                if (action) {
+                    newItem.click = () => {
+                        state.mainWindow.webContents.send('chrome:context-menu-command', action);
+                    };
+                }
+
+                if (submenu && submenu.length > 0) {
+                    newItem.submenu = buildMenuFromTemplate(submenu);
+                } else {
+                    delete newItem.submenu;
+                }
+                
+                return newItem;
+            }).filter(item => item !== null);
+        };
+        
+        const menuTemplate = buildMenuFromTemplate(template);
+        if (menuTemplate.length === 0) return;
+        
+        const menu = Menu.buildFromTemplate(menuTemplate);
+        menu.popup({ window: state.mainWindow, x: Math.round(x), y: Math.round(y) });
+    });
 
     // Settings
     ipcMain.handle('settings:get', () => state.settings);

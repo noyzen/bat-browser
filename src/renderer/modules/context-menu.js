@@ -1,6 +1,5 @@
 import { state, isTabInAnyGroup, persistState } from '../renderer.js';
 import * as Feat from './features.js';
-import { showCustomContextMenu } from './custom-context-menu.js';
 
 let fullRenderCallback;
 
@@ -164,6 +163,11 @@ export function initContextMenu(cbs) {
     callbacks = cbs;
     fullRenderCallback = cbs.fullRender;
     
+    // Listen for commands executed from the main process's native context menu
+    window.electronAPI.onContextMenuCommand((action) => {
+        handleContextMenuCommand(action.command, action.context);
+    });
+
     window.addEventListener('contextmenu', (e) => {
         const targetTab = e.target.closest('.tab-item, .all-tabs-list-item');
         const targetGroup = e.target.closest('.group-header, .tab-group, .all-tabs-group-header');
@@ -229,9 +233,7 @@ export function initContextMenu(cbs) {
         }
 
         if (menuTemplate.length > 0) {
-            showCustomContextMenu(e.clientX, e.clientY, menuTemplate, (action) => {
-                handleContextMenuCommand(action.command, action.context);
-            });
+            window.electronAPI.showChromeContextMenu({ template: menuTemplate, x: e.clientX, y: e.clientY });
         }
     });
 }

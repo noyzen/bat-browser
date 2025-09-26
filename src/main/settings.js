@@ -45,14 +45,25 @@ async function applyFontSetting(tab, fontFamily) {
 
     if (fontFamily && fontFamily !== 'default') {
         const css = `
-            /* Apply font to common text elements */
-            body, p, h1, h2, h3, h4, h5, h6, a, li, span, div, td, th, button, input, select, textarea, label {
+            /* Apply the custom font to the body with high specificity */
+            html body {
                 font-family: "${fontFamily}", sans-serif !important;
             }
 
-            /* Revert font for common icon selectors to let the page's CSS apply */
-            i, [class^="fa-"], [class*=" fa-"], [class^="icon-"], [class*=" icon-"], .material-icons {
+            /* Force inheritance for elements that might not get it from body, e.g., form elements. */
+            button, input, select, textarea, code, kbd, pre, samp {
+                font-family: inherit;
+            }
+
+            /* Revert font for elements that are very likely to be icons. */
+            .fa, .fas, .far, .fal, .fab, [class^="fa-"], [class*=" fa-"],
+            .glyphicon, [class^="glyphicon-"],
+            .material-icons, .material-symbols, .material-symbols-outlined,
+            .icon, [class^="icon-"], [class*=" icon-"],
+            [data-icon]::before {
                 font-family: revert !important;
+                font-style: revert !important;
+                font-weight: revert !important;
             }
         `;
         try {
