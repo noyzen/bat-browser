@@ -107,7 +107,7 @@
 .all-tabs-list-item.active { background-color: var(--bg-primary); border-color: var(--border-color); box-shadow: inset 4px 0 0 0 var(--accent-color); }
 .all-tabs-text-wrapper { display: flex; align-items: baseline; overflow: hidden; flex-grow: 1; gap: 8px; min-width: 0; }
 .all-tabs-text-wrapper .tab-title { min-width: 0; }
-.all-tabs-url { color: var(--fg-secondary); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; flex-shrink: 1; }
+.all-tabs-url { color: var(--fg-secondary); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; flex-shrink: 1; min-width: 0; }
 .all-tabs-list-item .tab-close-btn { margin-left: auto; visibility: visible; }
 .all-tabs-list-item.loading .tab-icon .fa-spinner { animation: spin 1s linear infinite; }
 .all-tabs-list-item.hibernated .tab-title { font-style: italic; }
