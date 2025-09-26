@@ -14,6 +14,18 @@ function loadSettings() {
             panelOpen: false,
             panelWidth: 350,
         },
+        hotkeys: {
+            'new-tab': 'Ctrl+T',
+            'close-tab': 'Ctrl+W',
+            'find-in-page': 'Ctrl+F',
+            'quick-search-tabs': 'Ctrl+Shift+F',
+            'zoom-in': 'Ctrl+=',
+            'zoom-out': 'Ctrl+-',
+            'zoom-reset': 'Ctrl+0',
+            'reload': 'Ctrl+R',
+            'go-back': 'Alt+ArrowLeft',
+            'go-forward': 'Alt+ArrowRight',
+        },
     };
 
     try {
@@ -23,6 +35,10 @@ function loadSettings() {
             // Deep merge AI settings
             if (savedSettings.ai) {
                 merged.ai = { ...defaults.ai, ...savedSettings.ai };
+            }
+            // Deep merge hotkeys to ensure new defaults are added for existing users
+            if (savedSettings.hotkeys) {
+                merged.hotkeys = { ...defaults.hotkeys, ...savedSettings.hotkeys };
             }
             return merged;
         }

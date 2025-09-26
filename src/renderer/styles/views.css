@@ -128,3 +128,69 @@
 .all-tabs-group-container.collapsed .all-tabs-group-tabs-wrapper { grid-template-rows: 0fr; padding-top: 0; padding-bottom: 0; }
 .all-tabs-group-tabs { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
 .all-tabs-group-tabs .all-tabs-list-item { border-color: var(--bg-tertiary); }
+
+/* --- Hotkeys Settings --- */
+#hotkey-list {
+    display: flex;
+    flex-direction: column;
+}
+.hotkey-item .setting-label h2 {
+    font-size: 15px;
+    font-weight: 500;
+}
+.hotkey-item .setting-label p {
+    font-size: 12px;
+}
+.hotkey-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.hotkey-display {
+    min-width: 150px;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 0;
+    cursor: pointer;
+    text-align: center;
+    font-family: monospace;
+    font-size: 14px;
+    color: var(--fg-primary);
+    transition: all 0.2s ease;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.hotkey-display:hover {
+    border-color: var(--fg-secondary);
+}
+.hotkey-display:focus, .hotkey-display.recording {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 1px var(--accent-color);
+    color: var(--accent-color);
+}
+.hotkey-display.recording::after {
+    content: '...';
+    animation: blink 1s infinite;
+}
+@keyframes blink {
+    50% { opacity: 0; }
+}
+
+.hotkey-reset-btn {
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
+    color: var(--fg-secondary);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    border-radius: 0;
+    font-size: 14px;
+}
+.hotkey-reset-btn:hover {
+    background-color: var(--bg-hover);
+    color: var(--fg-primary);
+}

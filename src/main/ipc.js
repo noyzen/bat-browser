@@ -193,6 +193,10 @@ function initializeIpc() {
         settingsModule.debouncedSaveSettings();
         tabsModule.updateViewBounds();
     });
+    ipcMain.handle('settings:set-hotkeys', (_, hotkeys) => {
+        state.settings.hotkeys = hotkeys;
+        settingsModule.debouncedSaveSettings();
+    });
 
     // View-specific IPC handlers
     ipcMain.on('view:reload-current', (event) => {

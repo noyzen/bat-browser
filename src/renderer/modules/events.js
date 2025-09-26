@@ -3,6 +3,30 @@ import * as Feat from './features.js';
 import { showAllTabsView, hideAllTabsView } from './views.js';
 
 let getState, updateNavControls, fullRender, persistState;
+let hotkeyToAction = new Map();
+
+export function updateHotkeyMappings(hotkeys) {
+    hotkeyToAction.clear();
+    if (hotkeys) {
+        for (const [action, hotkey] of Object.entries(hotkeys)) {
+            hotkeyToAction.set(hotkey, action);
+        }
+    }
+}
+
+async function refreshMaxButton() {
+    const maximized = await window.electronAPI.isWindowMaximized();
+    document.body.classList.toggle('maximized', maximized);
+    const iconClass = maximized ? 'fa-regular fa-window-restore' : 'fa-regular fa-window-maximize';
+    const title = maximized ? 'Restore' : 'Maximize';
+    
+    DOM.maxIcon.className = iconClass;
+    DOM.maxBtn.title = title;
+    DOM.allTabsMaxIcon.className = iconClass;
+    DOM.allTabsMaxBtn.title = title;
+    DOM.settingsMaxIcon.className = iconClass;
+    DOM.settingsMaxBtn.title = title;
+}
 
 function handleAddressBar(e) {
     if (e.key === 'Enter') {
@@ -22,47 +46,71 @@ function handleAddressBar(e) {
     }
 }
 
-async function refreshMaxButton() {
-    const maximized = await window.electronAPI.isWindowMaximized();
-    document.body.classList.toggle('maximized', maximized);
-    const iconClass = maximized ? 'fa-regular fa-window-restore' : 'fa-regular fa-window-maximize';
-    const title = maximized ? 'Restore' : 'Maximize';
-    
-    DOM.maxIcon.className = iconClass;
-    DOM.maxBtn.title = title;
-    DOM.allTabsMaxIcon.className = iconClass;
-    DOM.allTabsMaxBtn.title = title;
-    DOM.settingsMaxIcon.className = iconClass;
-    DOM.settingsMaxBtn.title = title;
-}
-
 function handleGlobalShortcuts(e) {
+    // Prevent interfering with input fields, especially the hotkey recorder
+    if (e.target.matches('input, textarea') || e.target.classList.contains('recording')) {
+        return;
+    }
+
+    const key = e.key.length === 1 ? e.key.toUpperCase() : e.key;
+    const combo = [
+        e.ctrlKey ? 'Ctrl' : '',
+        e.altKey ? 'Alt' : '',
+        e.shiftKey ? 'Shift' : '',
+        e.metaKey ? 'Meta' : '',
+        // Don't add modifiers themselves as keys
+        ['Control', 'Alt', 'Shift', 'Meta', 'Hyper', 'Super'].includes(key) ? '' : key
+    ].filter(Boolean).join('+');
+
+    const action = hotkeyToAction.get(combo);
+    if (!action) return;
+    
+    e.preventDefault();
+
     const state = getState();
-    if (e.ctrlKey && e.key === 'f') {
-        e.preventDefault();
-        Feat.showFindBar();
-    }
-    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') {
-        e.preventDefault();
-        Feat.showTabSearch();
-    }
-
     const activeTab = state.tabs.get(state.activeTabId);
-    if (!activeTab) return;
 
-    if (e.ctrlKey && (e.key === '=' || e.key === '+')) {
-        e.preventDefault();
-        const newZoom = Math.min((activeTab.zoomFactor || 1.0) + 0.1, 3.0);
-        window.electronAPI.updateTabZoom(activeTab.id, newZoom);
-    }
-    if (e.ctrlKey && e.key === '-') {
-        e.preventDefault();
-        const newZoom = Math.max((activeTab.zoomFactor || 1.0) - 0.1, 0.25);
-        window.electronAPI.updateTabZoom(activeTab.id, newZoom);
-    }
-    if (e.ctrlKey && e.key === '0') {
-        e.preventDefault();
-        window.electronAPI.updateTabZoom(activeTab.id, 1.0);
+    switch (action) {
+        case 'new-tab':
+            window.electronAPI.newTab();
+            break;
+        case 'close-tab':
+            if (state.activeTabId) {
+                Feat.handleCloseTab(state.activeTabId, { getState, persistState, fullRender });
+            }
+            break;
+        case 'find-in-page':
+            Feat.showFindBar();
+            break;
+        case 'quick-search-tabs':
+            Feat.showTabSearch();
+            break;
+        case 'zoom-in':
+            if (activeTab) {
+                const newZoom = Math.min((activeTab.zoomFactor || 1.0) + 0.1, 3.0);
+                window.electronAPI.updateTabZoom(activeTab.id, newZoom);
+            }
+            break;
+        case 'zoom-out':
+            if (activeTab) {
+                const newZoom = Math.max((activeTab.zoomFactor || 1.0) - 0.1, 0.25);
+                window.electronAPI.updateTabZoom(activeTab.id, newZoom);
+            }
+            break;
+        case 'zoom-reset':
+            if (activeTab) {
+                window.electronAPI.updateTabZoom(activeTab.id, 1.0);
+            }
+            break;
+        case 'reload':
+            window.electronAPI.reload();
+            break;
+        case 'go-back':
+            window.electronAPI.goBack();
+            break;
+        case 'go-forward':
+            window.electronAPI.goForward();
+            break;
     }
 }
 
@@ -267,6 +315,13 @@ export function initEvents(callbacks) {
     updateNavControls = callbacks.updateNavControls;
     fullRender = callbacks.fullRender;
     persistState = callbacks.persistState;
+    
+    // Get initial hotkeys and set them up
+    window.electronAPI.getSettings().then(settings => {
+        updateHotkeyMappings(settings.hotkeys);
+    });
+    // Listen for updates from the settings page
+    document.addEventListener('hotkeys-updated', (e) => updateHotkeyMappings(e.detail));
 
     // --- UI Element Listeners ---
     DOM.addTabBtn.addEventListener('click', () => window.electronAPI.newTab());

@@ -77,6 +77,35 @@ const apiKeyNameInput = document.getElementById('api-key-name-input');
 const apiKeyInput = document.getElementById('api-key-input');
 const getApiKeyBtn = document.getElementById('get-api-key-btn');
 
+const hotkeyContainer = document.getElementById('hotkey-list');
+let currentRecordingElement = null;
+
+const HOTKEY_COMMANDS = {
+    'new-tab': { title: 'New Tab', description: 'Open a new browser tab.' },
+    'close-tab': { title: 'Close Tab', description: 'Close the current active tab.' },
+    'find-in-page': { title: 'Find in Page', description: 'Show the find bar for the current page.' },
+    'quick-search-tabs': { title: 'Quick Search Tabs', description: 'Open the quick tab search overlay.' },
+    'zoom-in': { title: 'Zoom In', description: 'Increase the zoom level of the page.' },
+    'zoom-out': { title: 'Zoom Out', description: 'Decrease the zoom level of the page.' },
+    'zoom-reset': { title: 'Reset Zoom', description: 'Reset the zoom level to 100%.' },
+    'reload': { title: 'Reload', description: 'Reload the current page.' },
+    'go-back': { title: 'Go Back', description: 'Navigate to the previous page in history.' },
+    'go-forward': { title: 'Go Forward', description: 'Navigate to the next page in history.' },
+};
+
+const DEFAULT_HOTKEYS = {
+    'new-tab': 'Ctrl+T',
+    'close-tab': 'Ctrl+W',
+    'find-in-page': 'Ctrl+F',
+    'quick-search-tabs': 'Ctrl+Shift+F',
+    'zoom-in': 'Ctrl+=',
+    'zoom-out': 'Ctrl+-',
+    'zoom-reset': 'Ctrl+0',
+    'reload': 'Ctrl+R',
+    'go-back': 'Alt+ArrowLeft',
+    'go-forward': 'Alt+ArrowRight',
+};
+
 async function populateSettings() {
     currentSettings = await window.electronAPI.getSettings();
 
@@ -126,6 +155,8 @@ async function populateSettings() {
 
     // AI
     populateAISettings();
+    // Hotkeys
+    populateHotkeys();
 }
 
 function populateAISettings() {
@@ -200,6 +231,32 @@ function renderAPIKeyList() {
     });
 }
 
+function populateHotkeys() {
+    const hotkeys = currentSettings.hotkeys || {};
+    hotkeyContainer.innerHTML = '';
+
+    Object.entries(HOTKEY_COMMANDS).forEach(([command, { title, description }]) => {
+        const hotkey = hotkeys[command] || 'Not Set';
+
+        const item = document.createElement('div');
+        item.className = 'setting-item hotkey-item';
+        item.dataset.command = command;
+        item.dataset.keywords = `${title.toLowerCase()} ${command.replace(/-/g, ' ')}`;
+
+        item.innerHTML = `
+            <div class="setting-label">
+                <h2>${title}</h2>
+                <p>${description}</p>
+            </div>
+            <div class="setting-control hotkey-control">
+                <div class="hotkey-display" tabindex="0" role="button" aria-label="Current shortcut is ${hotkey}. Press to record a new shortcut">${hotkey}</div>
+                <button class="hotkey-reset-btn" title="Reset to default"><i class="fa-solid fa-rotate-left"></i></button>
+            </div>
+        `;
+        hotkeyContainer.appendChild(item);
+    });
+}
+
 function handleSettingsSearch(e) {
     const query = e.target.value.toLowerCase().trim();
 
@@ -255,6 +312,104 @@ async function hideSettingsView() {
     document.body.classList.remove('settings-open');
     await window.electronAPI.showActiveView();
 }
+
+function handleHotkeyRecordStart(e) {
+    const target = e.target.closest('.hotkey-display');
+    if (!target) return;
+
+    if (currentRecordingElement) {
+        currentRecordingElement.classList.remove('recording');
+        currentRecordingElement.textContent = currentRecordingElement.dataset.originalValue;
+    }
+    
+    currentRecordingElement = target;
+    target.dataset.originalValue = target.textContent;
+    target.textContent = 'Recording';
+    target.classList.add('recording');
+
+    window.addEventListener('keydown', handleHotkeyRecordEvent, { once: true, capture: true });
+    window.addEventListener('mousedown', cancelRecording, { once: true, capture: true });
+}
+
+function cancelRecording(e) {
+    if (currentRecordingElement && e.target !== currentRecordingElement) {
+        currentRecordingElement.classList.remove('recording');
+        currentRecordingElement.textContent = currentRecordingElement.dataset.originalValue;
+        currentRecordingElement = null;
+        window.removeEventListener('keydown', handleHotkeyRecordEvent, { once: true, capture: true });
+    }
+}
+
+async function handleHotkeyRecordEvent(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!currentRecordingElement) return;
+
+    window.removeEventListener('mousedown', cancelRecording, { once: true, capture: true });
+
+    let combo = [];
+    if (e.ctrlKey) combo.push('Ctrl');
+    if (e.altKey) combo.push('Alt');
+    if (e.shiftKey) combo.push('Shift');
+    if (e.metaKey) combo.push('Meta');
+
+    const key = e.key;
+    if (['Control', 'Alt', 'Shift', 'Meta', 'Hyper', 'Super'].includes(key)) {
+        currentRecordingElement.textContent = currentRecordingElement.dataset.originalValue;
+        currentRecordingElement.classList.remove('recording');
+        currentRecordingElement = null;
+        return;
+    }
+    
+    const formattedKey = key.length === 1 ? key.toUpperCase() : key;
+    combo.push(formattedKey);
+
+    const newHotkey = combo.join('+');
+    currentRecordingElement.textContent = newHotkey;
+    currentRecordingElement.classList.remove('recording');
+
+    const command = currentRecordingElement.closest('.hotkey-item').dataset.command;
+    
+    for (const [cmd, hk] of Object.entries(currentSettings.hotkeys)) {
+        if (hk === newHotkey && cmd !== command) {
+            alert(`Shortcut "${newHotkey}" is already assigned to "${HOTKEY_COMMANDS[cmd]?.title || cmd}".`);
+            currentRecordingElement.textContent = currentRecordingElement.dataset.originalValue; // Revert
+            currentRecordingElement = null;
+            return;
+        }
+    }
+
+    currentSettings.hotkeys[command] = newHotkey;
+    await window.electronAPI.settingsSetHotkeys(currentSettings.hotkeys);
+    document.dispatchEvent(new CustomEvent('hotkeys-updated', { detail: currentSettings.hotkeys }));
+
+    currentRecordingElement = null;
+}
+
+async function handleHotkeyReset(e) {
+    const target = e.target.closest('.hotkey-reset-btn');
+    if (!target) return;
+    
+    const item = target.closest('.hotkey-item');
+    const command = item.dataset.command;
+    const defaultHotkey = DEFAULT_HOTKEYS[command];
+
+    if (defaultHotkey) {
+        for (const [cmd, hk] of Object.entries(currentSettings.hotkeys)) {
+            if (hk === defaultHotkey && cmd !== command) {
+                 alert(`Default shortcut "${defaultHotkey}" is currently assigned to "${HOTKEY_COMMANDS[cmd]?.title || cmd}". Please change that shortcut first before resetting this one.`);
+                 return;
+            }
+        }
+
+        currentSettings.hotkeys[command] = defaultHotkey;
+        item.querySelector('.hotkey-display').textContent = defaultHotkey;
+        await window.electronAPI.settingsSetHotkeys(currentSettings.hotkeys);
+        document.dispatchEvent(new CustomEvent('hotkeys-updated', { detail: currentSettings.hotkeys }));
+    }
+}
+
 
 export function initViews({ fullRender }) {
     fullRenderCallback = fullRender;
@@ -313,6 +468,12 @@ export function initViews({ fullRender }) {
         apiKeyNameInput.value = '';
         apiKeyInput.value = '';
         renderAPIKeyList();
+    });
+    
+    // -- Hotkeys
+    hotkeyContainer.addEventListener('click', (e) => {
+      handleHotkeyRecordStart(e);
+      handleHotkeyReset(e);
     });
 
     // -- Sidebar navigation

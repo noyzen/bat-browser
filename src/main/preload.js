@@ -52,6 +52,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setDefaultFont: (fontFamily) => ipcRenderer.invoke('settings:set-default-font', fontFamily),
   settingsSetSearchEngine: (engine) => ipcRenderer.invoke('settings:set-search-engine', engine),
   settingsSetAI: (settings) => ipcRenderer.invoke('settings:set-ai', settings),
+  settingsSetHotkeys: (hotkeys) => ipcRenderer.invoke('settings:set-hotkeys', hotkeys),
 
   // AI Assistant
   aiChatStream: (payload) => ipcRenderer.send('ai:chat-stream', payload),
