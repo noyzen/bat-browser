@@ -74,20 +74,25 @@ async function applyFontSetting(tab, fontFamily) {
 
     // Only inject new CSS if a custom font is selected.
     if (fontFamily && fontFamily !== 'default') {
-        // This CSS is injected into web pages to apply the user's selected default font.
         const css = `
-            /* Use a selector with higher specificity (0,0,2) to override typical website
-               body font declarations, establishing the user's choice as the default. */
-            html body {
-                font-family: "${fontFamily}", sans-serif;
-            }
-            /* Ensure common form elements and editable content inherit the new default font from the body.
-               User-agent stylesheets often give these elements a specific font-family,
-               which this rule overrides to allow inheritance. More specific website styles
-               (e.g., for buttons with icons) will still apply correctly. */
+            /*
+              Forcefully override the font for all common text-containing elements.
+              Using a long list of selectors with '!important' ensures that the user's
+              font choice overrides website-defined fonts for general content.
+              This approach is powerful enough to work on complex pages like Google's.
+            */
+            html, body, div, p, span, a, li, td, th, h1, h2, h3, h4, h5, h6,
             input, textarea, select, button, [role="button"], [contenteditable="true"] {
-                font-family: inherit;
+                font-family: "${fontFamily}", sans-serif !important;
             }
+
+            /*
+              Specialized fonts, like icon fonts, are typically applied with more
+              specific class-based selectors (e.g., '.fa', '.material-icons').
+              When those selectors also use '!important', their higher specificity
+              (class vs. element) allows them to win against this general override,
+              thus preserving icons and other special typography.
+            */
         `;
         try {
             const newKey = await webContents.insertCSS(css);
