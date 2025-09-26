@@ -123,7 +123,7 @@ async function populateSettings() {
     qualitySlider.value = settings.screenshotQuality || 90;
     qualityValue.textContent = settings.screenshotQuality || 90;
 
-    qualitySettingItem.style.display = (settings.screenshotFormat === 'jpeg') ? 'flex' : 'none';
+    qualitySettingItem.style.display = (settings.screenshotFormat === 'jpeg' || settings.screenshotFormat === 'webp') ? 'flex' : 'none';
 }
 
 function handleSettingsSearch(e) {
@@ -213,7 +213,7 @@ export function initViews({ fullRender }) {
         radio.addEventListener('change', (e) => {
             const format = e.target.value;
             window.electronAPI.settingsSetScreenshotOption({ key: 'screenshotFormat', value: format });
-            document.getElementById('quality-setting-item').style.display = (format === 'jpeg') ? 'flex' : 'none';
+            document.getElementById('quality-setting-item').style.display = (format === 'jpeg' || format === 'webp') ? 'flex' : 'none';
         });
     });
 

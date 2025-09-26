@@ -155,34 +155,46 @@ function initializeIpc() {
             return { success: false, message: 'Tab is not available for capture.' };
         }
 
+        const webContents = tab.view.webContents;
+        const shouldAttach = !webContents.debugger.isAttached();
+
         try {
-            const webContents = tab.view.webContents;
-            const size = await webContents.executeJavaScript('({width: document.body.scrollWidth, height: document.body.scrollHeight})');
-            const image = await webContents.capturePage({ x: 0, y: 0, width: size.width, height: size.height });
-            
-            const format = state.settings.screenshotFormat || 'png';
+            if (shouldAttach) {
+                await webContents.debugger.attach('1.3');
+            }
+    
+            let format = state.settings.screenshotFormat || 'png';
+            if (!['jpeg', 'png', 'webp'].includes(format)) {
+                format = 'png'; // Default to a safe value
+            }
             const quality = state.settings.screenshotQuality || 90;
+    
+            const screenshotResult = await webContents.debugger.sendCommand('Page.captureScreenshot', {
+                format: format,
+                quality: (format === 'jpeg' || format === 'webp') ? quality : undefined,
+                captureBeyondViewport: true,
+                fromSurface: true,
+            });
             
             const { canceled, filePath } = await dialog.showSaveDialog(state.mainWindow, {
                 title: 'Save Screenshot',
                 defaultPath: `screenshot-${Date.now()}.${format}`,
                 filters: [{ name: 'Images', extensions: [format] }]
             });
-
+    
             if (!canceled && filePath) {
-                let buffer;
-                if (format === 'jpeg') {
-                    buffer = image.toJPEG(quality);
-                } else {
-                    buffer = image.toPNG();
-                }
+                const buffer = Buffer.from(screenshotResult.data, 'base64');
                 fs.writeFileSync(filePath, buffer);
                 return { success: true };
             }
             return { success: false, message: 'Save dialog was canceled.' };
         } catch (error) {
-            console.error('Failed to capture screenshot:', error);
-            return { success: false, message: error.message };
+            console.error('Failed to capture screenshot via CDP:', error);
+            return { success: false, message: `Failed to capture page. ${error.message}` };
+        } finally {
+            if (shouldAttach && webContents.debugger.isAttached()) {
+                await webContents.debugger.detach();
+            }
         }
     });
 
