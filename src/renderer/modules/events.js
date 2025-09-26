@@ -146,7 +146,23 @@ function initTabOverflow() {
 export function scrollToTab(tabId) {
     const tabElement = DOM.tabsContainer.querySelector(`[data-id="${tabId}"]`);
     if (!tabElement) return;
-    tabElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+
+    const container = DOM.tabsContainerWrapper;
+    const containerWidth = container.offsetWidth;
+    const tabOffsetLeft = tabElement.offsetLeft;
+    const tabWidth = tabElement.offsetWidth;
+
+    // Calculate the desired scroll position to center the tab
+    let desiredScrollLeft = tabOffsetLeft + (tabWidth / 2) - (containerWidth / 2);
+
+    // Clamp the scroll position to be within the valid range
+    const maxScrollLeft = container.scrollWidth - containerWidth;
+    const finalScrollLeft = Math.max(0, Math.min(desiredScrollLeft, maxScrollLeft));
+
+    container.scrollTo({
+        left: finalScrollLeft,
+        behavior: 'smooth'
+    });
 }
 
 
