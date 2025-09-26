@@ -1133,6 +1133,7 @@ window.addEventListener('contextmenu', (e) => {
     if (targetTab) {
         const tabId = targetTab.dataset.id;
         const parentGroup = Array.from(groups.values()).find(g => g.tabs.includes(tabId));
+        const otherTabsCount = tabs.size - 1;
         
         menuTemplate = [
             { label: 'New Tab', action: { command: 'new-tab' } },
@@ -1157,7 +1158,12 @@ window.addEventListener('contextmenu', (e) => {
                 action: { command: 'remove-from-group', context: { tabId } }
             },
             { type: 'separator' },
-            { label: 'Close Tab', action: { command: 'close-tab', context: { tabId } } }
+            { label: 'Close Tab', action: { command: 'close-tab', context: { tabId } } },
+            { 
+                label: 'Close Other Tabs', 
+                action: { command: 'close-other-tabs', context: { tabId } },
+                enabled: otherTabsCount > 0 
+            }
         ];
     } else if (targetGroup) {
         const groupId = targetGroup.dataset.groupId || targetGroup.dataset.id;
@@ -1292,6 +1298,20 @@ window.electronAPI.onContextMenuCommand(async (command, context) => {
                 if (!confirmed) return;
             }
             [...group.tabs].forEach(tabId => handleCloseTab(tabId));
+            break;
+        }
+        case 'close-other-tabs': {
+            const { tabId } = context;
+            const otherTabs = Array.from(tabs.keys()).filter(id => id !== tabId);
+            if (otherTabs.length > 0) {
+                const confirmed = await showConfirmationDialog(
+                    'Close Other Tabs?',
+                    `Are you sure you want to close all ${otherTabs.length} other tabs?`
+                );
+                if (confirmed) {
+                    otherTabs.forEach(idToClose => handleCloseTab(idToClose));
+                }
+            }
             break;
         }
     }
