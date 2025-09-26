@@ -355,8 +355,11 @@ async function switchTab(id) {
 
   const newTab = tabs.get(id);
   if (newTab) {
-    // FIX: A tab might not have a view if it's the active tab being restored from a session,
-    // or if it's hibernated. This condition handles both cases.
+    // Switch active tab ID and notify renderer immediately for instant UI feedback.
+    activeTabId = id;
+    mainWindow.webContents.send('tab:switched', id);
+
+    // If the tab is hibernated or doesn't have a view (e.g. from session restore), create it.
     if (newTab.isHibernated || !newTab.view) {
         console.log(`Waking up tab ${id}`);
         const partition = `persist:${id}`;
@@ -374,7 +377,9 @@ async function switchTab(id) {
         newTab.session = tabSession;
         attachViewListenersToTab(newTab);
         
-        await view.webContents.loadURL(newTab.url);
+        // Start loading the URL asynchronously. Do NOT await this call.
+        // The page will load in the background after the tab switch is visible.
+        view.webContents.loadURL(newTab.url);
         newTab.isHibernated = false;
         
         if (!mainWindow || mainWindow.isDestroyed()) return;
@@ -383,11 +388,10 @@ async function switchTab(id) {
     
     newTab.lastActive = Date.now();
     
+    // Attach the view, update its size, and focus it.
     if (!mainWindow || mainWindow.isDestroyed()) return;
     mainWindow.addBrowserView(newTab.view);
-    activeTabId = id;
     updateViewBounds();
-    mainWindow.webContents.send('tab:switched', id);
     newTab.view.webContents.focus();
     debouncedSaveSession();
   }
