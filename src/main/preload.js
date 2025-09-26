@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   switchTab: (id) => ipcRenderer.invoke('tab:switch', id),
   toggleTabShared: (id) => ipcRenderer.invoke('tab:toggle-shared', id),
   clearCacheAndReload: (id) => ipcRenderer.invoke('tab:clear-cache-and-reload', id),
+  screenshotTab: (id) => ipcRenderer.invoke('tab:screenshot', id),
   
   // View Controls
   hideActiveView: () => ipcRenderer.invoke('view:hide'),
@@ -43,6 +44,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Settings
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setDefaultFont: (fontFamily) => ipcRenderer.invoke('settings:set-default-font', fontFamily),
+  settingsSetSearchEngine: (engine) => ipcRenderer.invoke('settings:set-search-engine', engine),
+  settingsSetScreenshotOption: (option) => ipcRenderer.invoke('settings:set-screenshot-option', option),
 
   // Context Menu
   showContextMenu: (menuTemplate) => ipcRenderer.invoke('show-context-menu', menuTemplate),

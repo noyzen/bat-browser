@@ -38,6 +38,13 @@ async function handleContextMenuCommand(command, context) {
         case 'clear-cache-reload':
             window.electronAPI.clearCacheAndReload(tabId);
             break;
+        case 'screenshot-tab':
+            window.electronAPI.screenshotTab(tabId).then(result => {
+                if (!result.success && result.message) {
+                    console.error('Screenshot failed:', result.message);
+                }
+            });
+            break;
         case 'zoom-in': {
             if (!tab) break;
             const newFactor = Math.min((tab.zoomFactor || 1.0) + 0.1, 3.0);
@@ -192,6 +199,7 @@ export function initContextMenu(cbs) {
                 },
                 { type: 'separator' },
                 { label: 'Clear Cache and Reload', action: { command: 'clear-cache-reload', context: { tabId } } },
+                { label: 'Screenshot', action: { command: 'screenshot-tab', context: { tabId } } },
                 { type: 'separator' },
                 { label: 'Share data with other shared tabs', type: 'checkbox', checked: tab.isShared, action: { command: 'toggle-shared', context: { tabId } } },
                 { type: 'separator' },

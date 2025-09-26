@@ -6,21 +6,9 @@ let getState, updateNavControls, fullRender, persistState;
 
 function handleAddressBar(e) {
     if (e.key === 'Enter') {
-        let url = DOM.addressBar.value.trim();
-        if (!url) return;
-
-        if (e.ctrlKey) {
-            url = `https://www.${url}.com`;
-        } else {
-            if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url)) {
-                if (url.includes('.') && !url.includes(' ')) {
-                    url = 'http://' + url;
-                } else {
-                    url = `https://www.google.com/search?q=${encodeURIComponent(url)}`;
-                }
-            }
-        }
-        window.electronAPI.loadURL(url);
+        const query = DOM.addressBar.value.trim();
+        if (!query) return;
+        window.electronAPI.loadURL(query);
         DOM.addressBar.blur();
     }
 }

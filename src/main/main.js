@@ -90,7 +90,7 @@ function createWindow() {
             canGoBack: false, canGoForward: false,
             isLoading: !isHibernated, isLoaded: false,
             isHibernated,
-            lastActive: Date.now() - (isHibernated ? constants.HIBERNATION_THRESHOLD : 0),
+            lastActive: Date.now(),
             cssKeys: new Map(),
           });
         });
@@ -109,8 +109,6 @@ function createWindow() {
       await tabsModule.switchTab(newTab.id);
     }
   });
-
-  tabsModule.startHibernationTimer();
 }
 
 app.whenReady().then(() => {

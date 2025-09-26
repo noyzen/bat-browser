@@ -5,7 +5,7 @@ const state = require('./state');
 const sessionModule = require('./session');
 const settingsModule = require('./settings');
 const { getSerializableTabData, getRandomColor } = require('./utils');
-const { BROWSER_VIEW_WEBCONTENTS_CONFIG, CHROME_HEIGHT, HIBERNATION_THRESHOLD, HIBERNATION_CHECK_INTERVAL, SHARED_SESSION_PARTITION } = require('./constants');
+const { BROWSER_VIEW_WEBCONTENTS_CONFIG, CHROME_HEIGHT, SHARED_SESSION_PARTITION } = require('./constants');
 
 function updateViewBounds() {
     const tab = state.getActiveTab();
@@ -216,34 +216,6 @@ function createTab(url = 'about:blank', options = {}) {
     return tabData;
 }
 
-function hibernateTab(tab) {
-    if (!tab || !tab.view || tab.id === state.activeTabId || tab.isHibernated) return;
-    console.log(`Hibernating tab ${tab.id} (${tab.title})`);
-    
-    const currentURL = tab.view.webContents.getURL();
-    if (currentURL && !currentURL.startsWith('file://')) {
-      tab.url = currentURL;
-    }
-    
-    tab.view.webContents.destroy();
-    tab.view = null;
-    tab.isHibernated = true;
-    
-    state.mainWindow.webContents.send('tab:updated', { id: tab.id, isHibernated: true, url: tab.url });
-    sessionModule.debouncedSaveSession();
-}
-
-function startHibernationTimer() {
-    setInterval(() => {
-        const now = Date.now();
-        state.tabs.forEach(tab => {
-            if (tab.id !== state.activeTabId && !tab.isHibernated && (now - tab.lastActive > HIBERNATION_THRESHOLD)) {
-                hibernateTab(tab);
-            }
-        });
-    }, HIBERNATION_CHECK_INTERVAL);
-}
-
 async function switchTab(id) {
     const oldTab = state.getActiveTab();
     if (oldTab && oldTab.view) {
@@ -387,8 +359,6 @@ module.exports = {
     updateViewBounds,
     openUrlInNewTab,
     createTab,
-    hibernateTab,
-    startHibernationTimer,
     switchTab,
     closeTab,
     toggleTabSharedState,

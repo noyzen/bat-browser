@@ -3,6 +3,7 @@ import { state, isTabInAnyGroup } from '../renderer.js';
 import { renderTab, renderGroup } from './render.js';
 
 let fullRenderCallback;
+let settingsSearchInput;
 
 // --- All Tabs View ---
 export function showAllTabsView() {
@@ -66,51 +67,113 @@ export function renderAllTabsView() {
 
 // --- Settings View ---
 let fontsLoaded = false;
-async function populateAppearanceSettings() {
+async function populateSettings() {
     const settings = await window.electronAPI.getSettings();
 
+    // Appearance
     if (fontsLoaded) {
         DOM.fontSelect.value = settings.defaultFont || 'default';
-        return;
+    } else {
+        try {
+            if (!window.queryLocalFonts) {
+                DOM.fontLoadingIndicator.innerHTML = "Font detection not supported.";
+                return;
+            }
+    
+            const availableFonts = await window.queryLocalFonts();
+            const fontFamilies = new Set(availableFonts.map(f => f.family));
+    
+            DOM.fontSelect.innerHTML = '<option value="default">Browser Default</option>';
+            [...fontFamilies].sort((a, b) => a.localeCompare(b)).forEach(family => {
+                const option = document.createElement('option');
+                option.value = family;
+                option.textContent = family;
+                option.style.fontFamily = `"${family}"`;
+                DOM.fontSelect.appendChild(option);
+            });
+    
+            DOM.fontSelect.value = settings.defaultFont || 'default';
+    
+            fontsLoaded = true;
+            DOM.fontLoadingIndicator.style.display = 'none';
+            DOM.fontSelect.style.display = 'block';
+    
+        } catch (err) {
+            console.error("Error getting system fonts:", err);
+            DOM.fontLoadingIndicator.innerHTML = "Could not load system fonts.";
+        }
     }
 
-    try {
-        if (!window.queryLocalFonts) {
-            DOM.fontLoadingIndicator.innerHTML = "Font detection not supported.";
-            return;
+    // Search
+    const searchSelect = document.getElementById('search-engine-select');
+    searchSelect.innerHTML = `
+        <option value="google">Google</option>
+        <option value="duckduckgo">DuckDuckGo</option>
+        <option value="bing">Bing</option>
+        <option value="startpage">Startpage</option>
+    `;
+    searchSelect.value = settings.searchEngine || 'google';
+
+    // Captures
+    const qualitySettingItem = document.getElementById('quality-setting-item');
+    const qualitySlider = document.getElementById('ss-quality-slider');
+    const qualityValue = document.getElementById('ss-quality-value');
+    
+    document.querySelector(`input[name="ss-format"][value="${settings.screenshotFormat || 'png'}"]`).checked = true;
+    qualitySlider.value = settings.screenshotQuality || 90;
+    qualityValue.textContent = settings.screenshotQuality || 90;
+
+    qualitySettingItem.style.display = (settings.screenshotFormat === 'jpeg') ? 'flex' : 'none';
+}
+
+function handleSettingsSearch(e) {
+    const query = e.target.value.toLowerCase().trim();
+
+    document.querySelectorAll('#settings-main .settings-section').forEach(section => {
+        const sectionKeywords = section.dataset.keywords || '';
+        let sectionHasVisibleItem = false;
+
+        section.querySelectorAll('.setting-item').forEach(item => {
+            const itemKeywords = item.dataset.keywords || '';
+            const matches = query === '' || sectionKeywords.includes(query) || itemKeywords.includes(query);
+            item.classList.toggle('hidden-by-search', !matches);
+            if (matches) {
+                sectionHasVisibleItem = true;
+            }
+        });
+        
+        const sectionMatches = query === '' || sectionKeywords.includes(query) || sectionHasVisibleItem;
+        const navItem = document.querySelector(`#settings-sidebar a[href="#${section.id}"]`);
+        
+        if (navItem) {
+            navItem.parentElement.style.display = sectionMatches ? '' : 'none';
         }
 
-        const availableFonts = await window.queryLocalFonts();
-        const fontFamilies = new Set(availableFonts.map(f => f.family));
+        if (!sectionMatches) {
+            section.style.display = 'none';
+        } else if (document.querySelector('#settings-sidebar li.active a').getAttribute('href') === `#${section.id}`) {
+             section.style.display = 'block';
+        } else {
+             section.style.display = 'none';
+        }
+    });
 
-        DOM.fontSelect.innerHTML = '<option value="default">Browser Default</option>';
-        [...fontFamilies].sort((a, b) => a.localeCompare(b)).forEach(family => {
-            const option = document.createElement('option');
-            option.value = family;
-            option.textContent = family;
-            option.style.fontFamily = `"${family}"`;
-            DOM.fontSelect.appendChild(option);
-        });
-
-        DOM.fontSelect.value = settings.defaultFont || 'default';
-
-        fontsLoaded = true;
-        DOM.fontLoadingIndicator.style.display = 'none';
-        DOM.fontSelect.style.display = 'block';
-
-    } catch (err) {
-        console.error("Error getting system fonts:", err);
-        DOM.fontLoadingIndicator.innerHTML = "Could not load system fonts.";
+    // If a search is active and the current active tab is hidden, activate the first visible one
+    if (query && document.querySelector('#settings-sidebar li.active').style.display === 'none') {
+        const firstVisibleLink = document.querySelector('#settings-sidebar li:not([style*="display: none"]) a');
+        if (firstVisibleLink) {
+            firstVisibleLink.click();
+        }
     }
 }
 
+
 async function showSettingsView() {
     await window.electronAPI.hideActiveView();
-    populateAppearanceSettings();
+    populateSettings();
     DOM.settingsView.classList.remove('hidden');
     DOM.appChrome.classList.add('hidden');
-    // refreshMaxButton needs to be called from events module
-    document.dispatchEvent(new Event('DOMContentLoaded'));
+    document.dispatchEvent(new Event('DOMContentLoaded')); // Refresh max button
 }
 
 async function hideSettingsView() {
@@ -121,6 +184,7 @@ async function hideSettingsView() {
 
 export function initViews({ fullRender }) {
     fullRenderCallback = fullRender;
+    settingsSearchInput = document.getElementById('settings-search-input');
     
     // All Tabs View listeners
     DOM.backToBrowserBtn.addEventListener('click', hideAllTabsView);
@@ -132,10 +196,37 @@ export function initViews({ fullRender }) {
     // Settings View listeners
     DOM.settingsBtn.addEventListener('click', showSettingsView);
     DOM.settingsBackBtn.addEventListener('click', hideSettingsView);
+    settingsSearchInput.addEventListener('input', handleSettingsSearch);
+
+    // -- Appearance
     DOM.fontSelect.addEventListener('change', () => {
         window.electronAPI.setDefaultFont(DOM.fontSelect.value);
     });
 
+    // -- Search
+    document.getElementById('search-engine-select').addEventListener('change', (e) => {
+        window.electronAPI.settingsSetSearchEngine(e.target.value);
+    });
+
+    // -- Captures
+    document.querySelectorAll('input[name="ss-format"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            const format = e.target.value;
+            window.electronAPI.settingsSetScreenshotOption({ key: 'screenshotFormat', value: format });
+            document.getElementById('quality-setting-item').style.display = (format === 'jpeg') ? 'flex' : 'none';
+        });
+    });
+
+    const qualitySlider = document.getElementById('ss-quality-slider');
+    const qualityValue = document.getElementById('ss-quality-value');
+    qualitySlider.addEventListener('input', () => {
+        qualityValue.textContent = qualitySlider.value;
+    });
+    qualitySlider.addEventListener('change', () => { // only send on release
+        window.electronAPI.settingsSetScreenshotOption({ key: 'screenshotQuality', value: parseInt(qualitySlider.value, 10) });
+    });
+
+    // -- Sidebar navigation
     document.querySelectorAll('#settings-sidebar a').forEach(link => {
       link.addEventListener('click', e => {
           e.preventDefault();

@@ -11,8 +11,12 @@ module.exports = {
         '#64b5f6', '#4fc3f7', '#4dd0e1', '#4db6ac', '#81c784',
         '#aed581', '#dce775', '#fff176', '#ffd54f', '#ffb74d', '#ff8a65'
     ],
-    HIBERNATION_THRESHOLD: 5 * 60 * 1000, // 5 minutes
-    HIBERNATION_CHECK_INTERVAL: 30 * 1000, // 30 seconds
+    SEARCH_ENGINES: {
+        google: 'https://www.google.com/search?q=',
+        duckduckgo: 'https://duckduckgo.com/?q=',
+        bing: 'https://www.bing.com/search?q=',
+        startpage: 'https://www.startpage.com/sp/search?q=',
+    },
 
     BROWSER_VIEW_WEBCONTENTS_CONFIG: {
         nodeIntegration: false,

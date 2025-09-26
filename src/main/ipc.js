@@ -1,4 +1,5 @@
-const { ipcMain, Menu, clipboard } = require('electron');
+const { ipcMain, Menu, clipboard, dialog } = require('electron');
+const fs = require('fs');
 const path = require('path');
 const state = require('./state');
 const tabsModule = require('./tabs');
@@ -6,6 +7,7 @@ const settingsModule = require('./settings');
 const sessionModule = require('./session');
 const utils = require('./utils');
 const { getSerializableTabData } = require('./utils');
+const { SEARCH_ENGINES } = require('./constants');
 
 function initializeIpc() {
     // Window Controls
@@ -66,8 +68,28 @@ function initializeIpc() {
         return Array.from(state.tabs.values()).map(getSerializableTabData);
     });
 
+    // URL Loading Helper
+    function loadQueryOrURL(webContents, query) {
+        if (!webContents || webContents.isDestroyed()) return;
+
+        let url = query.trim();
+        if (!url) return;
+
+        const isUrl = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url) || (url.includes('.') && !url.includes(' '));
+        
+        if (isUrl) {
+            if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url)) {
+                url = 'http://' + url;
+            }
+        } else {
+            const searchEngineUrl = SEARCH_ENGINES[state.settings.searchEngine] || SEARCH_ENGINES.google;
+            url = searchEngineUrl + encodeURIComponent(url);
+        }
+        webContents.loadURL(url);
+    }
+
     // Navigation
-    ipcMain.handle('tab:loadURL', (_, url) => state.getActiveTab()?.view.webContents.loadURL(url));
+    ipcMain.handle('tab:loadURL', (_, query) => loadQueryOrURL(state.getActiveTab()?.view.webContents, query));
     ipcMain.handle('tab:goBack', () => state.getActiveTab()?.view.webContents.goBack());
     ipcMain.handle('tab:goForward', () => state.getActiveTab()?.view.webContents.goForward());
     ipcMain.handle('tab:reload', () => {
@@ -113,6 +135,56 @@ function initializeIpc() {
         }
         return true;
     });
+    ipcMain.handle('settings:set-search-engine', (_, engine) => {
+        if (SEARCH_ENGINES[engine]) {
+            state.settings.searchEngine = engine;
+            settingsModule.debouncedSaveSettings();
+        }
+    });
+    ipcMain.handle('settings:set-screenshot-option', (_, { key, value }) => {
+        if (['screenshotFormat', 'screenshotQuality'].includes(key)) {
+            state.settings[key] = value;
+            settingsModule.debouncedSaveSettings();
+        }
+    });
+
+    // Screenshot
+    ipcMain.handle('tab:screenshot', async (_, tabId) => {
+        const tab = state.tabs.get(tabId);
+        if (!tab || !tab.view || tab.view.webContents.isDestroyed()) {
+            return { success: false, message: 'Tab is not available for capture.' };
+        }
+
+        try {
+            const webContents = tab.view.webContents;
+            const size = await webContents.executeJavaScript('({width: document.body.scrollWidth, height: document.body.scrollHeight})');
+            const image = await webContents.capturePage({ x: 0, y: 0, width: size.width, height: size.height });
+            
+            const format = state.settings.screenshotFormat || 'png';
+            const quality = state.settings.screenshotQuality || 90;
+            
+            const { canceled, filePath } = await dialog.showSaveDialog(state.mainWindow, {
+                title: 'Save Screenshot',
+                defaultPath: `screenshot-${Date.now()}.${format}`,
+                filters: [{ name: 'Images', extensions: [format] }]
+            });
+
+            if (!canceled && filePath) {
+                let buffer;
+                if (format === 'jpeg') {
+                    buffer = image.toJPEG(quality);
+                } else {
+                    buffer = image.toPNG();
+                }
+                fs.writeFileSync(filePath, buffer);
+                return { success: true };
+            }
+            return { success: false, message: 'Save dialog was canceled.' };
+        } catch (error) {
+            console.error('Failed to capture screenshot:', error);
+            return { success: false, message: error.message };
+        }
+    });
 
     // View-specific IPC handlers
     ipcMain.on('view:reload-current', (event) => {
@@ -126,10 +198,10 @@ function initializeIpc() {
         }
     });
 
-    ipcMain.on('view:loadURL', (event, url) => {
+    ipcMain.on('view:loadURL', (event, query) => {
         const tab = utils.findTabByWebContents(event.sender);
         if (tab && tab.view) {
-            tab.view.webContents.loadURL(url);
+            loadQueryOrURL(tab.view.webContents, query);
         }
     });
 

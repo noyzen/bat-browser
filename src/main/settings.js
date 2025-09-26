@@ -4,15 +4,22 @@ const { SETTINGS_PATH } = require('./constants');
 const { debounce } = require('./utils');
 
 function loadSettings() {
+    const defaults = {
+        defaultFont: null,
+        searchEngine: 'google',
+        screenshotFormat: 'png',
+        screenshotQuality: 90,
+    };
+
     try {
         if (fs.existsSync(SETTINGS_PATH)) {
-            const settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
-            return settings || {};
+            const savedSettings = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
+            return { ...defaults, ...savedSettings };
         }
     } catch (e) {
         console.error('Failed to load settings:', e);
     }
-    return {};
+    return defaults;
 }
 
 const debouncedSaveSettings = debounce(() => {

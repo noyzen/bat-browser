@@ -9,25 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     urlInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
-            let url = urlInput.value.trim();
-            if (!url) return;
+            const query = urlInput.value.trim();
+            if (!query) return;
 
-            if (e.ctrlKey) {
-                // Ctrl+Enter for www.<input>.com
-                url = `https://www.${url}.com`;
-            } else {
-                // Simple URL detection logic, same as in renderer.js
-                if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url)) {
-                    if (url.includes('.') && !url.includes(' ')) {
-                        url = 'http://' + url;
-                    } else {
-                        url = `https://www.google.com/search?q=${encodeURIComponent(url)}`;
-                    }
-                }
-            }
-            
             if (window.viewAPI && window.viewAPI.loadURL) {
-                window.viewAPI.loadURL(url);
+                window.viewAPI.loadURL(query);
             } else {
                 console.error('View API not available to load URL.');
             }
