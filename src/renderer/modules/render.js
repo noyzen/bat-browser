@@ -7,6 +7,24 @@ export function setUpdateTabScrollButtonsCallback(cb) {
     updateTabScrollButtonsCallback = cb;
 }
 
+function formatUrlForDisplay(url) {
+    if (!url || url.startsWith('about:') || url.startsWith('file:')) {
+        return url;
+    }
+    try {
+        const urlObj = new URL(url);
+        let result = urlObj.hostname.replace(/^www\./, '');
+        // Append path, search, and hash, but only if they are not the root path "/" alone
+        if (urlObj.pathname !== '/' || urlObj.search || urlObj.hash) {
+            result += urlObj.pathname + urlObj.search + urlObj.hash;
+        }
+        return result;
+    } catch (e) {
+        // Fallback for search terms or things that aren't full URLs
+        return url.replace(/^https?:\/\/(www\.)?/, '');
+    }
+}
+
 function createTabElement(id) {
     const tabData = state.tabs.get(id);
     if (!tabData) return null;
@@ -313,7 +331,10 @@ export function renderGroup(id, context = 'main', visibleTabIds = null) {
 
 export function updateNavControls(tab) {
     if (!tab) return;
-    DOM.addressBar.value = (tab.isLoaded && tab.url !== 'about:blank' && !tab.isHibernated) ? tab.url : '';
+    const isFocused = document.activeElement === DOM.addressBar;
+    const urlToDisplay = (tab.isLoaded && tab.url !== 'about:blank' && !tab.isHibernated) ? tab.url : '';
+    
+    DOM.addressBar.value = isFocused ? urlToDisplay : formatUrlForDisplay(urlToDisplay);
     DOM.backBtn.disabled = !tab.canGoBack;
     DOM.forwardBtn.disabled = !tab.canGoForward;
     DOM.reloadIcon.classList.toggle('fa-xmark', tab.isLoading);

@@ -352,9 +352,25 @@ export function initEvents(callbacks) {
     window.electronAPI.onMaximizeChanged(refreshMaxButton);
     document.addEventListener('DOMContentLoaded', refreshMaxButton);
 
-    // --- Address Bar Expansion ---
-    DOM.addressBar.addEventListener('focus', () => DOM.titlebar.classList.add('address-bar-expanded'));
-    DOM.addressBar.addEventListener('blur', () => DOM.titlebar.classList.remove('address-bar-expanded'));
+    // --- Address Bar Expansion & URL Formatting ---
+    DOM.addressBar.addEventListener('focus', () => {
+        DOM.titlebar.classList.add('address-bar-expanded');
+        const state = getState();
+        const tab = state.tabs.get(state.activeTabId);
+        if (tab && tab.url && tab.url !== 'about:blank') {
+            DOM.addressBar.value = tab.url;
+            // Defer select to ensure value is updated in the DOM before selection
+            setTimeout(() => DOM.addressBar.select(), 0);
+        }
+    });
+    DOM.addressBar.addEventListener('blur', () => {
+        DOM.titlebar.classList.remove('address-bar-expanded');
+        const state = getState();
+        const tab = state.tabs.get(state.activeTabId);
+        if (updateNavControls) {
+            updateNavControls(tab); // Re-run formatting logic on blur
+        }
+    });
 
     // --- Global Shortcuts ---
     window.addEventListener('keydown', handleGlobalShortcuts);
