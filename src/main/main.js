@@ -386,6 +386,12 @@ function createWindow() {
     if (tabs.size > 0) saveSession();
   });
 
+  mainWindow.on('closed', () => {
+    // Nullify the window object when it's closed to help with garbage collection
+    // and prevent potential issues with stale references.
+    mainWindow = null;
+  });
+
   mainWindow.webContents.on('did-finish-load', async () => {
     const savedSession = loadSession();
     if (savedSession && savedSession.tabs.length > 0) {
