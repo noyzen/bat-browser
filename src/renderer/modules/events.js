@@ -4,6 +4,7 @@ import { showAllTabsView, hideAllTabsView } from './views.js';
 
 let getState, updateNavControls, fullRender, persistState;
 let hotkeyToAction = new Map();
+let wasAddressBarClicked = false;
 
 export function updateHotkeyMappings(hotkeys) {
     hotkeyToAction.clear();
@@ -355,6 +356,14 @@ export function initEvents(callbacks) {
     document.addEventListener('DOMContentLoaded', refreshMaxButton);
 
     // --- Address Bar Expansion & URL Formatting ---
+    DOM.addressBar.addEventListener('mousedown', () => {
+        // Flag that the focus event is triggered by a click,
+        // so we can select the text. But only if it's not already focused.
+        if (document.activeElement !== DOM.addressBar) {
+            wasAddressBarClicked = true;
+        }
+    });
+
     DOM.addressBar.addEventListener('focus', () => {
         DOM.titlebar.classList.add('address-bar-expanded');
         const state = getState();
@@ -362,8 +371,11 @@ export function initEvents(callbacks) {
         if (tab && tab.url && tab.url !== 'about:blank') {
             DOM.addressBar.value = tab.url; // Show full URL on focus
         }
-        // Defer select to ensure value is updated in the DOM before selection
-        setTimeout(() => DOM.addressBar.select(), 0);
+
+        if (wasAddressBarClicked) {
+            setTimeout(() => DOM.addressBar.select(), 0);
+            wasAddressBarClicked = false; // Reset flag after use
+        }
     });
 
     DOM.addressBar.addEventListener('blur', () => {
@@ -374,6 +386,8 @@ export function initEvents(callbacks) {
         if (updateNavControls) {
             updateNavControls(tab);
         }
+        // Also reset flag on blur in case mousedown happened without focus
+        wasAddressBarClicked = false;
     });
 
     // --- Global Shortcuts ---
