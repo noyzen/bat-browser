@@ -318,8 +318,10 @@ function handleHotkeyRecordStart(e) {
     if (!target) return;
 
     if (currentRecordingElement) {
+        // If another recording was active, cancel it first.
         currentRecordingElement.classList.remove('recording');
         currentRecordingElement.textContent = currentRecordingElement.dataset.originalValue;
+        window.removeEventListener('keydown', handleHotkeyRecordEvent, { capture: true });
     }
     
     currentRecordingElement = target;
@@ -327,7 +329,9 @@ function handleHotkeyRecordStart(e) {
     target.textContent = 'Recording';
     target.classList.add('recording');
 
-    window.addEventListener('keydown', handleHotkeyRecordEvent, { once: true, capture: true });
+    // Listen for key presses.
+    window.addEventListener('keydown', handleHotkeyRecordEvent, { capture: true });
+    // Listen for a click away to cancel.
     window.addEventListener('mousedown', cancelRecording, { once: true, capture: true });
 }
 
@@ -336,7 +340,8 @@ function cancelRecording(e) {
         currentRecordingElement.classList.remove('recording');
         currentRecordingElement.textContent = currentRecordingElement.dataset.originalValue;
         currentRecordingElement = null;
-        window.removeEventListener('keydown', handleHotkeyRecordEvent, { once: true, capture: true });
+        // Clean up the keydown listener if we cancel.
+        window.removeEventListener('keydown', handleHotkeyRecordEvent, { capture: true });
     }
 }
 
@@ -346,40 +351,46 @@ async function handleHotkeyRecordEvent(e) {
 
     if (!currentRecordingElement) return;
 
-    window.removeEventListener('mousedown', cancelRecording, { once: true, capture: true });
+    const key = e.key;
 
+    // Ignore presses of modifier keys on their own. Wait for a "real" key.
+    if (['Control', 'Alt', 'Shift', 'Meta', 'Hyper', 'Super'].includes(key)) {
+        return; // Keep listening for the next key event.
+    }
+    
+    // A non-modifier key was pressed, so the combo is complete.
+    // Clean up all temporary listeners immediately.
+    window.removeEventListener('keydown', handleHotkeyRecordEvent, { capture: true });
+    window.removeEventListener('mousedown', cancelRecording, { once: true, capture: true });
+    
     let combo = [];
     if (e.ctrlKey) combo.push('Ctrl');
     if (e.altKey) combo.push('Alt');
     if (e.shiftKey) combo.push('Shift');
     if (e.metaKey) combo.push('Meta');
-
-    const key = e.key;
-    if (['Control', 'Alt', 'Shift', 'Meta', 'Hyper', 'Super'].includes(key)) {
-        currentRecordingElement.textContent = currentRecordingElement.dataset.originalValue;
-        currentRecordingElement.classList.remove('recording');
-        currentRecordingElement = null;
-        return;
-    }
     
     const formattedKey = key.length === 1 ? key.toUpperCase() : key;
     combo.push(formattedKey);
-
     const newHotkey = combo.join('+');
-    currentRecordingElement.textContent = newHotkey;
-    currentRecordingElement.classList.remove('recording');
-
-    const command = currentRecordingElement.closest('.hotkey-item').dataset.command;
     
+    const command = currentRecordingElement.closest('.hotkey-item').dataset.command;
+
+    // Check for duplicates before committing the change.
     for (const [cmd, hk] of Object.entries(currentSettings.hotkeys)) {
         if (hk === newHotkey && cmd !== command) {
             alert(`Shortcut "${newHotkey}" is already assigned to "${HOTKEY_COMMANDS[cmd]?.title || cmd}".`);
-            currentRecordingElement.textContent = currentRecordingElement.dataset.originalValue; // Revert
+            // Revert UI and abort.
+            currentRecordingElement.textContent = currentRecordingElement.dataset.originalValue;
+            currentRecordingElement.classList.remove('recording');
             currentRecordingElement = null;
             return;
         }
     }
-
+    
+    // Success. Update UI, save settings, and notify the app.
+    currentRecordingElement.textContent = newHotkey;
+    currentRecordingElement.classList.remove('recording');
+    
     currentSettings.hotkeys[command] = newHotkey;
     await window.electronAPI.settingsSetHotkeys(currentSettings.hotkeys);
     document.dispatchEvent(new CustomEvent('hotkeys-updated', { detail: currentSettings.hotkeys }));
