@@ -113,10 +113,6 @@ function initializeIpc() {
         }
         return true;
     });
-    ipcMain.handle('settings:set-global-zoom', (_, factor) => {
-        state.settings.globalZoomFactor = factor;
-        settingsModule.debouncedSaveSettings();
-    });
 
     // View-specific IPC handlers
     ipcMain.on('view:reload-current', (event) => {

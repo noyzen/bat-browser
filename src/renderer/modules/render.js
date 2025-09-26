@@ -47,12 +47,16 @@ function updateTabElement(tabEl, tabData) {
 
     const iconEl = tabEl.querySelector('.tab-icon');
     let newIconHTML = '';
+    // A loading tab should always show the spinner.
     if (tabData.isLoading) {
         newIconHTML = '<i class="fa-solid fa-spinner"></i>';
-    } else if (tabData.isShared) {
-        newIconHTML = '<i class="fa-solid fa-users" title="This tab shares data with other shared tabs"></i>';
-    } else if (tabData.isHibernated) {
-        newIconHTML = '<i class="fa-solid fa-power-off"></i>';
+    } else {
+        // If not loading, show a persistent state icon (shared) or another transient one (hibernated).
+        if (tabData.isShared) {
+            newIconHTML = '<i class="fa-solid fa-users" title="This tab shares data with other shared tabs"></i>';
+        } else if (tabData.isHibernated) {
+            newIconHTML = '<i class="fa-solid fa-power-off"></i>';
+        }
     }
 
     if (iconEl.innerHTML !== newIconHTML) {
@@ -196,11 +200,13 @@ export function renderTab(id, context = 'main') {
         let iconHTML = '';
         if (tab.isLoading) {
             iconHTML = '<i class="fa-solid fa-spinner"></i>';
-        } else if (tab.isShared) {
-            iconHTML = '<i class="fa-solid fa-users" title="This tab shares data with other shared tabs"></i>';
-        } else if (tab.isHibernated) {
-            tabEl.classList.add('hibernated');
-            iconHTML = '<i class="fa-solid fa-power-off"></i>';
+        } else {
+            if (tab.isShared) {
+                iconHTML = '<i class="fa-solid fa-users" title="This tab shares data with other shared tabs"></i>';
+            } else if (tab.isHibernated) {
+                tabEl.classList.add('hibernated');
+                iconHTML = '<i class="fa-solid fa-power-off"></i>';
+            }
         }
         iconEl.innerHTML = iconHTML;
 

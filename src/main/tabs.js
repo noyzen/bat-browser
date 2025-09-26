@@ -189,7 +189,7 @@ function createTab(url = 'about:blank', options = {}) {
       id, view, session: tabSession, url, title: 'New Tab', canGoBack: false,
       canGoForward: false, isLoading: true, isLoaded: false, isHibernated: false,
       isShared: !!options.isShared,
-      zoomFactor: options.zoomFactor || state.settings.globalZoomFactor || 1.0,
+      zoomFactor: options.zoomFactor || 1.0,
       lastActive: Date.now(),
       color: fromTabId ? (state.tabs.get(fromTabId)?.color || getRandomColor()) : getRandomColor(),
       cssKeys: new Map(),

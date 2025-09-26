@@ -68,7 +68,6 @@ export function renderAllTabsView() {
 let fontsLoaded = false;
 async function populateAppearanceSettings() {
     const settings = await window.electronAPI.getSettings();
-    DOM.zoomSelect.value = settings.globalZoomFactor || '1';
 
     if (fontsLoaded) {
         DOM.fontSelect.value = settings.defaultFont || 'default';
@@ -135,9 +134,6 @@ export function initViews({ fullRender }) {
     DOM.settingsBackBtn.addEventListener('click', hideSettingsView);
     DOM.fontSelect.addEventListener('change', () => {
         window.electronAPI.setDefaultFont(DOM.fontSelect.value);
-    });
-    DOM.zoomSelect.addEventListener('change', () => {
-        window.electronAPI.setGlobalZoom(parseFloat(DOM.zoomSelect.value));
     });
 
     document.querySelectorAll('#settings-sidebar a').forEach(link => {

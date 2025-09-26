@@ -80,7 +80,7 @@ function createWindow() {
       });
 
       const createAllTabs = async () => {
-        const globalZoom = state.settings.globalZoomFactor || 1.0;
+        const globalZoom = 1.0;
         savedSession.tabs.forEach(t => {
           const isHibernated = t.id !== savedSession.activeTabId;
           state.tabs.set(t.id, {
