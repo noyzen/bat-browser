@@ -225,7 +225,7 @@ function attachViewListenersToTab(tabData) {
     });
   });
 
-  view.webContents.on('did-navigate', (_, newUrl) => {
+  view.webContents.on('did-navigate', async (_, newUrl) => {
     if (newUrl.startsWith('file://') && newUrl.includes('error.html')) {
       tabData.canGoBack = view.webContents.canGoBack();
       tabData.canGoForward = view.webContents.canGoForward();
@@ -237,6 +237,11 @@ function attachViewListenersToTab(tabData) {
     tabData.canGoBack = view.webContents.canGoBack();
     tabData.canGoForward = view.webContents.canGoForward();
     mainWindow.webContents.send('tab:updated', { id, url: newUrl, canGoBack: tabData.canGoBack, canGoForward: tabData.canGoForward });
+    
+    // Re-apply font on every navigation to ensure it persists.
+    // applyFontSetting handles removing the old style before adding the new one.
+    await applyFontSetting(tabData, settings.defaultFont);
+
     debouncedSaveSession();
   });
   
@@ -279,10 +284,6 @@ async function createTab(url = 'about:blank', options = {}) {
   tabs.set(id, tabData);
 
   attachViewListenersToTab(tabData);
-  
-  if (settings.defaultFont) {
-    applyFontSetting(tabData, settings.defaultFont);
-  }
 
   await view.webContents.loadURL(url);
   return tabData;
@@ -431,10 +432,6 @@ async function switchTab(id) {
         newTab.view = view;
         newTab.session = tabSession;
         attachViewListenersToTab(newTab);
-        
-        if (settings.defaultFont) {
-          applyFontSetting(newTab, settings.defaultFont);
-        }
 
         // Start loading the URL asynchronously. Do NOT await this call.
         // The page will load in the background after the tab switch is visible.

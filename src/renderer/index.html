@@ -81,21 +81,30 @@
       </div>
     </div>
     <div id="settings-content-container">
-        <div id="settings-content">
-            <h1>Settings</h1>
-            <div class="settings-section">
-                <h2>Appearance</h2>
-                <div class="setting-item">
-                    <label for="font-select">Default Page Font</label>
-                    <div class="setting-control">
-                        <select id="font-select" style="display: none;"></select>
-                        <span id="font-loading-indicator">
-                            <i class="fa-solid fa-spinner fa-spin"></i> Loading system fonts...
-                        </span>
-                    </div>
+      <div id="settings-layout">
+        <nav id="settings-sidebar">
+          <ul>
+            <li class="active"><a href="#appearance"><i class="fa-solid fa-palette"></i> Appearance</a></li>
+            <!-- Future sections can be added here -->
+          </ul>
+        </nav>
+        <main id="settings-main">
+          <div id="settings-content">
+            <section id="appearance" class="settings-section">
+              <h1>Appearance</h1>
+              <div class="setting-item">
+                <label for="font-select">Default Page Font</label>
+                <div class="setting-control">
+                  <select id="font-select" style="display: none;"></select>
+                  <span id="font-loading-indicator">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Loading system fonts...
+                  </span>
                 </div>
-            </div>
-        </div>
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
     </div>
   </div>
 
