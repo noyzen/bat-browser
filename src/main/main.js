@@ -4,6 +4,7 @@ const fs = require('fs');
 const WindowState = require('electron-window-state');
 
 const state = require('./state');
+const constants = require('./constants');
 const { initializeIpc } = require('./ipc');
 const sessionModule = require('./session');
 const settingsModule = require('./settings');
@@ -87,7 +88,7 @@ function createWindow() {
             canGoBack: false, canGoForward: false,
             isLoading: !isHibernated, isLoaded: false,
             isHibernated,
-            lastActive: Date.now() - (isHibernated ? state.constants.HIBERNATION_THRESHOLD : 0),
+            lastActive: Date.now() - (isHibernated ? constants.HIBERNATION_THRESHOLD : 0),
             cssKeys: new Map(),
           });
         });
