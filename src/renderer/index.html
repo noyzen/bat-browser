@@ -58,7 +58,14 @@
           <h3><i class="fa-solid fa-robot"></i> AI Assistant</h3>
           <button id="ai-panel-close-btn" title="Close Assistant" aria-label="Close Assistant"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div id="ai-panel-messages"></div>
+      <div id="ai-chat-container">
+        <div id="ai-welcome-screen">
+          <div class="ai-welcome-icon"><i class="fa-solid fa-hand-sparkles"></i></div>
+          <h2>Welcome to Bat AI</h2>
+          <p>I can help you analyze the content of this webpage.</p>
+        </div>
+        <div id="ai-panel-messages"></div>
+      </div>
       <div class="ai-panel-starters">
           <button data-prompt="Summarize this page.">Summarize Page</button>
           <button data-prompt="How good is the SEO on this page?">Analyze SEO</button>
@@ -154,8 +161,8 @@
               <div id="ai-settings-content" class="hidden">
                   <div class="setting-item column" data-keywords="api key management gemini">
                       <div class="setting-label">
-                          <h2>Gemini API Keys</h2>
-                          <p>Manage your Google Gemini API keys. One key must be active to use the AI Assistant.</p>
+                          <h2>Manage Gemini API Keys</h2>
+                          <p>Add your Google Gemini API keys below. One key must be active to use the AI Assistant.</p>
                       </div>
                       <div class="setting-control full-width">
                           <div id="api-key-list"></div>
@@ -164,11 +171,11 @@
                   <div class="setting-item column" data-keywords="add new api key gemini">
                        <div class="setting-label">
                           <h2>Add New API Key</h2>
-                          <p>You can get a free API key from Google AI Studio.</p>
+                          <p>You can get a free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" id="get-api-key-link">Google AI Studio</a>.</p>
                       </div>
                       <div class="setting-control full-width">
                           <div class="add-key-form">
-                              <input type="text" id="api-key-name-input" placeholder="Key Name (e.g., 'My Personal Key')">
+                              <input type="text" id="api-key-name-input" placeholder="Key Name (e.g., 'Personal Key')">
                               <input type="password" id="api-key-input" placeholder="Paste your Gemini API Key here">
                               <button id="add-api-key-btn"><i class="fa-solid fa-plus"></i> Add Key</button>
                           </div>

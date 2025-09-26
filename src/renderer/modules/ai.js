@@ -3,6 +3,8 @@
 const panel = document.getElementById('ai-panel');
 const resizeHandle = document.getElementById('ai-panel-resize-handle');
 const closeBtn = document.getElementById('ai-panel-close-btn');
+const chatContainer = document.getElementById('ai-chat-container');
+const welcomeScreen = document.getElementById('ai-welcome-screen');
 const messagesContainer = document.getElementById('ai-panel-messages');
 const input = document.getElementById('ai-panel-input');
 const sendBtn = document.getElementById('ai-panel-send-btn');
@@ -13,6 +15,18 @@ let currentAIMessageElement = null;
 let isAwaitingResponse = false;
 
 function appendMessage(text, sender) {
+    // Hide welcome screen if it's visible
+    if (!welcomeScreen.classList.contains('hidden')) {
+        welcomeScreen.classList.add('hidden');
+    }
+
+    const messageWrapper = document.createElement('div');
+    messageWrapper.classList.add('ai-message-wrapper', `ai-message-wrapper-${sender}`);
+
+    const avatar = document.createElement('div');
+    avatar.classList.add('ai-avatar');
+    avatar.innerHTML = sender === 'user' ? '<i class="fa-solid fa-user"></i>' : '<i class="fa-solid fa-robot"></i>';
+
     const messageEl = document.createElement('div');
     messageEl.classList.add('ai-message', `ai-message-${sender}`);
     
@@ -28,9 +42,11 @@ function appendMessage(text, sender) {
         .replace(/\n/g, '<br>');
 
     messageEl.innerHTML = formattedText;
-    messagesContainer.appendChild(messageEl);
+    
+    messageWrapper.append(avatar, messageEl);
+    messagesContainer.appendChild(messageWrapper);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    return messageEl;
+    return messageEl; // Return the content element for streaming
 }
 
 export async function showAIPanel(tabId) {
@@ -38,8 +54,12 @@ export async function showAIPanel(tabId) {
     const panelWidth = settings?.ai?.panelWidth || 350;
 
     currentTabId = tabId;
-    messagesContainer.innerHTML = '<p class="ai-welcome-message">Ask me anything about this page!</p>';
+    welcomeScreen.classList.remove('hidden');
+    messagesContainer.innerHTML = '';
+    
     panel.style.width = `${panelWidth}px`;
+    document.documentElement.style.setProperty('--ai-panel-width', `${panelWidth}px`);
+
     panel.classList.remove('hidden');
     resizeHandle.classList.remove('hidden');
     input.focus();
@@ -64,11 +84,20 @@ async function handleSendMessage() {
     sendBtn.disabled = true;
     isAwaitingResponse = true;
 
-    // Create the spinner element directly to avoid sanitizing the HTML
+    // Create the assistant's message structure for streaming
+    const messageWrapper = document.createElement('div');
+    messageWrapper.classList.add('ai-message-wrapper', 'ai-message-wrapper-assistant');
+
+    const avatar = document.createElement('div');
+    avatar.classList.add('ai-avatar');
+    avatar.innerHTML = '<i class="fa-solid fa-robot"></i>';
+
     currentAIMessageElement = document.createElement('div');
     currentAIMessageElement.classList.add('ai-message', 'ai-message-assistant');
     currentAIMessageElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-    messagesContainer.appendChild(currentAIMessageElement);
+
+    messageWrapper.append(avatar, currentAIMessageElement);
+    messagesContainer.appendChild(messageWrapper);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
     window.electronAPI.aiChatStream({ tabId: currentTabId, prompt });
@@ -77,6 +106,7 @@ async function handleSendMessage() {
 function handleStreamChunk(chunk) {
     if (!currentAIMessageElement) return;
 
+    // Replace spinner with first text chunk
     if (currentAIMessageElement.innerHTML.includes('fa-spinner')) {
         currentAIMessageElement.innerHTML = '';
     }
@@ -152,7 +182,7 @@ export function initAI() {
     // --- Panel Resizing Logic ---
     const throttledUpdate = throttle((width) => {
         window.electronAPI.settingsSetAI({ panelWidth: width });
-    }, 50); // Update main process ~20fps for smooth BrowserView resize
+    }, 16); // ~60fps for smoother BrowserView resize
 
     resizeHandle.addEventListener('mousedown', (e) => {
         e.preventDefault();
@@ -165,6 +195,7 @@ export function initAI() {
             const newWidth = startWidth - (moveEvent.clientX - startX);
             const clampedWidth = Math.max(250, Math.min(newWidth, 600));
             panel.style.width = `${clampedWidth}px`;
+            document.documentElement.style.setProperty('--ai-panel-width', `${clampedWidth}px`);
             throttledUpdate(clampedWidth);
         };
 
