@@ -349,12 +349,15 @@ function createWindow() {
 async function switchTab(id) {
   const oldTab = getActiveTab();
   if (oldTab && oldTab.view) {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
     mainWindow.removeBrowserView(oldTab.view);
   }
 
   const newTab = tabs.get(id);
   if (newTab) {
-    if (newTab.isHibernated) {
+    // FIX: A tab might not have a view if it's the active tab being restored from a session,
+    // or if it's hibernated. This condition handles both cases.
+    if (newTab.isHibernated || !newTab.view) {
         console.log(`Waking up tab ${id}`);
         const partition = `persist:${id}`;
         const tabSession = session.fromPartition(partition);
@@ -373,10 +376,14 @@ async function switchTab(id) {
         
         await view.webContents.loadURL(newTab.url);
         newTab.isHibernated = false;
+        
+        if (!mainWindow || mainWindow.isDestroyed()) return;
         mainWindow.webContents.send('tab:updated', { id: newTab.id, isHibernated: false, isLoading: true });
     }
     
     newTab.lastActive = Date.now();
+    
+    if (!mainWindow || mainWindow.isDestroyed()) return;
     mainWindow.addBrowserView(newTab.view);
     activeTabId = id;
     updateViewBounds();
