@@ -46,15 +46,16 @@ async function applyFontSetting(tab, fontFamily) {
 
     // Only inject new CSS if a custom font is selected.
     if (fontFamily && fontFamily !== 'default') {
-        // This CSS applies the selected font to all elements using the universal selector (*).
-        // This selector has the lowest possible specificity (0,0,0), meaning any other
-        // font-family rule from the website (e.g., on `body`, `p`, or a class like `.icon`)
-        // will have higher specificity and override this rule.
-        // This correctly sets a new "default" font for any text not explicitly styled by the site,
-        // without breaking site-specific typography or icon fonts.
+        // Use CSS Cascade Layers to inject a low-priority default font.
+        // 1. Author origin styles (like this one) override User-Agent (browser default) styles.
+        // 2. Un-layered author styles (from the website) override layered styles, regardless of specificity.
+        // This ensures our font acts as a new default but never breaks a website's custom typography.
+        // We target body and common form elements that don't always inherit fonts.
         const css = `
-            * {
-                font-family: "${fontFamily}", sans-serif;
+            @layer batBrowserDefaults {
+                body, input, textarea, select, button {
+                    font-family: "${fontFamily}", sans-serif;
+                }
             }
         `;
         try {
