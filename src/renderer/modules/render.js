@@ -308,12 +308,24 @@ export function renderGroup(id, context = 'main', visibleTabIds = null) {
         titleEl.className = 'group-title';
         titleEl.textContent = group.name;
 
-        if (group.tabs.includes(state.activeTabId)) headerEl.classList.add('active-child');
+        const hasActiveChild = group.tabs.includes(state.activeTabId);
+        if (hasActiveChild) {
+            headerEl.classList.add('active-child');
+        }
+        
         const tabCountEl = document.createElement('span');
         tabCountEl.className = 'group-tab-count';
         tabCountEl.textContent = `${group.tabs.length} tabs`;
         
-        headerEl.append(toggleIcon, titleEl, tabCountEl);
+        headerEl.append(toggleIcon, titleEl);
+
+        if (group.collapsed && hasActiveChild) {
+            const activeIndicatorIcon = document.createElement('i');
+            activeIndicatorIcon.className = 'fa-solid fa-circle active-in-group-indicator';
+            headerEl.appendChild(activeIndicatorIcon);
+        }
+
+        headerEl.appendChild(tabCountEl);
         groupContainer.appendChild(headerEl);
         
         const tabsWrapperWrapper = document.createElement('div');
