@@ -1,6 +1,7 @@
 // --- AI Assistant Module ---
 
 const panel = document.getElementById('ai-panel');
+const resizeHandle = document.getElementById('ai-panel-resize-handle');
 const closeBtn = document.getElementById('ai-panel-close-btn');
 const messagesContainer = document.getElementById('ai-panel-messages');
 const input = document.getElementById('ai-panel-input');
@@ -32,16 +33,22 @@ function appendMessage(text, sender) {
     return messageEl;
 }
 
-export function showAIPanel(tabId) {
+export async function showAIPanel(tabId) {
+    const settings = await window.electronAPI.getSettings();
+    const panelWidth = settings?.ai?.panelWidth || 350;
+
     currentTabId = tabId;
     messagesContainer.innerHTML = '<p class="ai-welcome-message">Ask me anything about this page!</p>';
+    panel.style.width = `${panelWidth}px`;
     panel.classList.remove('hidden');
+    resizeHandle.classList.remove('hidden');
     input.focus();
     window.electronAPI.settingsSetAI({ panelOpen: true });
 }
 
 export function hideAIPanel() {
     panel.classList.add('hidden');
+    resizeHandle.classList.add('hidden');
     currentTabId = null;
     window.electronAPI.settingsSetAI({ panelOpen: false });
 }
@@ -57,7 +64,12 @@ async function handleSendMessage() {
     sendBtn.disabled = true;
     isAwaitingResponse = true;
 
-    currentAIMessageElement = appendMessage('<i class="fa-solid fa-spinner fa-spin"></i>', 'assistant');
+    // Create the spinner element directly to avoid sanitizing the HTML
+    currentAIMessageElement = document.createElement('div');
+    currentAIMessageElement.classList.add('ai-message', 'ai-message-assistant');
+    currentAIMessageElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    messagesContainer.appendChild(currentAIMessageElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
     window.electronAPI.aiChatStream({ tabId: currentTabId, prompt });
 }
@@ -100,6 +112,19 @@ function handleStreamChunk(chunk) {
     }
 }
 
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    }
+}
+
 export function initAI() {
     closeBtn.addEventListener('click', hideAIPanel);
     sendBtn.addEventListener('click', handleSendMessage);
@@ -122,6 +147,37 @@ export function initAI() {
             input.value = prompt;
             handleSendMessage();
         }
+    });
+
+    // --- Panel Resizing Logic ---
+    const throttledUpdate = throttle((width) => {
+        window.electronAPI.settingsSetAI({ panelWidth: width });
+    }, 50); // Update main process ~20fps for smooth BrowserView resize
+
+    resizeHandle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        document.body.classList.add('resizing');
+
+        const startX = e.clientX;
+        const startWidth = panel.offsetWidth;
+
+        const doDrag = (moveEvent) => {
+            const newWidth = startWidth - (moveEvent.clientX - startX);
+            const clampedWidth = Math.max(250, Math.min(newWidth, 600));
+            panel.style.width = `${clampedWidth}px`;
+            throttledUpdate(clampedWidth);
+        };
+
+        const stopDrag = () => {
+            document.body.classList.remove('resizing');
+            window.removeEventListener('mousemove', doDrag);
+            window.removeEventListener('mouseup', stopDrag);
+            // Final save of the width
+            window.electronAPI.settingsSetAI({ panelWidth: panel.offsetWidth, panelOpen: true });
+        };
+
+        window.addEventListener('mousemove', doDrag);
+        window.addEventListener('mouseup', stopDrag);
     });
 
     window.electronAPI.onAIChatStreamChunk(handleStreamChunk);

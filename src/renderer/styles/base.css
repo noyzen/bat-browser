@@ -47,6 +47,12 @@ body.settings-open #app-container, body.settings-open #find-bar {
     flex-grow: 1;
     min-width: 0;
 }
+
+body.resizing, body.resizing * {
+    cursor: col-resize !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
   
 /* --- Custom Scrollbar --- */
 ::-webkit-scrollbar {

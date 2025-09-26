@@ -1,4 +1,18 @@
 /* --- AI Assistant Panel --- */
+#ai-panel-resize-handle {
+    width: 4px;
+    background-color: transparent;
+    cursor: col-resize;
+    flex-shrink: 0;
+    transition: background-color 0.2s ease;
+}
+#ai-panel-resize-handle.hidden {
+    display: none;
+}
+#ai-panel-resize-handle:hover {
+    background-color: var(--accent-color);
+}
+
 #ai-panel {
     width: 350px;
     flex-shrink: 0;
@@ -10,7 +24,7 @@
     transition: width 200ms ease-in-out;
 }
 #ai-panel.hidden {
-    width: 0;
+    width: 0 !important; /* Use important to override inline style from resize */
     border-left: none;
 }
 .ai-panel-header {
@@ -89,11 +103,10 @@
     padding: 8px 16px;
     display: flex;
     gap: 8px;
-    overflow-x: auto;
+    flex-wrap: wrap;
     flex-shrink: 0;
 }
 .ai-panel-starters button {
-    flex-shrink: 0;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     color: var(--fg-secondary);
