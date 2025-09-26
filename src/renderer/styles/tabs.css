@@ -82,12 +82,30 @@
     cursor: pointer; gap: 5px; padding: 0 8px; 
     background-color: var(--bg-tab-bar); 
     max-width: 200px; min-width: 50px; border-radius: 0;
+    position: relative;
 }
 .tab-item:hover { background-color: var(--bg-hover); }
 
 #tabs-container .tab-item.active { 
     background-color: var(--bg-primary);
     z-index: 2; 
+}
+
+.tab-item::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 8px;
+    right: 8px;
+    height: var(--active-tab-indicator-height);
+    background-color: var(--tab-color);
+    transform: scaleX(0);
+    transition: transform 150ms ease-in-out;
+    border-radius: 1px;
+}
+
+#tabs-container .tab-item.active::after {
+    transform: scaleX(1);
 }
 
 .tab-icon { width: 16px; height: 16px; display: grid; place-items: center; flex-shrink: 0; }
