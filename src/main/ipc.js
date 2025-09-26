@@ -183,12 +183,14 @@ function initializeIpc() {
                     await webContents.debugger.sendCommand('Input.synthesizeScrollGesture', {
                         x: width / 2, y: viewHeight / 2, yDistance: -viewHeight, speed: 800, gestureSourceType: 'mouse',
                     });
-                    await new Promise(resolve => setTimeout(resolve, 750));
+                    // Increased wait time for lazy-loaded content
+                    await new Promise(resolve => setTimeout(resolve, 1500));
                 }
+                // Slower scroll back to top and longer wait
                 await webContents.debugger.sendCommand('Input.synthesizeScrollGesture', {
-                    x: width / 2, y: viewHeight / 2, yDistance: contentSize.height, speed: 1200,
+                    x: width / 2, y: viewHeight / 2, yDistance: contentSize.height, speed: 800,
                 });
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise(resolve => setTimeout(resolve, 1500));
             }
     
             let format = state.settings.screenshotFormat || 'png';

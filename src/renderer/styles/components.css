@@ -102,6 +102,15 @@
 }
 
 /* --- Screenshot Overlay --- */
+@keyframes screenshot-bg-pan {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+@keyframes screenshot-progress-shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
 #screenshot-overlay {
     position: fixed;
     inset: 0;
@@ -109,7 +118,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.7);
+    background: linear-gradient(270deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.7));
+    background-size: 200% 200%;
+    animation: screenshot-bg-pan 10s ease infinite;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     opacity: 0;
@@ -130,7 +141,7 @@
 }
 .screenshot-loader i {
     font-size: 48px;
-    --fa-animation-duration: 2s;
+    --fa-animation-duration: 1.5s;
 }
 .screenshot-loader-text h2 {
     margin: 0 0 8px 0;
@@ -141,4 +152,23 @@
     margin: 0;
     font-size: 14px;
     color: var(--fg-secondary);
+}
+.screenshot-progress-bar {
+    width: 200px;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+    margin-top: 12px;
+}
+.screenshot-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    animation: screenshot-progress-shimmer 1.5s infinite linear;
 }
