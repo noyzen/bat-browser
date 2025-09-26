@@ -82,10 +82,17 @@ export function initIpc(callbacks) {
         DOM.findMatches.textContent = `${activeMatchOrdinal}/${matches}`;
     });
 
-    window.electronAPI.onScreenshotStart(() => {
+    window.electronAPI.onScreenshotStart(({ tabId }) => {
         DOM.screenshotProgressBarValue.style.width = '0%';
         DOM.screenshotProgressPercent.textContent = '0%';
         DOM.screenshotOverlay.classList.remove('hidden');
+
+        // Define and attach the event listener for the cancel button
+        const cancelHandler = () => window.electronAPI.cancelScreenshot(tabId);
+        DOM.screenshotCancelBtn.addEventListener('click', cancelHandler, { once: true });
+        
+        // Store the handler on the element itself so we can remove it later
+        DOM.screenshotCancelBtn.handler = cancelHandler;
     });
 
     window.electronAPI.onScreenshotProgress(({ percent }) => {
@@ -94,12 +101,16 @@ export function initIpc(callbacks) {
     });
     
     window.electronAPI.onScreenshotEnd(({ result }) => {
-        // Add a short delay before hiding to allow user to see 100%
+        // IMPORTANT: Clean up the event listener to prevent memory leaks.
+        if (DOM.screenshotCancelBtn.handler) {
+            DOM.screenshotCancelBtn.removeEventListener('click', DOM.screenshotCancelBtn.handler);
+            delete DOM.screenshotCancelBtn.handler;
+        }
+
         setTimeout(() => {
             DOM.screenshotOverlay.classList.add('hidden');
             if (!result.success && result.message) {
-                // You could implement a more user-friendly notification here
-                console.error('Screenshot failed:', result.message);
+                console.error('Screenshot failed or cancelled:', result.message);
             }
         }, 500);
     });

@@ -52,3 +52,4 @@ export const settingsCloseBtn = document.getElementById('settings-close-btn');
 export const screenshotOverlay = document.getElementById('screenshot-overlay');
 export const screenshotProgressBarValue = document.getElementById('screenshot-progress-bar-value');
 export const screenshotProgressPercent = document.getElementById('screenshot-progress-percent');
+export const screenshotCancelBtn = document.getElementById('screenshot-cancel-btn');
