@@ -55,12 +55,21 @@ async function applyFontSetting(tab, fontFamily) {
                 font-family: inherit;
             }
 
-            /* Revert font for elements that are very likely to be icons. */
-            .fa, .fas, .far, .fal, .fab, [class^="fa-"], [class*=" fa-"],
-            .glyphicon, [class^="glyphicon-"],
-            .material-icons, .material-symbols, .material-symbols-outlined,
-            .icon, [class^="icon-"], [class*=" icon-"],
-            [data-icon]::before {
+            /*
+             * Revert font for elements that are very likely to be icons.
+             * This is a blacklist approach to prevent the custom font from breaking icon fonts.
+             * The 'i' tag is included as a broad catch-all, as it's overwhelmingly used for icons.
+             * This may cause text in <i> tags intended for italics to not use the custom font,
+             * which is an accepted trade-off for fixing broken icons.
+             */
+            i, /* Broad catch-all for icons */
+            [data-icon], /* Elements with data-icon attribute */
+            .fa, .fas, .far, .fal, .fab, [class^="fa-"], [class*=" fa-"], /* Font Awesome */
+            .bi, [class^="bi-"], [class*=" bi-"], /* Bootstrap Icons */
+            .glyphicon, [class^="glyphicon-"], /* Glyphicons */
+            .material-icons, .material-symbols, .material-symbols-outlined, /* Material Design Icons */
+            .icon, [class^="icon-"], [class*=" icon-"], /* Generic icon classes */
+            [data-icon]::before, [data-icon]::after { /* Pseudo-elements with data-icon on parent */
                 font-family: revert !important;
                 font-style: revert !important;
                 font-weight: revert !important;
