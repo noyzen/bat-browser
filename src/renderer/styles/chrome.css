@@ -3,7 +3,6 @@
     position: relative; 
     z-index: 10; 
     background-color: var(--bg-secondary);
-    border-bottom: 2px solid var(--border-color);
 }
     
 /* --- Unified Title Bar Structure --- */
@@ -11,9 +10,9 @@
     display: flex;
     height: var(--titlebar-height);
     align-items: center; /* Vertically center all items */
-    background-color: var(--bg-secondary);
     overflow: hidden;
     flex-shrink: 0;
+    border-bottom: 2px solid var(--border-color);
 }
 #window-handle {
     -webkit-app-region: drag;
