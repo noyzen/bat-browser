@@ -117,8 +117,6 @@
 .all-tabs-group-container.collapsed .all-tabs-group-header { border-bottom-color: transparent; }
 .all-tabs-group-header::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background-color: var(--tab-group-color); }
 .all-tabs-group-header:hover { background-color: var(--bg-hover); }
-.all-tabs-group-header .group-toggle-icon { transition: transform 0.3s ease-in-out; }
-.all-tabs-group-container.collapsed .group-toggle-icon { transform: rotate(-90deg); }
 .all-tabs-group-header .group-title { font-weight: bold; color: var(--tab-group-color); flex-grow: 1; }
 .all-tabs-group-header .group-tab-count { color: var(--fg-secondary); font-size: 12px; }
 .all-tabs-group-header.active-child { box-shadow: inset 4px 0 0 0 var(--accent-color); }

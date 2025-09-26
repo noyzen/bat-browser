@@ -116,9 +116,9 @@
 .tab-group.collapsed .group-header { border-right: none; }
 .tab-group.collapsed .group-title { color: #fff; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 .group-toggle-icon { font-size: 11px; color: var(--fg-secondary); transition: all 150ms ease-in-out; width: 18px; height: 18px; display: grid; place-items: center; border-radius: 0; flex-shrink: 0; }
-.group-header:hover .group-toggle-icon { background-color: var(--bg-hover); color: var(--fg-primary); }
+.group-header:hover .group-toggle-icon { color: var(--fg-primary); }
 .tab-group.collapsed .group-toggle-icon { color: #fff; }
-.tab-group.collapsed .group-header:hover .group-toggle-icon { background-color: rgba(255, 255, 255, 0.2); color: #fff; }
+.tab-group.collapsed .group-header:hover .group-toggle-icon { color: #fff; }
 .tab-group-tabs { display: contents; }
 .active-in-group-indicator { color: white; font-size: 7px; }
 

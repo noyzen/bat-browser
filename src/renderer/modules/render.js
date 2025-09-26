@@ -114,7 +114,7 @@ export function render() {
                 if (titleEl && titleEl.textContent !== group.name) titleEl.textContent = group.name;
 
                 const toggleIcon = element.querySelector('.group-toggle-icon');
-                if (toggleIcon) toggleIcon.className = `fa-solid ${group.collapsed ? 'fa-chevron-right' : 'fa-chevron-down'} group-toggle-icon`;
+                if (toggleIcon) toggleIcon.className = `fa-solid ${group.collapsed ? 'fa-plus' : 'fa-minus'} group-toggle-icon`;
                 
                 const hasActiveChild = group.tabs.includes(state.activeTabId);
                 element.classList.toggle('active-child', hasActiveChild);
@@ -248,7 +248,7 @@ export function renderGroup(id, context = 'main', visibleTabIds = null) {
         headerEl.className = 'group-header';
         titleEl.className = 'group-title';
 
-        toggleIcon.className = `fa-solid ${group.collapsed ? 'fa-chevron-right' : 'fa-chevron-down'} group-toggle-icon`;
+        toggleIcon.className = `fa-solid ${group.collapsed ? 'fa-plus' : 'fa-minus'} group-toggle-icon`;
 
         if (group.collapsed) {
             groupContainer.classList.add('collapsed');
@@ -280,7 +280,7 @@ export function renderGroup(id, context = 'main', visibleTabIds = null) {
         headerEl.dataset.type = 'group';
         headerEl.draggable = true;
         
-        toggleIcon.className = 'fa-solid fa-chevron-down group-toggle-icon';
+        toggleIcon.className = `fa-solid ${group.collapsed ? 'fa-plus' : 'fa-minus'} group-toggle-icon`;
         titleEl.className = 'group-title';
         titleEl.textContent = group.name;
 
