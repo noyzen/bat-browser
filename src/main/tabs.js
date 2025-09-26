@@ -61,6 +61,36 @@ async function openUrlInNewTab(url, fromTabId, inBackground) {
 function attachViewListenersToTab(tabData) {
     const { id, view } = tabData;
   
+    view.webContents.on('before-input-event', (event, input) => {
+      if (input.type === 'keyDown' && !input.isAutoRepeat) {
+        const hotkeys = state.settings.hotkeys;
+        if (!hotkeys) return;
+
+        const key = input.key.length === 1 ? input.key.toUpperCase() : input.key;
+        const combo = [
+            input.control ? 'Ctrl' : '',
+            input.alt ? 'Alt' : '',
+            input.shift ? 'Shift' : '',
+            input.meta ? 'Meta' : '',
+            ['Control', 'Alt', 'Shift', 'Meta', 'Hyper', 'Super'].includes(key) ? '' : key
+        ].filter(Boolean).join('+');
+        
+        if (Object.values(hotkeys).includes(combo)) {
+            event.preventDefault();
+            if (state.mainWindow && !state.mainWindow.isDestroyed()) {
+                state.mainWindow.webContents.send('forwarded-keydown', {
+                    key: input.key,
+                    code: input.code,
+                    shiftKey: input.shift,
+                    ctrlKey: input.control,
+                    altKey: input.alt,
+                    metaKey: input.meta,
+                });
+            }
+        }
+      }
+    });
+
     view.webContents.on('did-start-loading', () => {
       tabData.isLoading = true;
       state.mainWindow.webContents.send('tab:updated', { id, isLoading: true });

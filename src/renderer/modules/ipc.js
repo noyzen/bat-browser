@@ -83,4 +83,22 @@ export function initIpc(callbacks) {
     window.electronAPI.onFindResult(({ matches, activeMatchOrdinal }) => {
         DOM.findMatches.textContent = `${activeMatchOrdinal}/${matches}`;
     });
+
+    window.electronAPI.onForwardedKeydown((event) => {
+        // Synthesize a KeyboardEvent and dispatch it on the window.
+        // The global shortcut handler will pick it up.
+        // We can't set a real target, but the handler checks for inputs
+        // and our synthetic event won't have an input as a target, which is correct.
+        const keyboardEvent = new KeyboardEvent('keydown', {
+            key: event.key,
+            code: event.code,
+            ctrlKey: event.ctrlKey,
+            shiftKey: event.shiftKey,
+            altKey: event.altKey,
+            metaKey: event.metaKey,
+            bubbles: true,
+            cancelable: true,
+        });
+        window.dispatchEvent(keyboardEvent);
+    });
 }
