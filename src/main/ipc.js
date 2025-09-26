@@ -1,4 +1,4 @@
-const { ipcMain, Menu, clipboard } = require('electron');
+const { ipcMain, Menu, clipboard, shell } = require('electron');
 const path = require('path');
 const state = require('./state');
 const tabsModule = require('./tabs');
@@ -35,6 +35,15 @@ function loadQueryOrURL(webContents, query) {
 
 
 function initializeIpc() {
+    // App Controls
+    ipcMain.handle('app:open-external', (_, url) => {
+        // Security: only allow opening http and https protocols
+        const protocol = new URL(url).protocol;
+        if (['http:', 'https:'].includes(protocol)) {
+            shell.openExternal(url);
+        }
+    });
+
     // Window Controls
     ipcMain.handle('window:minimize', () => state.mainWindow.minimize());
     ipcMain.handle('window:maximize', () => {

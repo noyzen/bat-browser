@@ -75,6 +75,7 @@ const apiKeyList = document.getElementById('api-key-list');
 const addApiKeyBtn = document.getElementById('add-api-key-btn');
 const apiKeyNameInput = document.getElementById('api-key-name-input');
 const apiKeyInput = document.getElementById('api-key-input');
+const getApiKeyBtn = document.getElementById('get-api-key-btn');
 
 async function populateSettings() {
     currentSettings = await window.electronAPI.getSettings();
@@ -284,6 +285,10 @@ export function initViews({ fullRender }) {
     });
     
     // -- AI
+    getApiKeyBtn.addEventListener('click', () => {
+        window.electronAPI.openExternal('https://aistudio.google.com/app/apikey');
+    });
+
     aiEnableToggle.addEventListener('change', () => {
         currentSettings.ai.enabled = aiEnableToggle.checked;
         window.electronAPI.settingsSetAI({ enabled: currentSettings.ai.enabled });

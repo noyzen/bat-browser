@@ -46,8 +46,24 @@
 
 #ai-settings-content { width: 100%; transition: opacity 0.3s ease, transform 0.3s ease; }
 #ai-settings-content.hidden { display: none; }
-#get-api-key-link { color: var(--accent-color); text-decoration: none; font-weight: 500; }
-#get-api-key-link:hover { text-decoration: underline; }
+
+.cta-button {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 0;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s ease;
+}
+.cta-button:hover {
+    background-color: #1f8ad2;
+}
 
 #api-key-list { display: flex; flex-direction: column; gap: 10px; width: 100%; border: 1px solid var(--border-color); background-color: var(--bg-primary); padding: 8px; }
 .api-key-item { display: flex; align-items: center; background-color: var(--bg-tertiary); padding: 12px; transition: background-color 0.2s ease; }

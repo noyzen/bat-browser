@@ -12,12 +12,43 @@ const startersContainer = document.querySelector('.ai-panel-starters');
 
 let currentTabId = null;
 let currentAIMessageElement = null;
+let currentAIResponseText = '';
 let isAwaitingResponse = false;
 
-function appendMessage(text, sender) {
-    // Hide welcome screen if it's visible
+function formatAndAppendMessage(text, sender, elementToUpdate = null) {
     if (!welcomeScreen.classList.contains('hidden')) {
         welcomeScreen.classList.add('hidden');
+    }
+
+    // Sanitize text to prevent HTML injection
+    const sanitizedText = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+    // Convert markdown-like syntax to HTML
+    let formattedHtml = sanitizedText
+        // Code blocks ```lang\ncode```
+        .replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+            const language = lang || 'plaintext';
+            return `<div class="code-block-wrapper">
+                        <div class="code-block-header">
+                            <span>${language}</span>
+                            <button class="copy-code-btn" title="Copy code"><i class="fa-regular fa-copy"></i> Copy</button>
+                        </div>
+                        <pre><code class="language-${language}">${code.trim()}</code></pre>
+                    </div>`;
+        })
+        // Bold **text**
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // Italic *text*
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        // Newlines to <br>
+        .replace(/\n/g, '<br>');
+
+    if (elementToUpdate) {
+        elementToUpdate.innerHTML = formattedHtml;
+        return elementToUpdate;
     }
 
     const messageWrapper = document.createElement('div');
@@ -29,25 +60,14 @@ function appendMessage(text, sender) {
 
     const messageEl = document.createElement('div');
     messageEl.classList.add('ai-message', `ai-message-${sender}`);
-    
-    // Basic markdown for **bold** and *italic*
-    let sanitizedText = text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-
-    let formattedText = sanitizedText
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/\n/g, '<br>');
-
-    messageEl.innerHTML = formattedText;
+    messageEl.innerHTML = formattedHtml;
     
     messageWrapper.append(avatar, messageEl);
     messagesContainer.appendChild(messageWrapper);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    return messageEl; // Return the content element for streaming
+    return messageEl;
 }
+
 
 export async function showAIPanel(tabId) {
     const settings = await window.electronAPI.getSettings();
@@ -77,12 +97,13 @@ async function handleSendMessage() {
     const prompt = input.value.trim();
     if (!prompt || !currentTabId || isAwaitingResponse) return;
 
-    appendMessage(prompt, 'user');
+    formatAndAppendMessage(prompt, 'user');
     input.value = '';
     input.style.height = 'auto'; // Reset height
     input.disabled = true;
     sendBtn.disabled = true;
     isAwaitingResponse = true;
+    currentAIResponseText = '';
 
     // Create the assistant's message structure for streaming
     const messageWrapper = document.createElement('div');
@@ -94,7 +115,8 @@ async function handleSendMessage() {
 
     currentAIMessageElement = document.createElement('div');
     currentAIMessageElement.classList.add('ai-message', 'ai-message-assistant');
-    currentAIMessageElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    // Use a typing indicator instead of a spinner
+    currentAIMessageElement.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
 
     messageWrapper.append(avatar, currentAIMessageElement);
     messagesContainer.appendChild(messageWrapper);
@@ -106,35 +128,28 @@ async function handleSendMessage() {
 function handleStreamChunk(chunk) {
     if (!currentAIMessageElement) return;
 
-    // Replace spinner with first text chunk
-    if (currentAIMessageElement.innerHTML.includes('fa-spinner')) {
+    // Replace typing indicator with first text chunk
+    if (currentAIMessageElement.querySelector('.typing-indicator')) {
         currentAIMessageElement.innerHTML = '';
     }
 
     if (chunk.text) {
-        // Append text chunk by chunk. Sanitize and format as it comes.
-         let sanitizedText = chunk.text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;");
-
-        let formattedText = sanitizedText
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/\n/g, '<br>');
-
-        currentAIMessageElement.innerHTML += formattedText;
+        currentAIResponseText += chunk.text;
+        // Just append raw text during stream for performance. We'll format it once at the end.
+        currentAIMessageElement.textContent = currentAIResponseText; 
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
     if (chunk.error) {
-        currentAIMessageElement.innerHTML = `<span class="ai-error">${chunk.error}</span>`;
+        currentAIMessageElement.innerHTML = `<div class="ai-error"><strong>Error:</strong> ${chunk.error}</div>`;
         isAwaitingResponse = false;
         input.disabled = false;
         sendBtn.disabled = false;
     }
 
     if (chunk.done) {
+        // Now that the stream is complete, format the full response
+        formatAndAppendMessage(currentAIResponseText, 'assistant', currentAIMessageElement);
         isAwaitingResponse = false;
         input.disabled = false;
         sendBtn.disabled = false;
@@ -168,7 +183,8 @@ export function initAI() {
     // Auto-resize textarea
     input.addEventListener('input', () => {
         input.style.height = 'auto';
-        input.style.height = `${input.scrollHeight}px`;
+        const scrollHeight = input.scrollHeight;
+        input.style.height = `${scrollHeight}px`;
     });
 
     startersContainer.addEventListener('click', (e) => {
@@ -176,6 +192,22 @@ export function initAI() {
             const prompt = e.target.dataset.prompt;
             input.value = prompt;
             handleSendMessage();
+        }
+    });
+
+    // Code block copy functionality
+    messagesContainer.addEventListener('click', (e) => {
+        const copyBtn = e.target.closest('.copy-code-btn');
+        if (copyBtn) {
+            const codeEl = copyBtn.closest('.code-block-wrapper').querySelector('code');
+            if (codeEl) {
+                navigator.clipboard.writeText(codeEl.textContent).then(() => {
+                    copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+                    }, 2000);
+                });
+            }
         }
     });
 
@@ -193,7 +225,7 @@ export function initAI() {
 
         const doDrag = (moveEvent) => {
             const newWidth = startWidth - (moveEvent.clientX - startX);
-            const clampedWidth = Math.max(250, Math.min(newWidth, 600));
+            const clampedWidth = Math.max(250, Math.min(newWidth, 800));
             panel.style.width = `${clampedWidth}px`;
             document.documentElement.style.setProperty('--ai-panel-width', `${clampedWidth}px`);
             throttledUpdate(clampedWidth);
