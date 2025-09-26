@@ -161,56 +161,56 @@ function initializeIpc() {
             return { success: false, message: 'Tab is not available for capture.' };
         }
     
+        const webContents = tab.view.webContents;
+        // Notify the renderer to show the loading overlay.
         state.mainWindow.webContents.send('screenshot:start', { tabId });
     
-        const webContents = tab.view.webContents;
-        const shouldAttach = !webContents.debugger.isAttached();
         let finalResult = { success: false, message: 'An unknown error occurred during screenshot.' };
+        let debuggerWasAttachedByUs = false;
     
         try {
-            if (shouldAttach) {
-                await webContents.debugger.attach('1.3');
-            }
-            
-            // Get page dimensions using reliable JS evaluation
-            const pageMetrics = await webContents.debugger.sendCommand('Runtime.evaluate', {
-                expression: `({
+            // Step 1: Get page dimensions using the more stable executeJavaScript
+            const pageMetrics = await webContents.executeJavaScript(`
+                Promise.resolve({
                     contentHeight: Math.max(
                         document.body.scrollHeight, document.documentElement.scrollHeight,
                         document.body.offsetHeight, document.documentElement.offsetHeight,
                         document.body.clientHeight, document.documentElement.clientHeight
                     ),
                     viewHeight: window.innerHeight,
-                })`,
-                returnByValue: true,
-            }).then(res => res.result.value);
+                })
+            `);
     
             const { contentHeight, viewHeight } = pageMetrics;
     
-            // Scroll down the page to trigger lazy-loaded elements
+            // Step 2: Scroll down the page to trigger lazy-loaded elements
             if (contentHeight > viewHeight) {
                 const scrolls = Math.ceil(contentHeight / viewHeight);
                 for (let i = 0; i < scrolls; i++) {
                     const scrollPosition = i * viewHeight;
-                    await webContents.debugger.sendCommand('Runtime.evaluate', {
-                        expression: `window.scrollTo(0, ${scrollPosition})`,
-                    });
+                    await webContents.executeJavaScript(`window.scrollTo(0, ${scrollPosition})`);
                     
-                    // Send progress update to renderer
                     const percent = Math.round(((i + 1) / scrolls) * 100);
                     state.mainWindow.webContents.send('screenshot:progress', { tabId, percent });
 
                     // Use a generous delay for content to load
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    await new Promise(resolve => setTimeout(resolve, 1500));
                 }
                  // Scroll back to top before capture
-                await webContents.debugger.sendCommand('Runtime.evaluate', { expression: `window.scrollTo(0, 0)` });
+                await webContents.executeJavaScript(`window.scrollTo(0, 0)`);
                 await new Promise(resolve => setTimeout(resolve, 500)); // Wait for repaint
             } else {
                  state.mainWindow.webContents.send('screenshot:progress', { tabId, percent: 100 });
                  await new Promise(resolve => setTimeout(resolve, 500));
             }
     
+            // Step 3: Attach debugger ONLY when needed for the screenshot
+            if (!webContents.debugger.isAttached()) {
+                await webContents.debugger.attach('1.3');
+                debuggerWasAttachedByUs = true;
+            }
+
+            // Step 4: Capture the full page screenshot
             let format = state.settings.screenshotFormat || 'png';
             if (!['jpeg', 'png', 'webp'].includes(format)) format = 'png';
             const quality = state.settings.screenshotQuality || 90;
@@ -236,14 +236,15 @@ function initializeIpc() {
                 finalResult = { success: false, message: 'Save dialog was canceled.' };
             }
         } catch (error) {
-            console.error('Failed to capture screenshot via CDP:', error);
+            console.error('Failed to capture screenshot:', error);
             finalResult = { success: false, message: `Failed to capture page. ${error.message}` };
         } finally {
-            // This block is crucial to prevent the UI from getting stuck.
-            // It will run regardless of success or failure.
-            if (webContents.debugger.isAttached() && shouldAttach) {
+            // THIS BLOCK IS CRUCIAL to prevent the UI from getting stuck.
+            // It will run regardless of success or failure in the try block.
+            if (debuggerWasAttachedByUs && webContents.debugger.isAttached()) {
                 await webContents.debugger.detach().catch(err => console.error('Could not detach debugger:', err));
             }
+            // This event MUST be sent to hide the overlay and restore the UI.
             state.mainWindow.webContents.send('screenshot:end', { tabId, result: finalResult });
         }
         return finalResult;
