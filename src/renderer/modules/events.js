@@ -358,17 +358,19 @@ export function initEvents(callbacks) {
         const state = getState();
         const tab = state.tabs.get(state.activeTabId);
         if (tab && tab.url && tab.url !== 'about:blank') {
-            DOM.addressBar.value = tab.url;
-            // Defer select to ensure value is updated in the DOM before selection
-            setTimeout(() => DOM.addressBar.select(), 0);
+            DOM.addressBar.value = tab.url; // Show full URL on focus
         }
+        // Defer select to ensure value is updated in the DOM before selection
+        setTimeout(() => DOM.addressBar.select(), 0);
     });
+
     DOM.addressBar.addEventListener('blur', () => {
         DOM.titlebar.classList.remove('address-bar-expanded');
+        // On blur, revert to the formatted URL by calling the main update function.
         const state = getState();
         const tab = state.tabs.get(state.activeTabId);
         if (updateNavControls) {
-            updateNavControls(tab); // Re-run formatting logic on blur
+            updateNavControls(tab);
         }
     });
 

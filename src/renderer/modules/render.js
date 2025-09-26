@@ -9,19 +9,24 @@ export function setUpdateTabScrollButtonsCallback(cb) {
 
 function formatUrlForDisplay(url) {
     if (!url || url.startsWith('about:') || url.startsWith('file:')) {
-        return url;
+        return ''; // Return empty for internal pages
     }
     try {
+        // For invalid URLs (like search terms), this will throw
         const urlObj = new URL(url);
+        // If it's a valid URL, format it
         let result = urlObj.hostname.replace(/^www\./, '');
-        // Append path, search, and hash, but only if they are not the root path "/" alone
         if (urlObj.pathname !== '/' || urlObj.search || urlObj.hash) {
             result += urlObj.pathname + urlObj.search + urlObj.hash;
         }
+        // Truncate very long URLs in the unfocused state
+        if (result.length > 100) {
+            result = result.substring(0, 97) + '...';
+        }
         return result;
     } catch (e) {
-        // Fallback for search terms or things that aren't full URLs
-        return url.replace(/^https?:\/\/(www\.)?/, '');
+        // If it's not a valid URL (e.g., a search query), just return it
+        return url;
     }
 }
 
@@ -230,7 +235,8 @@ export function renderTab(id, context = 'main') {
 
         const urlEl = document.createElement('span');
         urlEl.className = 'all-tabs-url';
-        urlEl.textContent = tab.url;
+        const formattedUrl = formatUrlForDisplay(tab.url);
+        urlEl.textContent = formattedUrl || tab.url; // Show original if formatting results in empty
         
         titleEl.className = 'tab-title';
         titleEl.textContent = tab.title;
@@ -330,11 +336,25 @@ export function renderGroup(id, context = 'main', visibleTabIds = null) {
 }
 
 export function updateNavControls(tab) {
-    if (!tab) return;
-    const isFocused = document.activeElement === DOM.addressBar;
+    if (!tab) {
+        // Clear the bar if there's no active tab
+        DOM.addressBar.value = '';
+        DOM.backBtn.disabled = true;
+        DOM.forwardBtn.disabled = true;
+        DOM.reloadIcon.className = 'fa-solid fa-rotate-right';
+        DOM.reloadBtn.setAttribute('aria-label', 'Reload');
+        return;
+    }
+
     const urlToDisplay = (tab.isLoaded && tab.url !== 'about:blank' && !tab.isHibernated) ? tab.url : '';
     
-    DOM.addressBar.value = isFocused ? urlToDisplay : formatUrlForDisplay(urlToDisplay);
+    // The address bar's text content is now handled exclusively by its focus and blur event handlers.
+    // This function just syncs the other controls (back, forward, reload).
+    // On initial load or tab switch, the blur handler will be called implicitly or we call it to set the default state.
+    if (document.activeElement !== DOM.addressBar) {
+        DOM.addressBar.value = formatUrlForDisplay(urlToDisplay);
+    }
+
     DOM.backBtn.disabled = !tab.canGoBack;
     DOM.forwardBtn.disabled = !tab.canGoForward;
     DOM.reloadIcon.classList.toggle('fa-xmark', tab.isLoading);
