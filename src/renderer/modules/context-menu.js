@@ -1,5 +1,6 @@
 import { state, isTabInAnyGroup, persistState } from '../renderer.js';
 import * as Feat from './features.js';
+import { captureVisible, captureFullPage, startAreaSelection } from './screenshot.js';
 
 let fullRenderCallback;
 
@@ -53,6 +54,22 @@ async function handleContextMenuCommand(command, context) {
         case 'zoom-reset': {
             if (!tab) break;
             window.electronAPI.updateTabZoom(tabId, 1.0);
+            break;
+        }
+        case 'capture-visible':
+        case 'capture-full':
+        case 'capture-area': {
+            if (!tab) break;
+            // First, ensure the tab we want to capture is the active one
+            if (state.activeTabId !== tabId) {
+                await window.electronAPI.switchTab(tabId);
+                // Give it a brief moment for the view to be ready, especially if waking from hibernation
+                await new Promise(resolve => setTimeout(resolve, 100)); 
+            }
+            // Now execute the correct capture function
+            if (command === 'capture-visible') captureVisible();
+            else if (command === 'capture-full') captureFullPage();
+            else if (command === 'capture-area') startAreaSelection();
             break;
         }
         case 'close-tab':
@@ -209,6 +226,19 @@ export function initContextMenu(cbs) {
                 { label: 'Close Tab', action: { command: 'close-tab', context: { tabId } } },
                 { label: 'Close Other Tabs', action: { command: 'close-other-tabs', context: { tabId } }, enabled: otherTabsCount > 0 }
             ];
+
+            const isCaptureDisabled = tab.url.endsWith('newtab.html') || tab.url === 'about:blank' || (tab.isHibernated && !tab.url);
+
+            menuTemplate.push({ type: 'separator' }, {
+                label: 'Screenshot',
+                enabled: !isCaptureDisabled,
+                submenu: [
+                    { label: 'Capture Visible Area', action: { command: 'capture-visible', context: { tabId } } },
+                    { label: 'Capture Full Page', action: { command: 'capture-full', context: { tabId } } },
+                    { label: 'Capture Area', action: { command: 'capture-area', context: { tabId } } },
+                ]
+            });
+
         } else if (targetGroup) {
             const groupId = targetGroup.dataset.groupId || targetGroup.dataset.id;
             menuTemplate = [

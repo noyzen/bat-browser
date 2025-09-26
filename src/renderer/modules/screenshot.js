@@ -1,24 +1,10 @@
 import * as DOM from './dom.js';
 
-let getState;
+let getStateCallback;
 let currentCapture = null; // To hold the data URL of the latest capture
 
 export function initScreenshot(callbacks) {
-    getState = callbacks.getState;
-
-    // --- Event Listeners for UI ---
-    DOM.screenshotBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        DOM.screenshotMenu.classList.toggle('hidden');
-    });
-
-    document.addEventListener('click', () => {
-        DOM.screenshotMenu.classList.add('hidden');
-    });
-
-    DOM.captureVisibleBtn.addEventListener('click', captureVisible);
-    DOM.captureFullBtn.addEventListener('click', captureFullPage);
-    DOM.captureAreaBtn.addEventListener('click', startAreaSelection);
+    getStateCallback = callbacks.getState;
 
     // --- IPC Listeners for Full Page Capture Progress ---
     window.electronAPI.onScreenshotStart(({ tabId }) => {
@@ -60,7 +46,7 @@ export function initScreenshot(callbacks) {
 }
 
 // --- Capture Functions ---
-async function captureVisible() {
+export async function captureVisible() {
     const result = await window.electronAPI.captureVisible();
     if (result.success) {
         showPreview(result.dataUrl);
@@ -69,14 +55,14 @@ async function captureVisible() {
     }
 }
 
-async function captureFullPage() {
-    const state = getState();
+export async function captureFullPage() {
+    const state = getStateCallback();
     if (state.activeTabId) {
         window.electronAPI.captureFull(state.activeTabId);
     }
 }
 
-function startAreaSelection() {
+export function startAreaSelection() {
     const overlay = DOM.screenshotSelectionOverlay;
     overlay.classList.remove('hidden');
     
