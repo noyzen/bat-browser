@@ -46,12 +46,14 @@ async function applyFontSetting(tab, fontFamily) {
 
     // Only inject new CSS if a custom font is selected.
     if (fontFamily && fontFamily !== 'default') {
-        // This CSS sets the default font for the entire page with the lowest possible specificity.
-        // Any font-family rule from the website's own CSS will override this,
-        // correctly applying the custom font only to text that the website has not styled.
-        // This avoids breaking websites' custom fonts and icon fonts.
+        // This CSS applies the selected font to all elements using the universal selector (*).
+        // This selector has the lowest possible specificity (0,0,0), meaning any other
+        // font-family rule from the website (e.g., on `body`, `p`, or a class like `.icon`)
+        // will have higher specificity and override this rule.
+        // This correctly sets a new "default" font for any text not explicitly styled by the site,
+        // without breaking site-specific typography or icon fonts.
         const css = `
-            :root {
+            * {
                 font-family: "${fontFamily}", sans-serif;
             }
         `;
