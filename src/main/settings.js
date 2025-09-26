@@ -74,19 +74,18 @@ async function applyFontSetting(tab, fontFamily) {
 
     // Only inject new CSS if a custom font is selected.
     if (fontFamily && fontFamily !== 'default') {
-        // Use :where(:root) to inject a zero-specificity default font.
-        // This acts as a new base font for the entire document, but allows any 
-        // website CSS (even with low specificity) to override it, mimicking the
-        // behavior of a browser's default font setting.
+        // This CSS is injected into web pages to apply the user's selected default font.
         const css = `
-            :where(:root) {
+            /* Use a selector with higher specificity (0,0,2) to override typical website
+               body font declarations, establishing the user's choice as the default. */
+            html body {
                 font-family: "${fontFamily}", sans-serif;
             }
-            /* Ensure common form elements and editable content can inherit the new default font.
-               Most user-agent stylesheets give these elements a specific font-family.
-               By setting it to 'inherit', they will pick up the font from their parent,
-               which will ultimately trace back to our new :root default. */
-            :where(input, textarea, select, button, [role="button"], [contenteditable="true"]) {
+            /* Ensure common form elements and editable content inherit the new default font from the body.
+               User-agent stylesheets often give these elements a specific font-family,
+               which this rule overrides to allow inheritance. More specific website styles
+               (e.g., for buttons with icons) will still apply correctly. */
+            input, textarea, select, button, [role="button"], [contenteditable="true"] {
                 font-family: inherit;
             }
         `;
