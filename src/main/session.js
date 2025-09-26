@@ -7,6 +7,7 @@ function saveSession() {
   if (!state.mainWindow || state.tabs.size === 0) return;
 
   try {
+    const globalZoom = state.settings.globalZoomFactor || 1.0;
     const sessionState = {
       tabs: Array.from(state.tabs.values()).map(t => {
         let finalUrl = t.url;
@@ -24,7 +25,7 @@ function saveSession() {
           title: t.title,
           color: t.color,
           isShared: t.isShared,
-          zoomFactor: t.zoomFactor,
+          zoomFactor: t.zoomFactor === globalZoom ? undefined : t.zoomFactor,
           isActive: t.id === state.activeTabId,
         };
       }),

@@ -83,8 +83,8 @@
 }
 
 .tab-icon { width: 16px; height: 16px; display: grid; place-items: center; flex-shrink: 0; }
-.tab-icon i { display: none; font-size: 12px; }
-.tab-item.loading .tab-icon i, .all-tabs-list-item.loading .tab-icon i { display: block; animation: spin 1s linear infinite; }
+.tab-icon i { font-size: 12px; color: var(--fg-secondary); }
+.tab-item.loading .tab-icon .fa-spinner { animation: spin 1s linear infinite; }
 .tab-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--fg-primary); flex-grow: 1; }
 .tab-close-btn { border: none; background: transparent; color: var(--fg-secondary); width: 22px; height: 22px; font-size: 13px; line-height: 1; border-radius: 0; display: grid; place-items: center; cursor: pointer; flex-shrink: 0; padding: 0; }
 .tab-item .tab-close-btn { visibility: hidden; }
@@ -94,20 +94,10 @@
 .tab-item.hibernated { opacity: 0.6; transition: opacity 150ms ease; }
 .tab-item.hibernated:hover { opacity: 1; }
 .tab-item.hibernated .tab-title { font-style: italic; }
-.tab-item.hibernated .tab-icon i.fa-power-off, .all-tabs-list-item.hibernated .tab-icon i.fa-power-off {
-    display: block;
-    animation: none;
-    color: var(--fg-secondary);
-}
 
-/* Shared Tab Indicator */
-.tab-item.shared .tab-title::before {
-    font-family: "Font Awesome 6 Solid";
-    content: "\e533"; /* fa-users */
-    font-size: 10px;
+.tab-icon .fa-users {
     color: var(--accent-color);
-    margin-right: 4px;
-    vertical-align: middle;
+    font-size: 11px;
 }
 
 /* Tab Groups */

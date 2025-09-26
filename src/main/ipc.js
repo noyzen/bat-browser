@@ -95,6 +95,7 @@ function initializeIpc() {
             if (tab.view && !tab.view.webContents.isDestroyed()) {
                 tab.view.webContents.setZoomFactor(factor);
             }
+            state.mainWindow.webContents.send('tab:updated', { id, zoomFactor: factor });
             sessionModule.debouncedSaveSession();
         }
     });

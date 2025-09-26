@@ -19,7 +19,6 @@ function createTabElement(id) {
 
     const iconEl = document.createElement('div');
     iconEl.className = 'tab-icon';
-    iconEl.innerHTML = '<i class="fa-solid fa-spinner"></i>';
 
     const titleEl = document.createElement('span');
     titleEl.className = 'tab-title';
@@ -39,7 +38,6 @@ function updateTabElement(tabEl, tabData) {
     tabEl.classList.toggle('active', tabData.id === state.activeTabId);
     tabEl.classList.toggle('loading', tabData.isLoading);
     tabEl.classList.toggle('hibernated', !!tabData.isHibernated);
-    tabEl.classList.toggle('shared', !!tabData.isShared);
     tabEl.style.setProperty('--tab-color', tabData.color);
     
     const titleEl = tabEl.querySelector('.tab-title');
@@ -48,11 +46,19 @@ function updateTabElement(tabEl, tabData) {
     }
 
     const iconEl = tabEl.querySelector('.tab-icon');
-    if (tabData.isHibernated) {
-      iconEl.innerHTML = '<i class="fa-solid fa-power-off"></i>';
-    } else {
-      iconEl.innerHTML = '<i class="fa-solid fa-spinner"></i>';
+    let newIconHTML = '';
+    if (tabData.isLoading) {
+        newIconHTML = '<i class="fa-solid fa-spinner"></i>';
+    } else if (tabData.isShared) {
+        newIconHTML = '<i class="fa-solid fa-users" title="This tab shares data with other shared tabs"></i>';
+    } else if (tabData.isHibernated) {
+        newIconHTML = '<i class="fa-solid fa-power-off"></i>';
     }
+
+    if (iconEl.innerHTML !== newIconHTML) {
+        iconEl.innerHTML = newIconHTML;
+    }
+
 
     const parentGroup = Array.from(state.groups.values()).find(g => g.tabs.includes(tabData.id));
     if (parentGroup) {
@@ -167,7 +173,6 @@ export function renderTab(id, context = 'main') {
     
     const iconEl = document.createElement('div');
     iconEl.className = 'tab-icon';
-    iconEl.innerHTML = '<i class="fa-solid fa-spinner"></i>';
     
     const titleEl = document.createElement('span');
     
@@ -187,11 +192,17 @@ export function renderTab(id, context = 'main') {
         tabEl.title = `${tab.title}\n${tab.url}`;
         if (id === state.activeTabId) tabEl.classList.add('active');
         if (tab.isLoading) tabEl.classList.add('loading');
-        if (tab.isShared) tabEl.classList.add('shared');
-        if (tab.isHibernated) {
-          tabEl.classList.add('hibernated');
-          iconEl.innerHTML = '<i class="fa-solid fa-power-off"></i>';
+        
+        let iconHTML = '';
+        if (tab.isLoading) {
+            iconHTML = '<i class="fa-solid fa-spinner"></i>';
+        } else if (tab.isShared) {
+            iconHTML = '<i class="fa-solid fa-users" title="This tab shares data with other shared tabs"></i>';
+        } else if (tab.isHibernated) {
+            tabEl.classList.add('hibernated');
+            iconHTML = '<i class="fa-solid fa-power-off"></i>';
         }
+        iconEl.innerHTML = iconHTML;
 
         const urlEl = document.createElement('span');
         urlEl.className = 'all-tabs-url';

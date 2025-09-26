@@ -176,17 +176,18 @@ export function initContextMenu(cbs) {
 
             const parentGroup = Array.from(state.groups.values()).find(g => g.tabs.includes(tabId));
             const otherTabsCount = state.tabs.size - 1;
+            const zoomPercent = Math.round((tab.zoomFactor || 1.0) * 100);
 
             menuTemplate = [
                 { label: 'New Tab', action: { command: 'new-tab' } },
                 { label: 'Duplicate', action: { command: 'duplicate-tab', context: { tabId } } },
                 { type: 'separator' },
                 {
-                    label: 'Zoom',
+                    label: `Zoom (${zoomPercent}%)`,
                     submenu: [
-                        { label: 'Zoom In', action: { command: 'zoom-in', context: { tabId } } },
-                        { label: 'Zoom Out', action: { command: 'zoom-out', context: { tabId } } },
-                        { label: 'Reset', action: { command: 'zoom-reset', context: { tabId } } },
+                        { label: 'Zoom In (Ctrl++)', action: { command: 'zoom-in', context: { tabId } }, enabled: zoomPercent < 300 },
+                        { label: 'Zoom Out (Ctrl+-)', action: { command: 'zoom-out', context: { tabId } }, enabled: zoomPercent > 25 },
+                        { label: 'Reset to 100%', action: { command: 'zoom-reset', context: { tabId } }, enabled: zoomPercent !== 100 },
                     ]
                 },
                 { type: 'separator' },

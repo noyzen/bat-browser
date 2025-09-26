@@ -60,14 +60,9 @@
 .all-tabs-text-wrapper { display: flex; flex-direction: column; overflow: hidden; flex-grow: 1; gap: 2px; }
 .all-tabs-url { color: var(--fg-secondary); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .all-tabs-list-item .tab-close-btn { margin-left: auto; visibility: visible; }
-.all-tabs-list-item.shared .tab-title::before {
-    font-family: "Font Awesome 6 Solid";
-    content: "\e533"; /* fa-users */
-    font-size: 10px;
-    color: var(--accent-color);
-    margin-right: 4px;
-    vertical-align: middle;
-}
+.all-tabs-list-item.loading .tab-icon .fa-spinner { animation: spin 1s linear infinite; }
+.all-tabs-list-item.hibernated .tab-title { font-style: italic; }
+.all-tabs-list-item.hibernated { opacity: 0.7; }
 .all-tabs-group-container { display: flex; flex-direction: column; background-color: var(--bg-secondary); border-radius: 0; border: 1px solid var(--border-color); }
 .all-tabs-group-container.drag-over .all-tabs-group-header { background-color: rgba(255, 255, 255, 0.1); }
 .all-tabs-group-header { width: 100%; display: flex; align-items: center; gap: 8px; padding: 12px 16px; cursor: pointer; transition: background-color 150ms ease; min-height: 56px; position: relative; border-bottom: 1px solid var(--border-color); overflow: hidden; }
