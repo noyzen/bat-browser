@@ -46,8 +46,9 @@
     background: transparent; 
     color: var(--fg-primary);
     cursor: pointer;
-    display: grid; 
-    place-items: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 14px;
     border-radius: 0;
 }
@@ -71,7 +72,7 @@
     width: 100%;
     height: 100%;
 }
-#toolbar button { width: 28px; height: 28px; border: none; border-radius: 0; font-size: 14px; color: var(--fg-primary); background-color: transparent; display: grid; place-items: center; cursor: pointer; flex-shrink: 0; }
+#toolbar button { width: 28px; height: 28px; border: none; border-radius: 0; font-size: 14px; color: var(--fg-primary); background-color: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
 #toolbar button.loading i { animation: spin 1s linear infinite; }
 #toolbar button:not(:disabled):hover { background-color: var(--bg-hover); }
 #toolbar button:disabled { color: var(--fg-secondary); cursor: not-allowed; opacity: 0.4; }
