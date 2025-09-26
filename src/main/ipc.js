@@ -172,32 +172,6 @@ function initializeIpc() {
             state.mainWindow.webContents.send('close-tab-from-view', tab.id);
         }
     });
-
-    // Context Menu
-    ipcMain.handle('show-context-menu', (event, menuTemplate) => {
-        const buildMenu = (template) => {
-            return template.map(item => {
-                const menuItem = {
-                    label: item.label,
-                    enabled: item.enabled !== false,
-                    visible: item.visible !== false,
-                };
-                if (item.type) menuItem.type = item.type;
-                if (item.checked) menuItem.checked = item.checked;
-
-                if (item.action) {
-                    menuItem.click = () => event.sender.send('context-menu-command', item.action.command, item.action.context);
-                }
-
-                if (item.submenu) {
-                    menuItem.submenu = buildMenu(item.submenu);
-                }
-                return menuItem;
-            });
-        };
-        const menu = Menu.buildFromTemplate(buildMenu(menuTemplate));
-        menu.popup({ window: state.mainWindow });
-    });
 }
 
 module.exports = { initializeIpc };

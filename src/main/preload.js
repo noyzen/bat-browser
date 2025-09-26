@@ -45,10 +45,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setDefaultFont: (fontFamily) => ipcRenderer.invoke('settings:set-default-font', fontFamily),
   settingsSetSearchEngine: (engine) => ipcRenderer.invoke('settings:set-search-engine', engine),
 
-  // Context Menu
-  showContextMenu: (menuTemplate) => ipcRenderer.invoke('show-context-menu', menuTemplate),
-  onContextMenuCommand: (callback) => ipcRenderer.on('context-menu-command', (_e, command, context) => callback(command, context)),
-
   // Listeners from Main
   onSessionRestoreUI: (callback) => ipcRenderer.once('session:restore-ui', (_e, data) => callback(data)),
   onTabCreated: (callback) => ipcRenderer.on('tab:created', (_e, tabData) => callback(tabData)),

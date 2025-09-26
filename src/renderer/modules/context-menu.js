@@ -1,5 +1,6 @@
 import { state, isTabInAnyGroup, persistState } from '../renderer.js';
 import * as Feat from './features.js';
+import { showCustomContextMenu } from './custom-context-menu.js';
 
 let fullRenderCallback;
 
@@ -164,9 +165,15 @@ export function initContextMenu(cbs) {
     fullRenderCallback = cbs.fullRender;
     
     window.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
         const targetTab = e.target.closest('.tab-item, .all-tabs-list-item');
         const targetGroup = e.target.closest('.group-header, .tab-group, .all-tabs-group-header');
+        
+        // Prevent custom menu on inputs, etc., to allow native OS context menu for cut/copy/paste.
+        if (e.target.matches('input, textarea') || e.target.isContentEditable) {
+            return;
+        }
+        e.preventDefault();
+
         let menuTemplate = [];
 
         if (targetTab) {
@@ -222,9 +229,9 @@ export function initContextMenu(cbs) {
         }
 
         if (menuTemplate.length > 0) {
-            window.electronAPI.showContextMenu(menuTemplate);
+            showCustomContextMenu(e.clientX, e.clientY, menuTemplate, (action) => {
+                handleContextMenuCommand(action.command, action.context);
+            });
         }
     });
-
-    window.electronAPI.onContextMenuCommand(handleContextMenuCommand);
 }
