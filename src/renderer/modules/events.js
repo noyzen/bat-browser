@@ -1,8 +1,8 @@
 import * as DOM from './dom.js';
 import * as Feat from './features.js';
-import { showAllTabsView } from './views.js';
+import { showAllTabsView, hideAllTabsView } from './views.js';
 
-let getState, updateNavControls;
+let getState, updateNavControls, fullRender, persistState;
 
 function handleAddressBar(e) {
     if (e.key === 'Enter') {
@@ -154,9 +154,89 @@ export function scrollToTab(tabId) {
 }
 
 
+function initDelegatedEventListeners() {
+    // --- Main Tab Bar ---
+    DOM.tabsContainer.addEventListener('click', (e) => {
+        const state = getState();
+
+        // Close button
+        const closeBtn = e.target.closest('.tab-close-btn');
+        if (closeBtn) {
+            e.stopPropagation();
+            const tabId = e.target.closest('[data-id]').dataset.id;
+            Feat.handleCloseTab(tabId, { getState, persistState, fullRender });
+            return;
+        }
+
+        // Switch tab
+        const tabItem = e.target.closest('.tab-item');
+        if (tabItem) {
+            const tabId = tabItem.dataset.id;
+            if (tabId !== state.activeTabId) {
+                window.electronAPI.switchTab(tabId);
+            }
+            return;
+        }
+
+        // Collapse/Expand group
+        const groupHeader = e.target.closest('.group-header');
+        if (groupHeader) {
+            const groupId = groupHeader.dataset.id;
+            const group = state.groups.get(groupId);
+            if (group) {
+                group.collapsed = !group.collapsed;
+                persistState();
+                fullRender();
+            }
+            return;
+        }
+    });
+
+    // --- All Tabs View ---
+    DOM.allTabsListContainer.addEventListener('click', async (e) => {
+        const state = getState();
+
+        // Close button
+        const closeBtn = e.target.closest('.tab-close-btn');
+        if (closeBtn) {
+            e.stopPropagation();
+            const tabId = e.target.closest('[data-id]').dataset.id;
+            Feat.handleCloseTab(tabId, { getState, persistState, fullRender });
+            return;
+        }
+
+        // Switch tab and hide view
+        const tabItem = e.target.closest('.all-tabs-list-item');
+        if (tabItem) {
+            const tabId = tabItem.dataset.id;
+            if (tabId !== state.activeTabId) {
+                await window.electronAPI.switchTab(tabId);
+            }
+            hideAllTabsView();
+            return;
+        }
+
+        // Collapse/Expand group
+        const groupHeader = e.target.closest('.all-tabs-group-header');
+        if (groupHeader) {
+            const groupId = groupHeader.dataset.groupId;
+            const group = state.groups.get(groupId);
+            if (group) {
+                group.collapsed = !group.collapsed;
+                persistState();
+                fullRender(); // This will call renderAllTabsView if it's open
+            }
+            return;
+        }
+    });
+}
+
+
 export function initEvents(callbacks) {
     getState = callbacks.getState;
     updateNavControls = callbacks.updateNavControls;
+    fullRender = callbacks.fullRender;
+    persistState = callbacks.persistState;
 
     // --- UI Element Listeners ---
     DOM.addTabBtn.addEventListener('click', () => window.electronAPI.newTab());
@@ -190,4 +270,7 @@ export function initEvents(callbacks) {
     // --- Tab Overflow ---
     const { updateTabScrollButtons } = initTabOverflow();
     callbacks.updateTabScrollButtons = updateTabScrollButtons;
+
+    // --- Delegated Listeners for dynamically created items ---
+    initDelegatedEventListeners();
 }

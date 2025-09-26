@@ -1,7 +1,10 @@
 const { ipcMain, Menu, clipboard } = require('electron');
+const path = require('path');
 const state = require('./state');
 const tabsModule = require('./tabs');
 const settingsModule = require('./settings');
+const sessionModule = require('./session');
+const utils = require('./utils');
 const { getSerializableTabData } = require('./utils');
 
 function initializeIpc() {
@@ -55,7 +58,7 @@ function initializeIpc() {
         state.layout = newLayout;
         state.groups.clear();
         newGroups.forEach(g => state.groups.set(g.id, g));
-        state.sessionModule.debouncedSaveSession();
+        sessionModule.debouncedSaveSession();
     });
     ipcMain.handle('tabs:getAll', () => {
         return Array.from(state.tabs.values()).map(getSerializableTabData);
@@ -106,7 +109,7 @@ function initializeIpc() {
 
     // View-specific IPC handlers
     ipcMain.on('view:reload-current', (event) => {
-        const tab = state.utils.findTabByWebContents(event.sender);
+        const tab = utils.findTabByWebContents(event.sender);
         if (tab) {
             if (tab.url === 'about:blank') {
                 tab.view.webContents.loadFile(path.join(__dirname, '../renderer/newtab.html'));
@@ -117,14 +120,14 @@ function initializeIpc() {
     });
 
     ipcMain.on('view:loadURL', (event, url) => {
-        const tab = state.utils.findTabByWebContents(event.sender);
+        const tab = utils.findTabByWebContents(event.sender);
         if (tab && tab.view) {
             tab.view.webContents.loadURL(url);
         }
     });
 
     ipcMain.on('view:close', (event) => {
-        const tab = state.utils.findTabByWebContents(event.sender);
+        const tab = utils.findTabByWebContents(event.sender);
         if (tab) {
             state.mainWindow.webContents.send('close-tab-from-view', tab.id);
         }

@@ -1,3 +1,4 @@
+import * as DOM from './dom.js';
 import { state, persistState } from '../renderer.js';
 import * as Feat from './features.js';
 import { renderAllTabsView } from './views.js';
@@ -68,9 +69,8 @@ export function initIpc(callbacks) {
     });
 
     window.electronAPI.onWindowBlurred(() => {
-        const { addressBar } = require('./dom.js');
-        if (document.activeElement === addressBar) {
-            addressBar.blur();
+        if (document.activeElement === DOM.addressBar) {
+            DOM.addressBar.blur();
         }
     });
 
@@ -79,7 +79,6 @@ export function initIpc(callbacks) {
     });
 
     window.electronAPI.onFindResult(({ matches, activeMatchOrdinal }) => {
-        const { findMatches } = require('./dom.js');
-        findMatches.textContent = `${activeMatchOrdinal}/${matches}`;
+        DOM.findMatches.textContent = `${activeMatchOrdinal}/${matches}`;
     });
 }

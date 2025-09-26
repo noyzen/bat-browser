@@ -28,18 +28,7 @@ function createTabElement(id) {
     closeBtnEl.className = 'tab-close-btn';
     closeBtnEl.innerHTML = '<i class="fa-solid fa-xmark"></i>';
     closeBtnEl.title = 'Close Tab';
-    closeBtnEl.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const { fullRender, persistState, getState } = require('../renderer.js');
-        handleCloseTab(id, { getState, fullRender, persistState });
-    });
     
-    tabEl.addEventListener('click', () => {
-        if (id !== state.activeTabId) {
-            window.electronAPI.switchTab(id);
-        }
-    });
-
     tabEl.append(iconEl, titleEl, closeBtnEl);
     updateTabElement(tabEl, tabData);
     return tabEl;
@@ -161,10 +150,8 @@ export function render() {
         element.remove();
     }
     
-    if (updateTabScrollButtonsCallback) updateTabScrollButtonsCallback();
-    else {
-        const { updateTabScrollButtons } = require('./events.js');
-        if (updateTabScrollButtons) updateTabScrollButtons();
+    if (updateTabScrollButtonsCallback) {
+        updateTabScrollButtonsCallback();
     }
 }
 
@@ -186,11 +173,6 @@ export function renderTab(id, context = 'main') {
     const closeBtnEl = document.createElement('button');
     closeBtnEl.innerHTML = '<i class="fa-solid fa-xmark"></i>';
     closeBtnEl.title = 'Close Tab';
-    closeBtnEl.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const { fullRender, persistState, getState } = require('../renderer.js');
-        handleCloseTab(id, { getState, fullRender, persistState });
-    });
 
     if (context === 'main') {
        tabEl.className = 'tab-item';
@@ -224,24 +206,12 @@ export function renderTab(id, context = 'main') {
         tabEl.append(iconEl, textWrapper, closeBtnEl);
     }
     
-    tabEl.addEventListener('click', async () => {
-      const { hideAllTabsView } = require('./views.js');
-      if (context === 'all-tabs') {
-        if (id !== state.activeTabId) {
-          await window.electronAPI.switchTab(id);
-        }
-        hideAllTabsView();
-      } else if (id !== state.activeTabId) {
-        window.electronAPI.switchTab(id);
-      }
-    });
     return tabEl;
 }
 
 export function renderGroup(id, context = 'main', visibleTabIds = null) {
     const group = state.groups.get(id);
     if (!group) return null;
-    const { fullRender, persistState } = require('../renderer.js');
 
     const groupContainer = document.createElement('div');
     groupContainer.style.setProperty('--tab-group-color', group.color);
@@ -258,12 +228,6 @@ export function renderGroup(id, context = 'main', visibleTabIds = null) {
         groupContainer.draggable = true;
         headerEl.className = 'group-header';
         titleEl.className = 'group-title';
-
-        headerEl.addEventListener('click', () => {
-            group.collapsed = !group.collapsed;
-            persistState();
-            fullRender();
-        });
 
         toggleIcon.className = `fa-solid ${group.collapsed ? 'fa-chevron-right' : 'fa-chevron-down'} group-toggle-icon`;
 
@@ -297,12 +261,6 @@ export function renderGroup(id, context = 'main', visibleTabIds = null) {
         headerEl.dataset.type = 'group';
         headerEl.draggable = true;
         
-        headerEl.addEventListener('click', () => {
-            group.collapsed = !group.collapsed;
-            persistState();
-            fullRender();
-        });
-
         toggleIcon.className = 'fa-solid fa-chevron-down group-toggle-icon';
         titleEl.className = 'group-title';
         titleEl.textContent = group.name;

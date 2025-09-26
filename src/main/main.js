@@ -5,10 +5,10 @@ const WindowState = require('electron-window-state');
 
 const state = require('./state');
 const { initializeIpc } = require('./ipc');
-const { loadSession } = require('./session');
-const { loadSettings } = require('./settings');
-const { createTab, switchTab } = require('./tabs');
-const { getSerializableTabData } = require('./utils');
+const sessionModule = require('./session');
+const settingsModule = require('./settings');
+const tabsModule = require('./tabs');
+const { getSerializableTabData, debounce } = require('./utils');
 
 // Gracefully handle unhandled exceptions
 process.on('uncaughtException', (error, origin) => {
@@ -48,7 +48,7 @@ function createWindow() {
   // Update state
   state.setMainWindow(win);
   mainWindowState.manage(win);
-  state.settings = loadSettings();
+  state.settings = settingsModule.loadSettings();
 
   win.loadFile('src/renderer/index.html');
   // win.webContents.openDevTools({ mode: 'detach' });
@@ -57,11 +57,11 @@ function createWindow() {
   win.on('unmaximize', () => win.webContents.send('window:maximize-changed', false));
   win.on('blur', () => win.webContents.send('window:blurred'));
   
-  const debouncedUpdateViewBounds = state.utils.debounce(() => state.tabsModule?.updateViewBounds(), 100);
+  const debouncedUpdateViewBounds = debounce(() => tabsModule?.updateViewBounds(), 100);
   win.on('resize', debouncedUpdateViewBounds);
   
   win.on('close', (e) => {
-    if (state.tabs.size > 0) state.sessionModule.saveSession();
+    if (state.tabs.size > 0) sessionModule.saveSession();
   });
 
   win.on('closed', () => {
@@ -69,7 +69,7 @@ function createWindow() {
   });
 
   win.webContents.on('did-finish-load', async () => {
-    const savedSession = loadSession();
+    const savedSession = sessionModule.loadSession();
     if (savedSession && savedSession.tabs.length > 0) {
       win.webContents.send('session:restore-ui', {
         tabs: savedSession.tabs,
@@ -95,19 +95,19 @@ function createWindow() {
         savedSession.groups.forEach(g => state.groups.set(g.id, g));
         state.layout = savedSession.layout;
         state.activeTabId = savedSession.activeTabId;
-        await switchTab(state.activeTabId);
+        await tabsModule.switchTab(state.activeTabId);
       };
       createAllTabs();
 
     } else {
-      const newTab = createTab();
+      const newTab = tabsModule.createTab();
       state.layout.push(newTab.id);
       win.webContents.send('tab:created', getSerializableTabData(newTab));
-      await switchTab(newTab.id);
+      await tabsModule.switchTab(newTab.id);
     }
   });
 
-  state.tabsModule.startHibernationTimer();
+  tabsModule.startHibernationTimer();
 }
 
 app.whenReady().then(() => {

@@ -2,6 +2,8 @@ const { BrowserView, session, clipboard, Menu } = require('electron');
 const path = require('path');
 const { randomUUID } = require('crypto');
 const state = require('./state');
+const sessionModule = require('./session');
+const settingsModule = require('./settings');
 const { getSerializableTabData, getRandomColor } = require('./utils');
 const { BROWSER_VIEW_WEBCONTENTS_CONFIG, CHROME_HEIGHT, HIBERNATION_THRESHOLD, HIBERNATION_CHECK_INTERVAL } = require('./constants');
 
@@ -41,7 +43,7 @@ async function openUrlInNewTab(url, fromTabId, inBackground) {
     if (!inBackground) {
         await switchTab(newTab.id);
     } else {
-        state.sessionModule.debouncedSaveSession();
+        sessionModule.debouncedSaveSession();
     }
 }
 
@@ -62,7 +64,7 @@ function attachViewListenersToTab(tabData) {
     view.webContents.on('page-title-updated', (_, title) => {
       tabData.title = title;
       state.mainWindow.webContents.send('tab:updated', { id, title });
-      state.sessionModule.debouncedSaveSession();
+      sessionModule.debouncedSaveSession();
     });
   
     view.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
@@ -108,9 +110,9 @@ function attachViewListenersToTab(tabData) {
       tabData.canGoForward = view.webContents.canGoForward();
       state.mainWindow.webContents.send('tab:updated', { id, url: newUrl, canGoBack: tabData.canGoBack, canGoForward: tabData.canGoForward });
       
-      await state.settingsModule.applyFontSetting(tabData, state.settings.defaultFont);
+      await settingsModule.applyFontSetting(tabData, state.settings.defaultFont);
   
-      state.sessionModule.debouncedSaveSession();
+      sessionModule.debouncedSaveSession();
     });
     
     view.webContents.setWindowOpenHandler((details) => {
@@ -219,7 +221,7 @@ function hibernateTab(tab) {
     tab.isHibernated = true;
     
     state.mainWindow.webContents.send('tab:updated', { id: tab.id, isHibernated: true, url: tab.url });
-    state.sessionModule.debouncedSaveSession();
+    sessionModule.debouncedSaveSession();
 }
 
 function startHibernationTimer() {
@@ -274,7 +276,7 @@ async function switchTab(id) {
       state.mainWindow.addBrowserView(newTab.view);
       updateViewBounds();
       newTab.view.webContents.focus();
-      state.sessionModule.debouncedSaveSession();
+      sessionModule.debouncedSaveSession();
     }
 }
 
