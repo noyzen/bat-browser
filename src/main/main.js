@@ -23,6 +23,8 @@ let activeTabId = null;
 
 const CHROME_HEIGHT = 39; // Height of the unified titlebar/toolbar + 1px border
 const SESSION_PATH = path.join(app.getPath('userData'), 'session.json');
+const SETTINGS_PATH = path.join(app.getPath('userData'), 'settings.json');
+let settings = {};
 const PREDEFINED_COLORS = [
   '#e57373', '#f06292', '#ba68c8', '#9575cd', '#7986cb',
   '#64b5f6', '#4fc3f7', '#4dd0e1', '#4db6ac', '#81c784',
@@ -40,6 +42,52 @@ const BROWSER_VIEW_WEBCONTENTS_CONFIG = {
   allowRunningInsecureContent: false,
   preload: path.join(__dirname, 'viewPreload.js'),
 };
+
+// --- Settings ---
+function loadSettings() {
+    try {
+        if (fs.existsSync(SETTINGS_PATH)) {
+            return JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
+        }
+    } catch (e) {
+        console.error('Failed to load settings:', e);
+    }
+    return {}; // Return empty object on failure or if file doesn't exist
+}
+
+const debouncedSaveSettings = debounce(() => {
+    try {
+        fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2));
+    } catch (e) {
+        console.error('Failed to save settings:', e);
+    }
+}, 500);
+
+async function applyFontSetting(tab, fontFamily) {
+    if (!tab || !tab.view || tab.view.webContents.isDestroyed()) return;
+    const webContents = tab.view.webContents;
+    const existingKey = tab.cssKeys.get('defaultFont');
+
+    if (existingKey) {
+        try {
+            await webContents.removeInsertedCSS(existingKey);
+        } catch (e) {
+            // Ignore errors if webContents is gone
+        } finally {
+            tab.cssKeys.delete('defaultFont');
+        }
+    }
+
+    if (fontFamily && fontFamily !== 'default') {
+        const css = `* { font-family: "${fontFamily}" !important; }`;
+        try {
+            const newKey = await webContents.insertCSS(css);
+            tab.cssKeys.set('defaultFont', newKey);
+        } catch (e) {
+            console.error('Failed to insert font CSS:', e);
+        }
+    }
+}
 
 
 function getRandomColor() {
@@ -225,11 +273,16 @@ async function createTab(url = 'about:blank', options = {}) {
     isLoaded: false,
     isHibernated: false,
     lastActive: Date.now(),
-    color: fromTabId ? (tabs.get(fromTabId)?.color || getRandomColor()) : getRandomColor()
+    color: fromTabId ? (tabs.get(fromTabId)?.color || getRandomColor()) : getRandomColor(),
+    cssKeys: new Map(),
   };
   tabs.set(id, tabData);
 
   attachViewListenersToTab(tabData);
+  
+  if (settings.defaultFont) {
+    applyFontSetting(tabData, settings.defaultFont);
+  }
 
   await view.webContents.loadURL(url);
   return tabData;
@@ -290,6 +343,7 @@ function createWindow() {
   });
 
   mainWindowState.manage(mainWindow);
+  settings = loadSettings();
   mainWindow.loadFile('src/renderer/index.html');
   // mainWindow.webContents.openDevTools({ mode: 'detach' });
 
@@ -325,6 +379,7 @@ function createWindow() {
             isLoading: !isHibernated, isLoaded: false,
             isHibernated,
             lastActive: Date.now() - (isHibernated ? HIBERNATION_THRESHOLD : 0),
+            cssKeys: new Map(),
           });
         });
         
@@ -377,6 +432,10 @@ async function switchTab(id) {
         newTab.session = tabSession;
         attachViewListenersToTab(newTab);
         
+        if (settings.defaultFont) {
+          applyFontSetting(newTab, settings.defaultFont);
+        }
+
         // Start loading the URL asynchronously. Do NOT await this call.
         // The page will load in the background after the tab switch is visible.
         view.webContents.loadURL(newTab.url);
@@ -496,6 +555,24 @@ ipcMain.handle('zoom:set', (_, factor) => {
   const view = getActiveTab()?.view;
   if(view) view.webContents.setZoomFactor(factor);
 });
+
+// Settings
+ipcMain.handle('settings:get-default-font', () => {
+    return settings.defaultFont || 'default';
+});
+ipcMain.handle('settings:set-default-font', async (_, fontFamily) => {
+    settings.defaultFont = (fontFamily === 'default') ? null : fontFamily;
+    debouncedSaveSettings();
+
+    // Apply to all currently active (non-hibernated) tabs
+    for (const tab of tabs.values()) {
+        if (tab.view && !tab.view.webContents.isDestroyed()) {
+            await applyFontSetting(tab, settings.defaultFont);
+        }
+    }
+    return true;
+});
+
 
 // View Reload from Error Page
 ipcMain.on('view:reload-current', (event) => {

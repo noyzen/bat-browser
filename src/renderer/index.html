@@ -23,6 +23,7 @@
           <button id="all-tabs-btn" title="List all tabs" aria-label="List all tabs">
              <i class="fa-solid fa-chevron-down"></i>
           </button>
+          <button id="settings-btn" title="Settings" aria-label="Settings"><i class="fa-solid fa-cog"></i></button>
           <button id="back-btn" title="Back" aria-label="Back" disabled><i class="fa-solid fa-arrow-left"></i></button>
           <button id="forward-btn" title="Forward" aria-label="Forward" disabled><i class="fa-solid fa-arrow-right"></i></button>
           <button id="reload-btn" title="Reload" aria-label="Reload"><i id="reload-icon" class="fa-solid fa-rotate-right"></i></button>
@@ -62,6 +63,39 @@
     <div id="tab-search-box">
       <input type="text" id="tab-search-input" placeholder="Search tabs..." />
       <ul id="tab-search-results"></ul>
+    </div>
+  </div>
+
+  <div id="settings-view" class="hidden">
+    <div class="all-tabs-titlebar"> <!-- Reuse class for styling -->
+      <div class="all-tabs-titlebar-left">
+        <button id="settings-back-to-browser-btn" title="Back to Browser">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back to Browser</span>
+        </button>
+      </div>
+       <div class="window-controls">
+        <button id="settings-min-btn" title="Minimize" aria-label="Minimize"><i class="fa-solid fa-window-minimize"></i></button>
+        <button id="settings-max-btn" title="Maximize" aria-label="Maximize"><i id="settings-max-icon" class="fa-regular fa-window-maximize"></i></button>
+        <button id="settings-close-btn" title="Close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+    <div id="settings-content-container">
+        <div id="settings-content">
+            <h1>Settings</h1>
+            <div class="settings-section">
+                <h2>Appearance</h2>
+                <div class="setting-item">
+                    <label for="font-select">Default Page Font</label>
+                    <div class="setting-control">
+                        <select id="font-select" style="display: none;"></select>
+                        <span id="font-loading-indicator">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Loading system fonts...
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
   </div>
 

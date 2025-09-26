@@ -26,6 +26,7 @@ const searchResults = document.getElementById('tab-search-results');
 const titlebar = document.getElementById('titlebar');
 const toolbar = document.getElementById('toolbar');
 const toolbarWrapper = document.getElementById('toolbar-wrapper');
+const appChrome = document.getElementById('app-chrome');
 
 // All Tabs View Elements
 const allTabsView = document.getElementById('all-tabs-view');
@@ -36,6 +37,17 @@ const allTabsMinBtn = document.getElementById('all-tabs-min-btn');
 const allTabsMaxBtn = document.getElementById('all-tabs-max-btn');
 const allTabsMaxIcon = document.getElementById('all-tabs-max-icon');
 const allTabsCloseBtn = document.getElementById('all-tabs-close-btn');
+
+// Settings View Elements
+const settingsBtn = document.getElementById('settings-btn');
+const settingsView = document.getElementById('settings-view');
+const settingsBackBtn = document.getElementById('settings-back-to-browser-btn');
+const fontSelect = document.getElementById('font-select');
+const fontLoadingIndicator = document.getElementById('font-loading-indicator');
+const settingsMinBtn = document.getElementById('settings-min-btn');
+const settingsMaxBtn = document.getElementById('settings-max-btn');
+const settingsMaxIcon = document.getElementById('settings-max-icon');
+const settingsCloseBtn = document.getElementById('settings-close-btn');
 
 
 // --- State ---
@@ -725,10 +737,15 @@ async function refreshMaxButton() {
   document.body.classList.toggle('maximized', maximized);
   const iconClass = maximized ? 'fa-regular fa-window-restore' : 'fa-regular fa-window-maximize';
   const title = maximized ? 'Restore' : 'Maximize';
+  
   maxIcon.className = iconClass;
   maxBtn.title = title;
+  
   allTabsMaxIcon.className = iconClass;
   allTabsMaxBtn.title = title;
+  
+  settingsMaxIcon.className = iconClass;
+  settingsMaxBtn.title = title;
 }
 minBtn.addEventListener('click', () => window.electronAPI.minimizeWindow());
 maxBtn.addEventListener('click', () => window.electronAPI.maximizeWindow());
@@ -736,6 +753,10 @@ closeBtn.addEventListener('click', () => window.electronAPI.closeWindow());
 allTabsMinBtn.addEventListener('click', () => window.electronAPI.minimizeWindow());
 allTabsMaxBtn.addEventListener('click', () => window.electronAPI.maximizeWindow());
 allTabsCloseBtn.addEventListener('click', () => window.electronAPI.closeWindow());
+settingsMinBtn.addEventListener('click', () => window.electronAPI.minimizeWindow());
+settingsMaxBtn.addEventListener('click', () => window.electronAPI.maximizeWindow());
+settingsCloseBtn.addEventListener('click', () => window.electronAPI.closeWindow());
+
 window.electronAPI.onMaximizeChanged(refreshMaxButton);
 document.addEventListener('DOMContentLoaded', refreshMaxButton);
 
@@ -1464,12 +1485,14 @@ function showAllTabsView() {
     window.electronAPI.hideActiveView();
     renderAllTabsView();
     allTabsView.classList.remove('hidden');
+    appChrome.classList.add('hidden');
     allTabsSearchInput.focus();
     allTabsSearchInput.select();
 }
 function hideAllTabsView() {
-    render(); // Sync main UI before switching back to it
     allTabsView.classList.add('hidden');
+    appChrome.classList.remove('hidden');
+    render(); // Sync main UI before switching back to it
     window.electronAPI.showActiveView();
 }
 
@@ -1524,6 +1547,74 @@ allTabsSearchInput.addEventListener('input', renderAllTabsView);
 allTabsView.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') hideAllTabsView();
 });
+
+
+// --- Settings View ---
+let fontsLoaded = false;
+async function populateFontSelector() {
+    if (fontsLoaded) {
+        const currentFont = await window.electronAPI.getDefaultFont();
+        fontSelect.value = currentFont;
+        return;
+    }
+
+    try {
+        if (!window.queryLocalFonts) {
+            fontLoadingIndicator.innerHTML = "Font detection not supported.";
+            return;
+        }
+
+        const availableFonts = await window.queryLocalFonts();
+        const fontFamilies = new Set();
+        for (const fontData of availableFonts) {
+            fontFamilies.add(fontData.family);
+        }
+
+        fontSelect.innerHTML = '<option value="default">Browser Default</option>';
+
+        // Sort fonts alphabetically and add them to the select
+        [...fontFamilies].sort((a, b) => a.localeCompare(b)).forEach(family => {
+            const option = document.createElement('option');
+            option.value = family;
+            option.textContent = family;
+            option.style.fontFamily = family; // Preview the font
+            fontSelect.appendChild(option);
+        });
+
+        const currentFont = await window.electronAPI.getDefaultFont();
+        fontSelect.value = currentFont;
+
+        fontsLoaded = true;
+        fontLoadingIndicator.style.display = 'none';
+        fontSelect.style.display = 'block';
+
+    } catch (err) {
+        console.error("Error getting system fonts:", err);
+        fontLoadingIndicator.innerHTML = "Could not load system fonts.";
+    }
+}
+
+async function showSettingsView() {
+    await window.electronAPI.hideActiveView();
+    populateFontSelector();
+    settingsView.classList.remove('hidden');
+    appChrome.classList.add('hidden');
+    refreshMaxButton();
+}
+
+async function hideSettingsView() {
+    settingsView.classList.add('hidden');
+    appChrome.classList.remove('hidden');
+    await window.electronAPI.showActiveView();
+}
+
+settingsBtn.addEventListener('click', showSettingsView);
+settingsBackBtn.addEventListener('click', hideSettingsView);
+
+fontSelect.addEventListener('change', () => {
+    window.electronAPI.setDefaultFont(fontSelect.value);
+});
+
 
 // --- Address Bar Expansion ---
 addressBar.addEventListener('focus', () => {

@@ -69,6 +69,11 @@ body {
   background-color: var(--bg-secondary);
 }
 
+#app-chrome.hidden {
+  display: none;
+}
+
+
 /* --- Unified Title Bar Structure --- */
 #titlebar {
   display: flex;
@@ -106,7 +111,7 @@ body {
   place-items: center; font-size: 12px; border-radius: 0;
 }
 .window-controls button:hover { background: var(--bg-hover); }
-.window-controls #close-btn:hover, .window-controls #all-tabs-close-btn:hover { background: var(--window-controls-close-hover); color: white; }
+.window-controls #close-btn:hover, .window-controls #all-tabs-close-btn:hover, .window-controls #settings-close-btn:hover { background: var(--window-controls-close-hover); color: white; }
 
 /* --- Tab Bar --- */
 #tab-bar-wrapper {
@@ -361,12 +366,87 @@ body {
 .search-result-title { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .search-result-url { font-size: 12px; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+
+/* --- Settings View --- */
+#settings-view {
+  position: fixed; inset: 0; background: var(--bg-primary); 
+  z-index: 50; display: flex; flex-direction: column;
+}
+#settings-view.hidden { display: none; }
+#settings-content-container {
+  flex-grow: 1;
+  overflow-y: auto;
+  -webkit-app-region: no-drag;
+}
+#settings-content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px;
+}
+#settings-content h1 {
+  font-size: 28px;
+  font-weight: 300;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 16px;
+  margin: 0 0 24px 0;
+}
+#settings-content h2 {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--fg-secondary);
+  text-transform: uppercase;
+  margin: 40px 0 16px 0;
+  letter-spacing: 0.5px;
+}
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.setting-item label {
+  font-size: 14px;
+}
+.setting-control {
+  display: flex;
+  align-items: center;
+}
+#font-select {
+  background-color: var(--bg-tertiary);
+  color: var(--fg-primary);
+  border: 1px solid var(--border-color);
+  padding: 8px 36px 8px 12px;
+  border-radius: 0;
+  min-width: 250px;
+  font-size: 14px;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238b8b8b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 24px;
+  cursor: pointer;
+}
+#font-select:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+#font-loading-indicator {
+  color: var(--fg-secondary);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
 /* --- All Tabs View --- */
 #all-tabs-view { position: fixed; inset: 0; background: var(--bg-primary); z-index: 50; display: flex; flex-direction: column; }
 #all-tabs-view.hidden { display: none; }
 .all-tabs-titlebar { display: flex; align-items: center; height: var(--titlebar-height); background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color); -webkit-app-region: drag; flex-shrink: 0; padding-left: 8px; }
 .all-tabs-titlebar-left { flex-grow: 1; display: flex; align-items: center; gap: 20px; -webkit-app-region: no-drag; }
-#back-to-browser-btn {
+#back-to-browser-btn, #settings-back-to-browser-btn {
   background: var(--accent-color);
   border: none;
   color: white;
@@ -380,7 +460,7 @@ body {
   border-radius: 0;
   transition: background-color 150ms ease;
 }
-#back-to-browser-btn:hover { background: #1f8ad2; }
+#back-to-browser-btn:hover, #settings-back-to-browser-btn:hover { background: #1f8ad2; }
 .search-wrapper { position: relative; display: flex; align-items: center; }
 .search-wrapper .fa-magnifying-glass { position: absolute; left: 12px; color: var(--fg-secondary); }
 #all-tabs-search-input { width: 300px; height: 28px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--fg-primary); outline: none; padding: 0 12px 0 34px; font-size: 14px; border-radius: 0; }

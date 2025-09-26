@@ -38,6 +38,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Zoom
   setZoom: (factor) => ipcRenderer.invoke('zoom:set', factor),
   
+  // Settings
+  getDefaultFont: () => ipcRenderer.invoke('settings:get-default-font'),
+  setDefaultFont: (fontFamily) => ipcRenderer.invoke('settings:set-default-font', fontFamily),
+
   // Context Menu
   showContextMenu: (menuTemplate) => ipcRenderer.invoke('show-context-menu', menuTemplate),
   onContextMenuCommand: (callback) => ipcRenderer.on('context-menu-command', (_e, command, context) => callback(command, context)),
