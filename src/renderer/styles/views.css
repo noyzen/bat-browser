@@ -43,7 +43,7 @@
 #search-engine-select { background-color: var(--bg-tertiary); color: var(--fg-primary); border: 1px solid var(--border-color); padding: 8px 36px 8px 12px; border-radius: 0; min-width: 250px; font-size: 14px; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238b8b8b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; background-size: 24px; cursor: pointer; }
 #search-engine-select:focus { outline: none; border-color: var(--accent-color); }
 
-/* Custom Font Selector */
+/* Custom Font Selector Button */
 #font-select-btn {
     background-color: var(--bg-tertiary);
     color: var(--fg-primary);
@@ -76,7 +76,7 @@
     color: var(--fg-secondary);
 }
 
-/* Font Picker Modal */
+/* --- Redesigned Font Picker Modal --- */
 #font-picker-modal {
     position: fixed;
     inset: 0;
@@ -95,7 +95,7 @@
 .font-picker-dialog {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    width: 450px;
+    width: 400px;
     max-width: 90vw;
     height: 70vh;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -118,7 +118,7 @@
 }
 .font-picker-header h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 500;
 }
 #font-picker-close-btn {
@@ -137,28 +137,86 @@
     background: var(--bg-hover);
     color: var(--fg-primary);
 }
-.font-picker-dialog .search-wrapper {
-    padding: 16px 20px;
+.font-search-wrapper {
     flex-shrink: 0;
+    padding: 12px 20px;
+    position: relative;
+}
+.font-search-wrapper .fa-magnifying-glass {
+    position: absolute;
+    left: 32px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--fg-secondary);
+    pointer-events: none;
+    font-size: 14px;
 }
 #font-search-input {
     width: 100%;
-    height: 36px;
+    height: 38px;
     background: var(--bg-primary);
     border-radius: 0;
     border: 1px solid var(--border-color);
     color: var(--fg-primary);
     outline: none;
-    padding: 0 12px 0 34px;
+    padding: 0 40px 0 38px;
     font-size: 14px;
 }
 #font-search-input:focus {
     border-color: var(--accent-color);
     box-shadow: 0 0 0 1px var(--accent-color);
 }
+#font-search-clear-btn {
+    position: absolute;
+    right: 21px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 0;
+}
+#font-search-clear-btn:hover {
+    color: var(--fg-primary);
+}
+#font-search-clear-btn.hidden {
+    display: none;
+}
 #font-list-container {
-    overflow-y: auto;
+    overflow: hidden;
     flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+#font-list-default {
+    list-style: none;
+    padding: 0 20px;
+    margin: 0;
+    flex-shrink: 0;
+}
+#font-list-default li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+}
+.font-list-separator {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 8px 20px;
+    flex-shrink: 0;
+}
+#font-list-scroll-wrapper {
+    flex-grow: 1;
+    overflow-y: auto;
     position: relative;
     padding: 0 4px 16px 20px;
 }
@@ -178,17 +236,18 @@
 }
 #font-list li {
     padding: 10px 16px;
-    cursor: pointer;
     border-radius: 0;
-    font-size: 16px;
+    font-size: 15px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    cursor: pointer;
+    transition: background-color 100ms ease-in-out, color 100ms ease-in-out;
 }
-#font-list li:hover {
+#font-list-default li:hover, #font-list li:hover {
     background: var(--bg-hover);
 }
-#font-list li.selected {
+#font-list-default li.selected, #font-list li.selected {
     background: var(--accent-color);
     color: white;
 }

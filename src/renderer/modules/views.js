@@ -96,12 +96,16 @@ const fontSelectValue = document.getElementById('font-select-value');
 const fontPickerModal = document.getElementById('font-picker-modal');
 const fontPickerCloseBtn = document.getElementById('font-picker-close-btn');
 const fontSearchInput = document.getElementById('font-search-input');
+const fontSearchClearBtn = document.getElementById('font-search-clear-btn');
 const fontListContainer = document.getElementById('font-list-container');
+const fontListDefault = document.getElementById('font-list-default');
 const fontList = document.getElementById('font-list');
+const fontListScrollWrapper = document.getElementById('font-list-scroll-wrapper');
 const fontListLoader = document.getElementById('font-list-loader');
 
 function renderFontList(filter = '') {
-    fontList.innerHTML = ''; // Clear previous results
+    fontList.innerHTML = '';
+    fontListDefault.innerHTML = '';
     const lowerCaseFilter = filter.toLowerCase();
 
     const filteredFonts = allFonts.filter(font => font.toLowerCase().includes(lowerCaseFilter));
@@ -112,16 +116,20 @@ function renderFontList(filter = '') {
         delete fontList.dataset.rafId;
     }
 
-    // Add Browser Default option first
+    // Add Browser Default option
     const defaultOption = document.createElement('li');
-    defaultOption.textContent = 'Browser Default';
+    defaultOption.innerHTML = `
+        <i class="fa-solid fa-desktop"></i>
+        <span>Browser Default</span>
+    `;
     defaultOption.dataset.font = 'default';
     if (!currentSettings.defaultFont || currentSettings.defaultFont === 'default') {
         defaultOption.classList.add('selected');
     }
-    fontList.appendChild(defaultOption);
+    fontListDefault.appendChild(defaultOption);
 
-    // Render list in batches to avoid freezing the UI
+
+    // Render system fonts list in batches to avoid freezing the UI
     const BATCH_SIZE = 100;
     let index = 0;
 
@@ -155,6 +163,7 @@ function renderFontList(filter = '') {
 
 async function loadFonts() {
     if (fontsLoaded) return;
+    fontListLoader.style.display = 'flex';
     try {
         if (!window.queryLocalFonts) {
             fontListLoader.textContent = "Font detection not supported.";
@@ -175,13 +184,13 @@ async function loadFonts() {
 function openFontPicker() {
     fontPickerModal.classList.remove('hidden');
     fontSearchInput.value = '';
+    fontSearchClearBtn.classList.add('hidden');
     fontSearchInput.focus();
     if (!fontsLoaded) {
         loadFonts();
     } else {
         renderFontList();
-        // Scroll to selected
-        const selected = fontList.querySelector('.selected');
+        const selected = fontList.querySelector('.selected') || fontListDefault.querySelector('.selected');
         if (selected) {
             selected.scrollIntoView({ block: 'center', behavior: 'auto' });
         }
@@ -544,9 +553,20 @@ export function initViews({ fullRender }) {
     });
     
     const debouncedRenderFontList = debounce((value) => renderFontList(value), 150);
-    fontSearchInput.addEventListener('input', () => debouncedRenderFontList(fontSearchInput.value));
+    fontSearchInput.addEventListener('input', () => {
+        const query = fontSearchInput.value;
+        fontSearchClearBtn.classList.toggle('hidden', !query);
+        debouncedRenderFontList(query)
+    });
 
-    fontList.addEventListener('click', (e) => {
+    fontSearchClearBtn.addEventListener('click', () => {
+        fontSearchInput.value = '';
+        fontSearchClearBtn.classList.add('hidden');
+        renderFontList('');
+        fontSearchInput.focus();
+    });
+
+    fontListContainer.addEventListener('click', (e) => {
         const target = e.target.closest('li');
         if (target) {
             selectFont(target.dataset.font);

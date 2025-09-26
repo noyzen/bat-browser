@@ -230,15 +230,22 @@
             <h2>Select Default Font</h2>
             <button id="font-picker-close-btn" title="Close"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div class="search-wrapper">
+        <div class="font-search-wrapper">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" id="font-search-input" placeholder="Search fonts">
+            <button id="font-search-clear-btn" class="hidden" title="Clear search"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div id="font-list-container">
-            <div id="font-list-loader">
-                <i class="fa-solid fa-spinner fa-spin"></i> Loading system fonts...
+            <ul id="font-list-default">
+                <!-- "Browser Default" will be rendered here by JS -->
+            </ul>
+            <div class="font-list-separator"></div>
+            <div id="font-list-scroll-wrapper">
+              <div id="font-list-loader">
+                  <i class="fa-solid fa-spinner fa-spin"></i> Loading system fonts...
+              </div>
+              <ul id="font-list"></ul>
             </div>
-            <ul id="font-list"></ul>
         </div>
     </div>
   </div>
