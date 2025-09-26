@@ -358,8 +358,10 @@ async function toggleTabSharedState(id) {
 
 async function clearCacheAndReload(id) {
     const tab = state.tabs.get(id);
-    if (tab && tab.session && tab.view) {
-        await tab.session.clearCache();
+    if (tab && tab.session && tab.view && !tab.view.webContents.isDestroyed()) {
+        // clearStorageData is more comprehensive than clearCache. It removes cookies,
+        // localStorage, IndexedDB, etc., fulfilling the user's expectation of a complete data clear.
+        await tab.session.clearStorageData();
         tab.view.webContents.reload();
     }
 }
