@@ -7,12 +7,24 @@ function loadSettings() {
     const defaults = {
         defaultFont: null,
         searchEngine: 'google',
+        ai: {
+            enabled: false,
+            apiKeys: [], // { id, name, key }
+            activeApiKeyId: null,
+            panelOpen: false,
+            panelWidth: 350,
+        },
     };
 
     try {
         if (fs.existsSync(SETTINGS_PATH)) {
             const savedSettings = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
-            return { ...defaults, ...savedSettings };
+            const merged = { ...defaults, ...savedSettings };
+            // Deep merge AI settings
+            if (savedSettings.ai) {
+                merged.ai = { ...defaults.ai, ...savedSettings.ai };
+            }
+            return merged;
         }
     } catch (e) {
         console.error('Failed to load settings:', e);

@@ -68,12 +68,20 @@ export function renderAllTabsView() {
 
 // --- Settings View ---
 let fontsLoaded = false;
+let currentSettings = {};
+const aiSettingsContent = document.getElementById('ai-settings-content');
+const aiEnableToggle = document.getElementById('ai-enable-toggle');
+const apiKeyList = document.getElementById('api-key-list');
+const addApiKeyBtn = document.getElementById('add-api-key-btn');
+const apiKeyNameInput = document.getElementById('api-key-name-input');
+const apiKeyInput = document.getElementById('api-key-input');
+
 async function populateSettings() {
-    const settings = await window.electronAPI.getSettings();
+    currentSettings = await window.electronAPI.getSettings();
 
     // Appearance
     if (fontsLoaded) {
-        DOM.fontSelect.value = settings.defaultFont || 'default';
+        DOM.fontSelect.value = currentSettings.defaultFont || 'default';
     } else {
         try {
             if (!window.queryLocalFonts) {
@@ -93,7 +101,7 @@ async function populateSettings() {
                 DOM.fontSelect.appendChild(option);
             });
     
-            DOM.fontSelect.value = settings.defaultFont || 'default';
+            DOM.fontSelect.value = currentSettings.defaultFont || 'default';
     
             fontsLoaded = true;
             DOM.fontLoadingIndicator.style.display = 'none';
@@ -113,7 +121,67 @@ async function populateSettings() {
         <option value="bing">Bing</option>
         <option value="startpage">Startpage</option>
     `;
-    searchSelect.value = settings.searchEngine || 'google';
+    searchSelect.value = currentSettings.searchEngine || 'google';
+
+    // AI
+    populateAISettings();
+}
+
+function populateAISettings() {
+    const aiConf = currentSettings.ai || {};
+    aiEnableToggle.checked = aiConf.enabled;
+    aiSettingsContent.classList.toggle('hidden', !aiConf.enabled);
+    renderAPIKeyList();
+}
+
+function renderAPIKeyList() {
+    apiKeyList.innerHTML = '';
+    const aiConf = currentSettings.ai || {};
+    if (!aiConf.apiKeys || aiConf.apiKeys.length === 0) {
+        apiKeyList.innerHTML = `<p class="no-keys-message">No API keys added yet.</p>`;
+        return;
+    }
+
+    aiConf.apiKeys.forEach(key => {
+        const keyEl = document.createElement('div');
+        keyEl.className = 'api-key-item';
+        keyEl.classList.toggle('active', key.id === aiConf.activeApiKeyId);
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'api-key-name';
+        nameEl.textContent = key.name;
+        
+        const partialKeyEl = document.createElement('span');
+        partialKeyEl.className = 'api-key-partial';
+        partialKeyEl.textContent = `(...${key.key.slice(-4)})`;
+        
+        const controlsEl = document.createElement('div');
+        controlsEl.className = 'api-key-controls';
+
+        const setActiveBtn = document.createElement('button');
+        setActiveBtn.textContent = 'Set Active';
+        setActiveBtn.disabled = key.id === aiConf.activeApiKeyId;
+        setActiveBtn.addEventListener('click', () => {
+            currentSettings.ai.activeApiKeyId = key.id;
+            window.electronAPI.settingsSetAI(currentSettings.ai);
+            renderAPIKeyList();
+        });
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+        deleteBtn.addEventListener('click', () => {
+            currentSettings.ai.apiKeys = currentSettings.ai.apiKeys.filter(k => k.id !== key.id);
+            if (currentSettings.ai.activeApiKeyId === key.id) {
+                currentSettings.ai.activeApiKeyId = currentSettings.ai.apiKeys.length > 0 ? currentSettings.ai.apiKeys[0].id : null;
+            }
+            window.electronAPI.settingsSetAI(currentSettings.ai);
+            renderAPIKeyList();
+        });
+
+        controlsEl.append(setActiveBtn, deleteBtn);
+        keyEl.append(nameEl, partialKeyEl, controlsEl);
+        apiKeyList.appendChild(keyEl);
+    });
 }
 
 function handleSettingsSearch(e) {
@@ -162,13 +230,13 @@ async function showSettingsView() {
     await window.electronAPI.hideActiveView();
     populateSettings();
     DOM.settingsView.classList.remove('hidden');
-    DOM.appChrome.classList.add('hidden');
+    document.body.classList.add('settings-open');
     document.dispatchEvent(new Event('DOMContentLoaded')); // Refresh max button
 }
 
 async function hideSettingsView() {
     DOM.settingsView.classList.add('hidden');
-    DOM.appChrome.classList.remove('hidden');
+    document.body.classList.remove('settings-open');
     await window.electronAPI.showActiveView();
 }
 
@@ -198,6 +266,33 @@ export function initViews({ fullRender }) {
     // -- Search
     document.getElementById('search-engine-select').addEventListener('change', (e) => {
         window.electronAPI.settingsSetSearchEngine(e.target.value);
+    });
+    
+    // -- AI
+    aiEnableToggle.addEventListener('change', () => {
+        currentSettings.ai.enabled = aiEnableToggle.checked;
+        window.electronAPI.settingsSetAI({ enabled: currentSettings.ai.enabled });
+        aiSettingsContent.classList.toggle('hidden', !currentSettings.ai.enabled);
+    });
+
+    addApiKeyBtn.addEventListener('click', () => {
+        const name = apiKeyNameInput.value.trim();
+        const key = apiKeyInput.value.trim();
+        if (!name || !key) return;
+
+        const newKey = { id: `key-${Date.now()}`, name, key };
+        if (!currentSettings.ai.apiKeys) currentSettings.ai.apiKeys = [];
+        currentSettings.ai.apiKeys.push(newKey);
+        
+        // If it's the first key, make it active
+        if (currentSettings.ai.apiKeys.length === 1) {
+            currentSettings.ai.activeApiKeyId = newKey.id;
+        }
+
+        window.electronAPI.settingsSetAI(currentSettings.ai);
+        apiKeyNameInput.value = '';
+        apiKeyInput.value = '';
+        renderAPIKeyList();
     });
 
     // -- Sidebar navigation

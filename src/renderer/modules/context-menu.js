@@ -1,7 +1,9 @@
 import { state, isTabInAnyGroup, persistState } from '../renderer.js';
 import * as Feat from './features.js';
+import { showAIPanel } from './ai.js';
 
 let fullRenderCallback;
+let settings;
 
 async function handleContextMenuCommand(command, context) {
     const rerender = () => fullRenderCallback();
@@ -53,6 +55,10 @@ async function handleContextMenuCommand(command, context) {
         case 'zoom-reset': {
             if (!tab) break;
             window.electronAPI.updateTabZoom(tabId, 1.0);
+            break;
+        }
+        case 'show-ai-assistant': {
+            showAIPanel(tabId);
             break;
         }
         case 'close-tab':
@@ -168,6 +174,8 @@ export function initContextMenu(cbs) {
         handleContextMenuCommand(action.command, action.context);
     });
 
+    window.electronAPI.getSettings().then(s => settings = s);
+
     window.addEventListener('contextmenu', (e) => {
         const targetTab = e.target.closest('.tab-item, .all-tabs-list-item');
         const targetGroup = e.target.closest('.group-header, .tab-group, .all-tabs-group-header');
@@ -203,6 +211,7 @@ export function initContextMenu(cbs) {
                 },
                 { type: 'separator' },
                 { label: 'Clear Cache and Reload', action: { command: 'clear-cache-reload', context: { tabId } } },
+                { label: 'AI Assistant', action: { command: 'show-ai-assistant', context: { tabId } }, visible: settings?.ai?.enabled },
                 { type: 'separator' },
                 { label: 'Share data with other shared tabs', type: 'checkbox', checked: tab.isShared, action: { command: 'toggle-shared', context: { tabId } } },
                 { type: 'separator' },

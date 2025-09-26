@@ -27,6 +27,25 @@ body {
     font-size: 13px;
     -webkit-user-select: none;
     user-select: none;
+    display: flex;
+    flex-direction: column;
+}
+
+body > #app-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+body.settings-open #app-container, body.settings-open #find-bar {
+    display: none;
+}
+
+#app-chrome {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 0;
 }
   
 /* --- Custom Scrollbar --- */

@@ -10,43 +10,62 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="app-chrome">
-    <!-- Unified top bar containing tabs, toolbar, and window controls -->
-    <div id="titlebar">
-      <div id="window-handle" class="drag-region" title="Drag Window"><i class="fa-solid fa-grip-vertical"></i></div>
-      <!-- Toolbar with address and navigation -->
-      <div id="toolbar-wrapper">
-        <div id="toolbar">
-          <button id="add-tab-btn" title="New Tab" aria-label="New Tab">
-            <i class="fa-solid fa-plus"></i>
-          </button>
-          <button id="all-tabs-btn" title="List all tabs" aria-label="List all tabs">
-             <i class="fa-solid fa-chevron-down"></i>
-          </button>
-          <button id="settings-btn" title="Settings" aria-label="Settings"><i class="fa-solid fa-cog"></i></button>
-          <button id="back-btn" title="Back" aria-label="Back" disabled><i class="fa-solid fa-arrow-left"></i></button>
-          <button id="forward-btn" title="Forward" aria-label="Forward" disabled><i class="fa-solid fa-arrow-right"></i></button>
-          <button id="reload-btn" title="Reload" aria-label="Reload"><i id="reload-icon" class="fa-solid fa-rotate-right"></i></button>
-          <div id="address-bar-container">
-            <input type="text" id="address-bar" placeholder="Search or type a URL" />
+  <div id="app-container">
+    <div id="app-chrome">
+      <!-- Unified top bar containing tabs, toolbar, and window controls -->
+      <div id="titlebar">
+        <div id="window-handle" class="drag-region" title="Drag Window"><i class="fa-solid fa-grip-vertical"></i></div>
+        <!-- Toolbar with address and navigation -->
+        <div id="toolbar-wrapper">
+          <div id="toolbar">
+            <button id="add-tab-btn" title="New Tab" aria-label="New Tab">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <button id="all-tabs-btn" title="List all tabs" aria-label="List all tabs">
+               <i class="fa-solid fa-chevron-down"></i>
+            </button>
+            <button id="settings-btn" title="Settings" aria-label="Settings"><i class="fa-solid fa-cog"></i></button>
+            <button id="back-btn" title="Back" aria-label="Back" disabled><i class="fa-solid fa-arrow-left"></i></button>
+            <button id="forward-btn" title="Forward" aria-label="Forward" disabled><i class="fa-solid fa-arrow-right"></i></button>
+            <button id="reload-btn" title="Reload" aria-label="Reload"><i id="reload-icon" class="fa-solid fa-rotate-right"></i></button>
+            <div id="address-bar-container">
+              <input type="text" id="address-bar" placeholder="Search or type a URL" />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div id="tab-bar-wrapper" class="drag-region">
-        <div id="tab-bar">
-          <button id="tab-scroll-left" title="Scroll tabs left" class="hidden"><i class="fa-solid fa-chevron-left"></i></button>
-          <div id="tabs-container-wrapper">
-            <div id="tabs-container"></div>
+        <div id="tab-bar-wrapper" class="drag-region">
+          <div id="tab-bar">
+            <button id="tab-scroll-left" title="Scroll tabs left" class="hidden"><i class="fa-solid fa-chevron-left"></i></button>
+            <div id="tabs-container-wrapper">
+              <div id="tabs-container"></div>
+            </div>
+            <button id="tab-scroll-right" title="Scroll tabs right" class="hidden"><i class="fa-solid fa-chevron-right"></i></button>
           </div>
-          <button id="tab-scroll-right" title="Scroll tabs right" class="hidden"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        
+        <div class="window-controls">
+          <button id="min-btn" title="Minimize" aria-label="Minimize"><i class="fa-solid fa-window-minimize"></i></button>
+          <button id="max-btn" title="Maximize" aria-label="Maximize"><i id="max-icon" class="fa-regular fa-window-maximize"></i></button>
+          <button id="close-btn" title="Close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
         </div>
       </div>
-      
-      <div class="window-controls">
-        <button id="min-btn" title="Minimize" aria-label="Minimize"><i class="fa-solid fa-window-minimize"></i></button>
-        <button id="max-btn" title="Maximize" aria-label="Maximize"><i id="max-icon" class="fa-regular fa-window-maximize"></i></button>
-        <button id="close-btn" title="Close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <div id="ai-panel" class="hidden">
+      <div class="ai-panel-header">
+          <h3><i class="fa-solid fa-robot"></i> AI Assistant</h3>
+          <button id="ai-panel-close-btn" title="Close Assistant" aria-label="Close Assistant"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="ai-panel-messages"></div>
+      <div class="ai-panel-starters">
+          <button data-prompt="Summarize this page.">Summarize Page</button>
+          <button data-prompt="How good is the SEO on this page?">Analyze SEO</button>
+          <button data-prompt="Suggest improvements for this page's accessibility.">Improve Accessibility</button>
+      </div>
+      <div class="ai-panel-input-container">
+          <textarea id="ai-panel-input" placeholder="Ask about this page..." rows="1"></textarea>
+          <button id="ai-panel-send-btn" aria-label="Send message"><i class="fa-solid fa-paper-plane"></i></button>
       </div>
     </div>
   </div>
@@ -90,6 +109,7 @@
           <ul>
             <li class="active"><a href="#appearance"><i class="fa-solid fa-palette"></i> Appearance</a></li>
             <li><a href="#search"><i class="fa-solid fa-magnifying-glass"></i> Search</a></li>
+            <li><a href="#ai"><i class="fa-solid fa-robot"></i> AI</a></li>
             <li><a href="#hotkeys"><i class="fa-solid fa-keyboard"></i> Hotkeys</a></li>
           </ul>
         </nav>
@@ -115,7 +135,32 @@
                       <select id="search-engine-select"></select>
                   </div>
                 </div>
-              </section>
+            </section>
+            <section id="ai" class="settings-section" style="display: none;" data-keywords="ai artificial intelligence gemini api key assistant">
+              <h1>AI Assistant</h1>
+              <div class="setting-item" data-keywords="enable disable ai assistant gemini">
+                <label for="ai-enable-toggle">Enable AI Assistant</label>
+                <div class="setting-control">
+                  <label class="switch">
+                    <input type="checkbox" id="ai-enable-toggle">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div id="ai-settings-content" class="hidden">
+                <div class="setting-item" data-keywords="api key management">
+                  <label>Gemini API Keys</label>
+                  <div class="setting-control column">
+                    <div id="api-key-list"></div>
+                    <div class="add-key-form">
+                        <input type="text" id="api-key-name-input" placeholder="Key Name (e.g., 'My Key')">
+                        <input type="password" id="api-key-input" placeholder="Enter Gemini API Key">
+                        <button id="add-api-key-btn">Add Key</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
             <section id="hotkeys" class="settings-section" style="display: none;" data-keywords="hotkeys shortcuts keyboard">
               <h1>Hotkeys</h1>
               <div class="setting-item">

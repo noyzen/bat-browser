@@ -49,6 +49,7 @@
     "electron-builder": "^24.13.3"
   },
   "dependencies": {
+    "@google/genai": "^0.15.0",
     "electron-window-state": "^5.0.3"
   }
 }

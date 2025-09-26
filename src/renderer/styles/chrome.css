@@ -1,22 +1,18 @@
 /* --- Main Layout --- */
 #app-chrome { 
-    height: var(--titlebar-height); /* Single row height */
     position: relative; 
     z-index: 10; 
     background-color: var(--bg-secondary);
-}
-
-#app-chrome.hidden {
-    display: none;
 }
     
 /* --- Unified Title Bar Structure --- */
 #titlebar {
     display: flex;
-    height: 100%;
+    height: var(--titlebar-height);
     align-items: center; /* Vertically center all items */
     background-color: var(--bg-secondary);
     overflow: hidden;
+    flex-shrink: 0;
 }
 #window-handle {
     -webkit-app-region: drag;

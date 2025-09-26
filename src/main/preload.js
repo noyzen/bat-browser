@@ -48,6 +48,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setDefaultFont: (fontFamily) => ipcRenderer.invoke('settings:set-default-font', fontFamily),
   settingsSetSearchEngine: (engine) => ipcRenderer.invoke('settings:set-search-engine', engine),
+  settingsSetAI: (settings) => ipcRenderer.invoke('settings:set-ai', settings),
+
+  // AI Assistant
+  aiChatStream: (payload) => ipcRenderer.send('ai:chat-stream', payload),
+  onAIChatStreamChunk: (callback) => ipcRenderer.on('ai:chat-stream-chunk', (_e, chunk) => callback(chunk)),
 
   // Listeners from Main
   onSessionRestoreUI: (callback) => ipcRenderer.once('session:restore-ui', (_e, data) => callback(data)),

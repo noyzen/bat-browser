@@ -10,8 +10,17 @@ const { BROWSER_VIEW_WEBCONTENTS_CONFIG, CHROME_HEIGHT, SHARED_SESSION_PARTITION
 function updateViewBounds() {
     const tab = state.getActiveTab();
     if (!tab || !tab.view || !state.mainWindow) return;
+    
     const [width, height] = state.mainWindow.getContentSize();
-    tab.view.setBounds({ x: 0, y: CHROME_HEIGHT, width, height: height - CHROME_HEIGHT });
+    const aiSettings = state.settings.ai || {};
+    const panelWidth = aiSettings.panelOpen ? (aiSettings.panelWidth || 350) : 0;
+    
+    tab.view.setBounds({ 
+        x: 0, 
+        y: CHROME_HEIGHT, 
+        width: width - panelWidth, 
+        height: height - CHROME_HEIGHT 
+    });
 }
 
 async function openUrlInNewTab(url, fromTabId, inBackground) {

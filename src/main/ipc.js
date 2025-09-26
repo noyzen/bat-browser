@@ -1,5 +1,6 @@
 const { ipcMain, Menu, clipboard } = require('electron');
 const path = require('path');
+const { GoogleGenAI } = require('@google/genai');
 const state = require('./state');
 const tabsModule = require('./tabs');
 const settingsModule = require('./settings');
@@ -178,6 +179,12 @@ function initializeIpc() {
             settingsModule.debouncedSaveSettings();
         }
     });
+    ipcMain.handle('settings:set-ai', (_, settings) => {
+        if (!state.settings.ai) state.settings.ai = {};
+        Object.assign(state.settings.ai, settings);
+        settingsModule.debouncedSaveSettings();
+        tabsModule.updateViewBounds();
+    });
 
     // View-specific IPC handlers
     ipcMain.on('view:reload-current', (event) => {
@@ -202,6 +209,55 @@ function initializeIpc() {
         const tab = utils.findTabByWebContents(event.sender);
         if (tab) {
             state.mainWindow.webContents.send('close-tab-from-view', tab.id);
+        }
+    });
+
+    // AI Chat
+    ipcMain.on('ai:chat-stream', async (event, { tabId, prompt }) => {
+        const { enabled, apiKeys, activeApiKeyId } = state.settings.ai;
+        if (!enabled) {
+            return event.sender.send('ai:chat-stream-chunk', { error: 'AI is not enabled in settings.' });
+        }
+        const activeKey = apiKeys.find(k => k.id === activeApiKeyId);
+        if (!activeKey || !activeKey.key) {
+            return event.sender.send('ai:chat-stream-chunk', { error: 'No active Gemini API key is set.' });
+        }
+
+        try {
+            const tab = state.tabs.get(tabId);
+            if (!tab || !tab.view || tab.view.webContents.isDestroyed()) {
+                return event.sender.send('ai:chat-stream-chunk', { error: 'The target tab is not available.' });
+            }
+            
+            const ai = new GoogleGenAI({ apiKey: activeKey.key });
+            const pageText = await tab.view.webContents.executeJavaScript('document.body.innerText');
+            const truncatedText = pageText.substring(0, 30000);
+
+            const fullPrompt = `You are a helpful and expertly informed web assistant called Bat AI, integrated into the Bat Browser. Your task is to analyze the text content of the current webpage and answer the user's question about it.
+
+WEBPAGE TEXT CONTENT:
+---
+${truncatedText}
+---
+
+Based on the content above, please answer the following question.
+USER QUESTION: ${prompt}`;
+
+            const responseStream = await ai.models.generateContentStream({
+                model: 'gemini-2.5-flash',
+                contents: fullPrompt,
+            });
+
+            for await (const chunk of responseStream) {
+                if (chunk.text) {
+                    event.sender.send('ai:chat-stream-chunk', { text: chunk.text });
+                }
+            }
+        } catch (e) {
+            console.error("Gemini API Error:", e);
+            event.sender.send('ai:chat-stream-chunk', { error: `An API error occurred: ${e.message}` });
+        } finally {
+            event.sender.send('ai:chat-stream-chunk', { done: true });
         }
     });
 }
