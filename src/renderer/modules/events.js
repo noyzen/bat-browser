@@ -6,8 +6,16 @@ let getState, updateNavControls, fullRender, persistState;
 
 function handleAddressBar(e) {
     if (e.key === 'Enter') {
-        const query = DOM.addressBar.value.trim();
+        let query = DOM.addressBar.value.trim();
         if (!query) return;
+
+        if (e.ctrlKey) {
+            // Avoid mangling URLs or multi-word searches.
+            if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(query) && !query.includes(' ') && !query.includes('.')) {
+                query = `www.${query}.com`;
+            }
+        }
+
         window.electronAPI.loadURL(query);
         DOM.addressBar.blur();
     }

@@ -79,7 +79,7 @@ function initializeIpc() {
         
         if (isUrl) {
             if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url)) {
-                url = 'http://' + url;
+                url = 'https://' + url;
             }
         } else {
             const searchEngineUrl = SEARCH_ENGINES[state.settings.searchEngine] || SEARCH_ENGINES.google;
@@ -163,6 +163,26 @@ function initializeIpc() {
                 await webContents.debugger.attach('1.3');
             }
     
+            // --- Auto-scroll to load lazy content ---
+            const { contentSize } = await webContents.debugger.sendCommand('Page.getLayoutMetrics');
+            const { width, height: viewHeight } = tab.view.getBounds();
+
+            if (contentSize.height > viewHeight) {
+                const scrolls = Math.ceil(contentSize.height / viewHeight);
+                for (let i = 0; i < scrolls; i++) {
+                    await webContents.debugger.sendCommand('Input.synthesizeScrollGesture', {
+                        x: width / 2,
+                        y: viewHeight / 2,
+                        yDistance: -viewHeight,
+                        speed: 800,
+                        gestureSourceType: 'mouse',
+                    });
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Wait for content to load
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Final wait
+            }
+            // --- End auto-scroll ---
+
             let format = state.settings.screenshotFormat || 'png';
             if (!['jpeg', 'png', 'webp'].includes(format)) {
                 format = 'png'; // Default to a safe value
