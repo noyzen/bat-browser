@@ -144,19 +144,39 @@ function initTabOverflow() {
 }
 
 export function scrollToTab(tabId) {
-    const tabElement = DOM.tabsContainer.querySelector(`[data-id="${tabId}"]`);
-    if (!tabElement) return;
+    const state = getState();
+    const tab = state.tabs.get(tabId);
+    if (!tab) return;
+
+    let targetElement;
+    
+    const parentGroup = Array.from(state.groups.values()).find(g => g.tabs.includes(tabId));
+
+    if (parentGroup && parentGroup.collapsed) {
+        // If tab is in a collapsed group, target the group header.
+        targetElement = DOM.tabsContainer.querySelector(`.tab-group[data-group-id="${parentGroup.id}"]`);
+    } else {
+        // Otherwise, target the tab element itself.
+        targetElement = DOM.tabsContainer.querySelector(`.tab-item[data-id="${tabId}"]`);
+    }
+
+    if (!targetElement) {
+        console.warn(`scrollToTab: Could not find target element for tabId ${tabId}`);
+        return;
+    }
 
     const container = DOM.tabsContainerWrapper;
-    const containerWidth = container.offsetWidth;
-    const tabOffsetLeft = tabElement.offsetLeft;
-    const tabWidth = tabElement.offsetWidth;
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = targetElement.getBoundingClientRect();
+    
+    // Calculate the element's center relative to the container's left edge
+    const targetCenter = (targetRect.left - containerRect.left) + (targetRect.width / 2);
 
-    // Calculate the desired scroll position to center the tab
-    let desiredScrollLeft = tabOffsetLeft + (tabWidth / 2) - (containerWidth / 2);
-
+    // Calculate the desired scroll position to center the target element
+    const desiredScrollLeft = container.scrollLeft + targetCenter - (containerRect.width / 2);
+    
     // Clamp the scroll position to be within the valid range
-    const maxScrollLeft = container.scrollWidth - containerWidth;
+    const maxScrollLeft = container.scrollWidth - container.clientWidth;
     const finalScrollLeft = Math.max(0, Math.min(desiredScrollLeft, maxScrollLeft));
 
     container.scrollTo({
