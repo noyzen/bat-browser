@@ -146,7 +146,7 @@ function initTabOverflow() {
 export function scrollToTab(tabId) {
     const tabElement = DOM.tabsContainer.querySelector(`[data-id="${tabId}"]`);
     if (!tabElement) return;
-    tabElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    tabElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 }
 
 
