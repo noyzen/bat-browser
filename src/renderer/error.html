@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+    <title>Page Load Error</title>
+    <link rel="stylesheet" href="error.css">
+</head>
+<body>
+    <div class="container">
+        <div class="icon">:(</div>
+        <h1>This site can’t be reached</h1>
+        <p id="url-display"></p>
+        <p class="error-code" id="error-code"></p>
+        <button id="reload-btn">Reload</button>
+    </div>
+    <script>
+        const params = new URLSearchParams(window.location.hash.substring(1));
+        const url = decodeURIComponent(params.get('url'));
+        const errorCode = params.get('code');
+        const errorDesc = decodeURIComponent(params.get('desc'));
+
+        document.getElementById('url-display').textContent = `The webpage at ${url} might be temporarily down or it may have moved permanently to a new web address.`;
+        document.getElementById('error-code').textContent = `${errorDesc.toUpperCase()} (CODE: ${errorCode})`;
+
+        document.getElementById('reload-btn').addEventListener('click', () => {
+             if (window.viewAPI && window.viewAPI.reloadCurrentPage) {
+                 window.viewAPI.reloadCurrentPage();
+             } else {
+                 console.error('View API not available for reload.');
+             }
+        });
+    </script>
+</body>
+</html>

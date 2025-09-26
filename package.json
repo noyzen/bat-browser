@@ -1,0 +1,54 @@
+{
+  "name": "bat-browser",
+  "version": "1.0.0",
+  "description": "A multi-profile web browser with isolated tab sessions.",
+  "main": "src/main/main.js",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "electron:dev": "electron .",
+    "electron:build": "electron-builder",
+    "electorn:build": "npm run electron:build"
+  },
+  "build": {
+    "appId": "com.example.bat-browser",
+    "productName": "Bat Browser",
+    "files": [
+      "src/**/*",
+      "fonts/**/*",
+      "appicon.png",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "asar": true,
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Network",
+      "icon": "appicon.png"
+    },
+    "win": {
+      "target": [
+        "portable",
+        "nsis"
+      ],
+      "icon": "appicon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": false
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.3.0",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "electron-window-state": "^5.0.3"
+  }
+}

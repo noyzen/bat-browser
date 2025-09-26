@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; script-src 'self';" />
+  <title>Bat Browser</title>
+  <link rel="stylesheet" href="../../fonts/all.min.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app-chrome">
+    <!-- Unified top bar containing tabs, toolbar, and window controls -->
+    <div id="titlebar">
+      <div id="window-handle" class="drag-region" title="Drag Window"><i class="fa-solid fa-grip-vertical"></i></div>
+      <!-- Toolbar with address and navigation -->
+      <div id="toolbar-wrapper">
+        <div id="toolbar">
+          <button id="add-tab-btn" title="New Tab" aria-label="New Tab">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+          <button id="all-tabs-btn" title="List all tabs" aria-label="List all tabs">
+             <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <button id="back-btn" title="Back" aria-label="Back" disabled><i class="fa-solid fa-arrow-left"></i></button>
+          <button id="forward-btn" title="Forward" aria-label="Forward" disabled><i class="fa-solid fa-arrow-right"></i></button>
+          <button id="reload-btn" title="Reload" aria-label="Reload"><i id="reload-icon" class="fa-solid fa-rotate-right"></i></button>
+          <div id="address-bar-container">
+            <input type="text" id="address-bar" placeholder="Search Google or type a URL" />
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-bar-wrapper" class="drag-region">
+        <div id="tab-bar">
+          <button id="tab-scroll-left" title="Scroll tabs left" class="hidden"><i class="fa-solid fa-chevron-left"></i></button>
+          <div id="tabs-container-wrapper">
+            <div id="tabs-container"></div>
+          </div>
+          <button id="tab-scroll-right" title="Scroll tabs right" class="hidden"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+      
+      <div class="window-controls">
+        <button id="min-btn" title="Minimize" aria-label="Minimize"><i class="fa-solid fa-window-minimize"></i></button>
+        <button id="max-btn" title="Maximize" aria-label="Maximize"><i id="max-icon" class="fa-regular fa-window-maximize"></i></button>
+        <button id="close-btn" title="Close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="find-bar" class="hidden">
+    <input type="text" id="find-input" placeholder="Find in page" />
+    <span id="find-matches">0/0</span>
+    <button id="find-prev-btn" title="Previous match" aria-label="Previous match"><i class="fa-solid fa-chevron-up"></i></button>
+    <button id="find-next-btn" title="Next match" aria-label="Next match"><i class="fa-solid fa-chevron-down"></i></button>
+    <button id="find-close-btn" title="Close" aria-label="Close find bar"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+
+  <div id="tab-search-overlay" class="hidden">
+    <div id="tab-search-box">
+      <input type="text" id="tab-search-input" placeholder="Search tabs..." />
+      <ul id="tab-search-results"></ul>
+    </div>
+  </div>
+
+  <div id="all-tabs-view" class="hidden">
+    <div class="all-tabs-titlebar">
+      <div class="all-tabs-titlebar-left">
+        <button id="back-to-browser-btn" title="Back to Browser">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back to Browser</span>
+        </button>
+        <div class="search-wrapper">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="all-tabs-search-input" placeholder="Search tabs">
+        </div>
+      </div>
+       <div class="window-controls">
+        <button id="all-tabs-min-btn" title="Minimize" aria-label="Minimize"><i class="fa-solid fa-window-minimize"></i></button>
+        <button id="all-tabs-max-btn" title="Maximize" aria-label="Maximize"><i id="all-tabs-max-icon" class="fa-regular fa-window-maximize"></i></button>
+        <button id="all-tabs-close-btn" title="Close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+    <div id="all-tabs-list-container"></div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
