@@ -5,7 +5,7 @@ const state = require('./state');
 const sessionModule = require('./session');
 const settingsModule = require('./settings');
 const { getSerializableTabData, getRandomColor } = require('./utils');
-const { BROWSER_VIEW_WEBCONTENTS_CONFIG, CHROME_HEIGHT, SHARED_SESSION_PARTITION } = require('./constants');
+const { BROWSER_VIEW_WEBCONTENTS_CONFIG, CHROME_HEIGHT, SHARED_SESSION_PARTITION, USER_AGENT } = require('./constants');
 
 function updateViewBounds() {
     const tab = state.getActiveTab();
@@ -181,7 +181,7 @@ function createTab(url = 'about:blank', options = {}) {
     const partition = options.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
     const tabSession = session.fromPartition(partition);
   
-    tabSession.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36');
+    tabSession.setUserAgent(USER_AGENT);
   
     const view = new BrowserView({ webPreferences: { partition, ...BROWSER_VIEW_WEBCONTENTS_CONFIG } });
   
@@ -232,7 +232,7 @@ async function switchTab(id) {
           console.log(`Waking up tab ${id}`);
           const partition = newTab.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
           const tabSession = session.fromPartition(partition);
-          tabSession.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36');
+          tabSession.setUserAgent(USER_AGENT);
           
           const view = new BrowserView({ webPreferences: { partition, ...BROWSER_VIEW_WEBCONTENTS_CONFIG } });
   
@@ -317,7 +317,7 @@ async function toggleTabSharedState(id) {
 
     const newPartition = tab.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
     const newSession = session.fromPartition(newPartition);
-    newSession.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36');
+    newSession.setUserAgent(USER_AGENT);
     const newView = new BrowserView({ webPreferences: { partition: newPartition, ...BROWSER_VIEW_WEBCONTENTS_CONFIG }});
 
     tab.view = newView;

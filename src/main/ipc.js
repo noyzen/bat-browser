@@ -9,6 +9,32 @@ const utils = require('./utils');
 const { getSerializableTabData } = require('./utils');
 const { SEARCH_ENGINES } = require('./constants');
 
+// URL Loading Helper
+function loadQueryOrURL(webContents, query) {
+    if (!webContents || webContents.isDestroyed()) return;
+
+    let url = query.trim();
+    if (!url) return;
+
+    const hasProtocol = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url);
+    // A string is likely a URL if it contains a dot and no spaces, is 'localhost', or 'localhost:port'.
+    const isLikelyUrl = (url.includes('.') && !url.includes(' ')) || url.startsWith('localhost');
+
+    if (hasProtocol) {
+        // User provided a protocol, respect it.
+        webContents.loadURL(url);
+    } else if (isLikelyUrl) {
+        // No protocol, default to https for domains, http for localhost.
+        const protocol = url.startsWith('localhost') ? 'http://' : 'https://';
+        webContents.loadURL(protocol + url);
+    } else {
+        // Not a URL, treat as a search query.
+        const searchEngineUrl = SEARCH_ENGINES[state.settings.searchEngine] || SEARCH_ENGINES.google;
+        webContents.loadURL(searchEngineUrl + encodeURIComponent(url));
+    }
+}
+
+
 function initializeIpc() {
     // Window Controls
     ipcMain.handle('window:minimize', () => state.mainWindow.minimize());
@@ -67,26 +93,6 @@ function initializeIpc() {
     ipcMain.handle('tabs:getAll', () => {
         return Array.from(state.tabs.values()).map(getSerializableTabData);
     });
-
-    // URL Loading Helper
-    function loadQueryOrURL(webContents, query) {
-        if (!webContents || webContents.isDestroyed()) return;
-
-        let url = query.trim();
-        if (!url) return;
-
-        const isUrl = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url) || (url.includes('.') && !url.includes(' '));
-        
-        if (isUrl) {
-            if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url)) {
-                url = 'https://' + url;
-            }
-        } else {
-            const searchEngineUrl = SEARCH_ENGINES[state.settings.searchEngine] || SEARCH_ENGINES.google;
-            url = searchEngineUrl + encodeURIComponent(url);
-        }
-        webContents.loadURL(url);
-    }
 
     // Navigation
     ipcMain.handle('tab:loadURL', (_, query) => loadQueryOrURL(state.getActiveTab()?.view.webContents, query));
@@ -163,6 +169,9 @@ function initializeIpc() {
                 await webContents.debugger.attach('1.3');
             }
     
+            // Disable mouse events to prevent hover effects during scrolling
+            await webContents.debugger.sendCommand('Input.setIgnoreInputEvents', { ignore: true });
+
             // --- Auto-scroll to load lazy content ---
             const { contentSize } = await webContents.debugger.sendCommand('Page.getLayoutMetrics');
             const { width, height: viewHeight } = tab.view.getBounds();
@@ -179,6 +188,10 @@ function initializeIpc() {
                     });
                     await new Promise(resolve => setTimeout(resolve, 500)); // Wait for content to load
                 }
+                // Scroll back to top to ensure consistent capture start point
+                await webContents.debugger.sendCommand('Input.synthesizeScrollGesture', {
+                    x: width / 2, y: viewHeight / 2, yDistance: contentSize.height, speed: 1200,
+                });
                 await new Promise(resolve => setTimeout(resolve, 1000)); // Final wait
             }
             // --- End auto-scroll ---
@@ -212,8 +225,12 @@ function initializeIpc() {
             console.error('Failed to capture screenshot via CDP:', error);
             return { success: false, message: `Failed to capture page. ${error.message}` };
         } finally {
-            if (shouldAttach && webContents.debugger.isAttached()) {
-                await webContents.debugger.detach();
+            if (webContents.debugger.isAttached()) {
+                 // Re-enable mouse events
+                await webContents.debugger.sendCommand('Input.setIgnoreInputEvents', { ignore: false });
+                if (shouldAttach) {
+                    await webContents.debugger.detach();
+                }
             }
         }
     });

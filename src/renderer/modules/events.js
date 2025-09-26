@@ -9,7 +9,8 @@ function handleAddressBar(e) {
         let query = DOM.addressBar.value.trim();
         if (!query) return;
 
-        if (e.ctrlKey) {
+        // Support Ctrl+Enter (Win/Linux) and Cmd+Enter (macOS)
+        if (e.ctrlKey || e.metaKey) {
             // Avoid mangling URLs or multi-word searches.
             if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(query) && !query.includes(' ') && !query.includes('.')) {
                 query = `www.${query}.com`;
