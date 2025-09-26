@@ -49,6 +49,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Listeners from Main
   onSessionRestoreUI: (callback) => ipcRenderer.once('session:restore-ui', (_e, data) => callback(data)),
   onTabCreated: (callback) => ipcRenderer.on('tab:created', (_e, tabData) => callback(tabData)),
+  onTabCreatedWithLayout: (callback) => ipcRenderer.on('tab:created-with-layout', (_e, data) => callback(data)),
   onTabSwitched: (callback) => ipcRenderer.on('tab:switched', (_e, id) => callback(id)),
   onTabUpdated: (callback) => ipcRenderer.on('tab:updated', (_e, update) => callback(update)),
   onTabClosed: (callback) => ipcRenderer.on('tab:closed', (_e, id) => callback(id)),

@@ -634,14 +634,23 @@ window.electronAPI.onSessionRestoreUI(session => {
 
 window.electronAPI.onTabCreated(tabData => {
   tabs.set(tabData.id, { ...tabData, zoomFactor: 1.0 });
-  if (!layout.find(id => tabs.has(id) && id === tabData.id)) {
+  const existsInLayout = layout.includes(tabData.id);
+  const existsInGroup = Array.from(groups.values()).some(g => g.tabs.includes(tabData.id));
+  if (!existsInLayout && !existsInGroup) {
     layout.push(tabData.id);
   }
-  activeTabId = tabData.id;
-  persistState();
   render();
-  updateNavControls(tabData);
-  setTimeout(() => scrollToTab(tabData.id), 50);
+});
+
+window.electronAPI.onTabCreatedWithLayout(({ newTab, newLayout, newGroups }) => {
+    tabs.set(newTab.id, { ...newTab, zoomFactor: 1.0 });
+    layout = newLayout;
+    groups.clear();
+    newGroups.forEach(g => groups.set(g.id, g));
+    render();
+    if (!allTabsView.classList.contains('hidden')) {
+        renderAllTabsView();
+    }
 });
 
 window.electronAPI.onTabSwitched(id => {

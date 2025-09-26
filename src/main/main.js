@@ -1,4 +1,4 @@
-const { app, BrowserWindow, BrowserView, Menu, ipcMain, session } = require('electron');
+const { app, BrowserWindow, BrowserView, Menu, ipcMain, session, clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const WindowState = require('electron-window-state');
@@ -196,6 +196,39 @@ function debounce(func, timeout = 500) {
 
 const debouncedSaveSession = debounce(saveSession);
 
+async function openUrlInNewTab(url, fromTabId, inBackground) {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+
+    const newTab = await createTab(url, { fromTabId });
+
+    const parentGroup = Array.from(groups.values()).find(g => g.tabs.includes(fromTabId));
+    if (parentGroup) {
+        const tabIndexInGroup = parentGroup.tabs.indexOf(fromTabId);
+        parentGroup.tabs.splice(tabIndexInGroup + 1, 0, newTab.id);
+    } else {
+        let insertionIndex = layout.indexOf(fromTabId);
+        if (insertionIndex === -1) {
+            insertionIndex = layout.indexOf(activeTabId);
+            if (insertionIndex === -1) {
+                insertionIndex = layout.length - 1;
+            }
+        }
+        layout.splice(insertionIndex + 1, 0, newTab.id);
+    }
+
+    mainWindow.webContents.send('tab:created-with-layout', {
+        newTab: getSerializableTabData(newTab),
+        newLayout: layout,
+        newGroups: Array.from(groups.values()),
+    });
+
+    if (!inBackground) {
+        await switchTab(newTab.id);
+    } else {
+        debouncedSaveSession();
+    }
+}
+
 function attachViewListenersToTab(tabData) {
   const { id, view } = tabData;
 
@@ -267,8 +300,67 @@ function attachViewListenersToTab(tabData) {
     debouncedSaveSession();
   });
   
-  view.webContents.setWindowOpenHandler(() => {
-    return { action: 'deny' }; // Disallow popups
+  view.webContents.setWindowOpenHandler((details) => {
+    const { url, disposition } = details;
+    const fromTabId = tabData.id;
+
+    if (disposition === 'new-window' || disposition === 'background-tab' || disposition === 'foreground-tab') {
+      const inBackground = disposition === 'background-tab';
+      openUrlInNewTab(url, fromTabId, inBackground);
+      return { action: 'deny' };
+    }
+    return { action: 'deny' };
+  });
+
+  view.webContents.on('context-menu', (event, params) => {
+    const menuTemplate = [];
+
+    if (params.linkURL) {
+      menuTemplate.push(
+        { label: 'Open Link in New Tab', click: () => openUrlInNewTab(params.linkURL, id, true) },
+        { label: 'Open Link in New Active Tab', click: () => openUrlInNewTab(params.linkURL, id, false) },
+        { type: 'separator' },
+        { label: 'Copy Link Address', click: () => clipboard.writeText(params.linkURL) },
+        { type: 'separator' }
+      );
+    }
+
+    if (params.srcURL && params.mediaType === 'image') {
+      menuTemplate.push(
+        { label: 'Copy Image Address', click: () => clipboard.writeText(params.srcURL) },
+        { type: 'separator' }
+      );
+    }
+
+    const hasSelection = params.selectionText.trim().length > 0;
+    if (hasSelection) {
+      menuTemplate.push({ label: 'Copy', accelerator: 'CmdOrCtrl+C', click: () => view.webContents.copy() });
+    }
+
+    if (params.isEditable) {
+      if (menuTemplate.length > 0 && menuTemplate[menuTemplate.length - 1].type !== 'separator') {
+        menuTemplate.push({ type: 'separator' });
+      }
+      menuTemplate.push(
+        { label: 'Cut', accelerator: 'CmdOrCtrl+X', click: () => view.webContents.cut(), enabled: hasSelection },
+        { label: 'Paste', accelerator: 'CmdOrCtrl+V', click: () => view.webContents.paste() }
+      );
+    }
+
+    if (menuTemplate.length > 0 && menuTemplate[menuTemplate.length - 1].type !== 'separator') {
+      menuTemplate.push({ type: 'separator' });
+    }
+
+    menuTemplate.push(
+      { label: 'Back', enabled: view.webContents.canGoBack(), click: () => view.webContents.goBack() },
+      { label: 'Forward', enabled: view.webContents.canGoForward(), click: () => view.webContents.goForward() },
+      { label: 'Reload', click: () => view.webContents.reload() },
+      { type: 'separator' },
+      { label: 'Inspect', accelerator: 'CmdOrCtrl+Shift+I', click: () => view.webContents.openDevTools({ mode: 'detach' }) }
+    );
+    
+    const menu = Menu.buildFromTemplate(menuTemplate);
+    menu.popup({ window: mainWindow });
   });
 }
 
@@ -310,7 +402,12 @@ async function createTab(url = 'about:blank', options = {}) {
   if (url === 'about:blank') {
     await view.webContents.loadFile(path.join(__dirname, '../renderer/newtab.html'));
   } else {
-    await view.webContents.loadURL(url);
+    try {
+      await view.webContents.loadURL(url);
+    } catch(e) {
+      console.error("Initial loadURL failed for", url, e.message);
+      // The did-fail-load handler will show an error page.
+    }
   }
   return tabData;
 }
@@ -470,7 +567,7 @@ async function switchTab(id) {
         if (newTab.url === 'about:blank') {
           view.webContents.loadFile(path.join(__dirname, '../renderer/newtab.html'));
         } else {
-          view.webContents.loadURL(newTab.url);
+          view.webContents.loadURL(newTab.url).catch(e => console.error("Switch-loadURL failed for", newTab.url, e.message));
         }
         newTab.isHibernated = false;
         
