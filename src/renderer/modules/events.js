@@ -48,7 +48,7 @@ function handleAddressBar(e) {
 
 function handleGlobalShortcuts(e) {
     // Always ignore key events when the hotkey recorder is active.
-    if (e.target.classList.contains('recording')) {
+    if (e.target.classList && e.target.classList.contains('recording')) {
         return;
     }
 

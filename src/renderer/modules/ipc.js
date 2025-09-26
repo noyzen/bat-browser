@@ -34,6 +34,7 @@ export function initIpc(callbacks) {
             state.layout.push(tabData.id);
         }
         fullRenderCallback();
+        setTimeout(() => scrollToTab(tabData.id), 50);
     });
 
     window.electronAPI.onTabCreatedWithLayout(({ newTab, newLayout, newGroups }) => {
