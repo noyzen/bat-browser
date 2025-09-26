@@ -122,9 +122,17 @@
 .tab-group-tabs { display: contents; }
 .active-in-group-indicator { color: white; font-size: 7px; }
 
-.tab-group:not(.collapsed) { border: 2px solid var(--tab-group-color); box-sizing: border-box; background: var(--bg-tab-bar); padding: 0; margin-right: 4px; }
-.tab-group:not(.collapsed) .group-header { border-right: none; border-top: none; }
+.tab-group:not(.collapsed) {
+    border-left: 2px solid var(--tab-group-color);
+    border-right: 2px solid var(--tab-group-color);
+    border-bottom: 2px solid var(--tab-group-color);
+    box-sizing: border-box;
+    background: var(--bg-tab-bar);
+    padding: 0;
+    margin-right: 4px;
+}
+.tab-group:not(.collapsed) .group-header { border-right: none; border-top: 2px solid var(--tab-group-color); }
 .tab-group:not(.collapsed) .tab-group-tabs { display: flex; }
-.tab-group:not(.collapsed) .tab-item { border-radius: 0; border-top: none; border-bottom: none; border-left: none; }
+.tab-group:not(.collapsed) .tab-item { border-radius: 0; border-top: 2px solid var(--tab-group-color); border-bottom: none; border-left: none; }
 .tab-group:not(.collapsed) .group-title { color: var(--tab-group-color); }
 .tab-group:not(.collapsed) .tab-item:last-child { border-right: none; }
