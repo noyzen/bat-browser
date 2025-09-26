@@ -5,13 +5,15 @@ let fullRenderCallback;
 
 async function handleContextMenuCommand(command, context) {
     const rerender = () => fullRenderCallback();
+    const { tabId } = context;
+    const tab = state.tabs.get(tabId);
 
     switch (command) {
         case 'new-tab':
             window.electronAPI.newTab();
             break;
         case 'duplicate-tab': {
-            const { tabId } = context;
+            if (!tab) break;
             const newTabData = await window.electronAPI.duplicateTab(tabId);
             if (!newTabData) break;
             state.tabs.set(newTabData.id, newTabData);
@@ -30,11 +32,33 @@ async function handleContextMenuCommand(command, context) {
             await window.electronAPI.switchTab(newTabData.id);
             break;
         }
+        case 'toggle-shared':
+            window.electronAPI.toggleTabShared(tabId);
+            break;
+        case 'clear-cache-reload':
+            window.electronAPI.clearCacheAndReload(tabId);
+            break;
+        case 'zoom-in': {
+            if (!tab) break;
+            const newFactor = Math.min((tab.zoomFactor || 1.0) + 0.1, 3.0);
+            window.electronAPI.updateTabZoom(tabId, newFactor);
+            break;
+        }
+        case 'zoom-out': {
+            if (!tab) break;
+            const newFactor = Math.max((tab.zoomFactor || 1.0) - 0.1, 0.25);
+            window.electronAPI.updateTabZoom(tabId, newFactor);
+            break;
+        }
+        case 'zoom-reset': {
+            if (!tab) break;
+            window.electronAPI.updateTabZoom(tabId, 1.0);
+            break;
+        }
         case 'close-tab':
             Feat.handleCloseTab(context.tabId, callbacks);
             break;
         case 'add-to-new-group': {
-            const { tabId } = context;
             const newGroupId = `group-${Date.now()}`;
             const newGroup = { id: newGroupId, name: "New Group", color: Feat.getRandomColor(), collapsed: false, tabs: [tabId] };
             let insertionIndex;
@@ -60,7 +84,7 @@ async function handleContextMenuCommand(command, context) {
             break;
         }
         case 'add-to-existing-group': {
-            const { tabId, groupId } = context;
+            const { groupId } = context;
             const oldParent = Array.from(state.groups.values()).find(g => g.tabs.includes(tabId));
             if (oldParent) oldParent.tabs = oldParent.tabs.filter(t => t !== tabId);
             else state.layout = state.layout.filter(id => id !== tabId);
@@ -70,7 +94,6 @@ async function handleContextMenuCommand(command, context) {
             break;
         }
         case 'remove-from-group': {
-            const { tabId } = context;
             const parentGroup = Array.from(state.groups.values()).find(g => g.tabs.includes(tabId));
             if (!parentGroup) return;
             parentGroup.tabs = parentGroup.tabs.filter(t => t !== tabId);
@@ -119,7 +142,6 @@ async function handleContextMenuCommand(command, context) {
             break;
         }
         case 'close-other-tabs': {
-            const { tabId } = context;
             const otherTabs = Array.from(state.tabs.keys()).filter(id => id !== tabId);
             if (otherTabs.length > 0) {
                 const confirmed = await Feat.showConfirmationDialog(
@@ -149,12 +171,28 @@ export function initContextMenu(cbs) {
 
         if (targetTab) {
             const tabId = targetTab.dataset.id;
+            const tab = state.tabs.get(tabId);
+            if (!tab) return;
+
             const parentGroup = Array.from(state.groups.values()).find(g => g.tabs.includes(tabId));
             const otherTabsCount = state.tabs.size - 1;
 
             menuTemplate = [
                 { label: 'New Tab', action: { command: 'new-tab' } },
                 { label: 'Duplicate', action: { command: 'duplicate-tab', context: { tabId } } },
+                { type: 'separator' },
+                {
+                    label: 'Zoom',
+                    submenu: [
+                        { label: 'Zoom In', action: { command: 'zoom-in', context: { tabId } } },
+                        { label: 'Zoom Out', action: { command: 'zoom-out', context: { tabId } } },
+                        { label: 'Reset', action: { command: 'zoom-reset', context: { tabId } } },
+                    ]
+                },
+                { type: 'separator' },
+                { label: 'Clear Cache and Reload', action: { command: 'clear-cache-reload', context: { tabId } } },
+                { type: 'separator' },
+                { label: 'Share data with other shared tabs', type: 'checkbox', checked: tab.isShared, action: { command: 'toggle-shared', context: { tabId } } },
                 { type: 'separator' },
                 { label: 'Add to New Group', action: { command: 'add-to-new-group', context: { tabId } } },
                 {
@@ -165,7 +203,6 @@ export function initContextMenu(cbs) {
                         action: { command: 'add-to-existing-group', context: { tabId, groupId: group.id } }
                     }))
                 },
-                { type: 'separator' },
                 { label: 'Remove from Group', enabled: !!parentGroup, action: { command: 'remove-from-group', context: { tabId } } },
                 { type: 'separator' },
                 { label: 'Close Tab', action: { command: 'close-tab', context: { tabId } } },

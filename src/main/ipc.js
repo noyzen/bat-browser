@@ -28,13 +28,15 @@ function initializeIpc() {
     ipcMain.handle('tab:duplicate', async (_, id) => {
         const originalTab = state.tabs.get(id);
         if (!originalTab) return null;
-        const newTab = tabsModule.createTab(originalTab.url, { fromTabId: id });
+        const newTab = tabsModule.createTab(originalTab.url, { fromTabId: id, isShared: originalTab.isShared, zoomFactor: originalTab.zoomFactor });
         await tabsModule.switchTab(newTab.id);
         return getSerializableTabData(newTab);
     });
 
     ipcMain.handle('tab:close', async (_, id) => tabsModule.closeTab(id));
     ipcMain.handle('tab:switch', (_, id) => tabsModule.switchTab(id));
+    ipcMain.handle('tab:toggle-shared', async (_, id) => tabsModule.toggleTabSharedState(id));
+    ipcMain.handle('tab:clear-cache-and-reload', async (_, id) => tabsModule.clearCacheAndReload(id));
 
     // Active View Controls (for All Tabs page)
     ipcMain.handle('view:hide', () => {
@@ -86,15 +88,19 @@ function initializeIpc() {
     ipcMain.handle('find:stop', () => state.getActiveTab()?.view.webContents.stopFindInPage('clearSelection'));
 
     // Zoom
-    ipcMain.handle('zoom:set', (_, factor) => {
-        const view = state.getActiveTab()?.view;
-        if (view) view.webContents.setZoomFactor(factor);
+    ipcMain.handle('tab:update-zoom', (_, { id, factor }) => {
+        const tab = state.tabs.get(id);
+        if (tab) {
+            tab.zoomFactor = factor;
+            if (tab.view && !tab.view.webContents.isDestroyed()) {
+                tab.view.webContents.setZoomFactor(factor);
+            }
+            sessionModule.debouncedSaveSession();
+        }
     });
 
     // Settings
-    ipcMain.handle('settings:get-default-font', () => {
-        return state.settings.defaultFont || 'default';
-    });
+    ipcMain.handle('settings:get', () => state.settings);
     ipcMain.handle('settings:set-default-font', async (_, fontFamily) => {
         state.settings.defaultFont = (fontFamily === 'default') ? null : fontFamily;
         settingsModule.debouncedSaveSettings();
@@ -105,6 +111,10 @@ function initializeIpc() {
             }
         }
         return true;
+    });
+    ipcMain.handle('settings:set-global-zoom', (_, factor) => {
+        state.settings.globalZoomFactor = factor;
+        settingsModule.debouncedSaveSettings();
     });
 
     // View-specific IPC handlers
@@ -137,13 +147,13 @@ function initializeIpc() {
     ipcMain.handle('show-context-menu', (event, menuTemplate) => {
         const buildMenu = (template) => {
             return template.map(item => {
-                if (item.type === 'separator') return { type: 'separator' };
-
                 const menuItem = {
                     label: item.label,
                     enabled: item.enabled !== false,
                     visible: item.visible !== false,
                 };
+                if (item.type) menuItem.type = item.type;
+                if (item.checked) menuItem.checked = item.checked;
 
                 if (item.action) {
                     menuItem.click = () => event.sender.send('context-menu-command', item.action.command, item.action.context);

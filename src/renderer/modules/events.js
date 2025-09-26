@@ -56,19 +56,19 @@ function handleGlobalShortcuts(e) {
     if (e.ctrlKey && (e.key === '=' || e.key === '+')) {
         e.preventDefault();
         const newZoom = Math.min((activeTab.zoomFactor || 1.0) + 0.1, 3.0);
-        window.electronAPI.setZoom(newZoom);
-        activeTab.zoomFactor = newZoom;
+        window.electronAPI.updateTabZoom(activeTab.id, newZoom);
+        activeTab.zoomFactor = newZoom; // Optimistic update
     }
     if (e.ctrlKey && e.key === '-') {
         e.preventDefault();
         const newZoom = Math.max((activeTab.zoomFactor || 1.0) - 0.1, 0.25);
-        window.electronAPI.setZoom(newZoom);
-        activeTab.zoomFactor = newZoom;
+        window.electronAPI.updateTabZoom(activeTab.id, newZoom);
+        activeTab.zoomFactor = newZoom; // Optimistic update
     }
     if (e.ctrlKey && e.key === '0') {
         e.preventDefault();
-        window.electronAPI.setZoom(1.0);
-        activeTab.zoomFactor = 1.0;
+        window.electronAPI.updateTabZoom(activeTab.id, 1.0);
+        activeTab.zoomFactor = 1.0; // Optimistic update
     }
 }
 

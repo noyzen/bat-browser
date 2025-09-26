@@ -5,7 +5,7 @@ const state = require('./state');
 const sessionModule = require('./session');
 const settingsModule = require('./settings');
 const { getSerializableTabData, getRandomColor } = require('./utils');
-const { BROWSER_VIEW_WEBCONTENTS_CONFIG, CHROME_HEIGHT, HIBERNATION_THRESHOLD, HIBERNATION_CHECK_INTERVAL } = require('./constants');
+const { BROWSER_VIEW_WEBCONTENTS_CONFIG, CHROME_HEIGHT, HIBERNATION_THRESHOLD, HIBERNATION_CHECK_INTERVAL, SHARED_SESSION_PARTITION } = require('./constants');
 
 function updateViewBounds() {
     const tab = state.getActiveTab();
@@ -17,7 +17,8 @@ function updateViewBounds() {
 async function openUrlInNewTab(url, fromTabId, inBackground) {
     if (!state.mainWindow || state.mainWindow.isDestroyed()) return;
 
-    const newTab = createTab(url, { fromTabId });
+    const fromTab = state.tabs.get(fromTabId);
+    const newTab = createTab(url, { fromTabId, isShared: fromTab?.isShared });
 
     const parentGroup = Array.from(state.groups.values()).find(g => g.tabs.includes(fromTabId));
     if (parentGroup) {
@@ -177,7 +178,7 @@ function attachViewListenersToTab(tabData) {
 function createTab(url = 'about:blank', options = {}) {
     const { fromTabId, id: existingId } = options;
     const id = existingId || `tab-${randomUUID()}`;
-    const partition = `persist:${id}`;
+    const partition = options.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
     const tabSession = session.fromPartition(partition);
   
     tabSession.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36');
@@ -187,6 +188,8 @@ function createTab(url = 'about:blank', options = {}) {
     const tabData = {
       id, view, session: tabSession, url, title: 'New Tab', canGoBack: false,
       canGoForward: false, isLoading: true, isLoaded: false, isHibernated: false,
+      isShared: !!options.isShared,
+      zoomFactor: options.zoomFactor || state.settings.globalZoomFactor || 1.0,
       lastActive: Date.now(),
       color: fromTabId ? (state.tabs.get(fromTabId)?.color || getRandomColor()) : getRandomColor(),
       cssKeys: new Map(),
@@ -195,6 +198,12 @@ function createTab(url = 'about:blank', options = {}) {
   
     attachViewListenersToTab(tabData);
     
+    view.webContents.on('did-finish-load', () => {
+      if (tabData.zoomFactor && tabData.zoomFactor !== 1.0) {
+        view.webContents.setZoomFactor(tabData.zoomFactor);
+      }
+    });
+
     if (url === 'about:blank') {
       view.webContents.loadFile(path.join(__dirname, '../renderer/newtab.html'));
     } else {
@@ -249,7 +258,7 @@ async function switchTab(id) {
   
       if (newTab.isHibernated || !newTab.view) {
           console.log(`Waking up tab ${id}`);
-          const partition = `persist:${id}`;
+          const partition = newTab.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
           const tabSession = session.fromPartition(partition);
           tabSession.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36');
           
@@ -259,6 +268,12 @@ async function switchTab(id) {
           newTab.session = tabSession;
           attachViewListenersToTab(newTab);
   
+          view.webContents.on('did-finish-load', () => {
+            if (newTab.zoomFactor && newTab.zoomFactor !== 1.0) {
+              view.webContents.setZoomFactor(newTab.zoomFactor);
+            }
+          });
+
           if (newTab.url === 'about:blank') {
             view.webContents.loadFile(path.join(__dirname, '../renderer/newtab.html'));
           } else {
@@ -289,7 +304,9 @@ async function closeTab(id) {
             }
             tab.view.webContents.destroy();
         }
-        tab.session?.clearStorageData().catch(err => console.error("Failed to clear storage:", err));
+        if (!tab.isShared) { // Don't clear storage for shared tabs on close
+            tab.session?.clearStorageData().catch(err => console.error("Failed to clear storage:", err));
+        }
         state.tabs.delete(id);
 
         state.mainWindow.webContents.send('tab:closed', id);
@@ -304,6 +321,68 @@ async function closeTab(id) {
     }
 }
 
+async function toggleTabSharedState(id) {
+    const tab = state.tabs.get(id);
+    if (!tab) return;
+
+    const wasActive = state.activeTabId === id;
+    const currentUrl = tab.isHibernated ? tab.url : tab.view.webContents.getURL();
+    
+    tab.isShared = !tab.isShared;
+
+    if (tab.view && !tab.view.webContents.isDestroyed()) {
+        if (wasActive) state.mainWindow.removeBrowserView(tab.view);
+        tab.view.webContents.destroy();
+    }
+    
+    // Clear the old session data if it was an isolated tab
+    if (!tab.isShared) { // it was just toggled from shared to isolated
+      await tab.session?.clearStorageData();
+    } else { // it was just toggled from isolated to shared
+      const oldPartition = `persist:${id}`;
+      await session.fromPartition(oldPartition).clearStorageData();
+    }
+
+    const newPartition = tab.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
+    const newSession = session.fromPartition(newPartition);
+    newSession.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36');
+    const newView = new BrowserView({ webPreferences: { partition: newPartition, ...BROWSER_VIEW_WEBCONTENTS_CONFIG }});
+
+    tab.view = newView;
+    tab.session = newSession;
+    attachViewListenersToTab(tab);
+    
+    newView.webContents.on('did-finish-load', () => {
+      if (tab.zoomFactor && tab.zoomFactor !== 1.0) {
+        newView.webContents.setZoomFactor(tab.zoomFactor);
+      }
+    });
+
+    if (currentUrl && !currentUrl.endsWith('newtab.html') && !currentUrl.startsWith('file://')) {
+        newView.webContents.loadURL(currentUrl);
+    } else {
+        newView.webContents.loadFile(path.join(__dirname, '../renderer/newtab.html'));
+    }
+
+    if (wasActive) {
+        state.mainWindow.addBrowserView(newView);
+        updateViewBounds();
+        newView.webContents.focus();
+    }
+
+    state.mainWindow.webContents.send('tab:updated', getSerializableTabData(tab));
+    sessionModule.debouncedSaveSession();
+}
+
+async function clearCacheAndReload(id) {
+    const tab = state.tabs.get(id);
+    if (tab && tab.session && tab.view) {
+        await tab.session.clearCache();
+        tab.view.webContents.reload();
+    }
+}
+
+
 module.exports = {
     updateViewBounds,
     openUrlInNewTab,
@@ -312,4 +391,6 @@ module.exports = {
     startHibernationTimer,
     switchTab,
     closeTab,
+    toggleTabSharedState,
+    clearCacheAndReload,
 };

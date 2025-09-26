@@ -100,6 +100,16 @@
     color: var(--fg-secondary);
 }
 
+/* Shared Tab Indicator */
+.tab-item.shared .tab-title::before {
+    font-family: "Font Awesome 6 Solid";
+    content: "\e533"; /* fa-users */
+    font-size: 10px;
+    color: var(--accent-color);
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
 /* Tab Groups */
 .tab-group { display: flex; align-items: flex-end; height: 100%; align-items: stretch; border-radius: 0; position: relative; overflow: hidden; }
 .tab-group.drag-over, .all-tabs-group-header.drag-over, .all-tabs-group-container.drag-over { background-color: rgba(255,255,255,0.1); }

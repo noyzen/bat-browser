@@ -66,10 +66,12 @@ export function renderAllTabsView() {
 
 // --- Settings View ---
 let fontsLoaded = false;
-async function populateFontSelector() {
+async function populateAppearanceSettings() {
+    const settings = await window.electronAPI.getSettings();
+    DOM.zoomSelect.value = settings.globalZoomFactor || '1';
+
     if (fontsLoaded) {
-        const currentFont = await window.electronAPI.getDefaultFont();
-        DOM.fontSelect.value = currentFont;
+        DOM.fontSelect.value = settings.defaultFont || 'default';
         return;
     }
 
@@ -87,12 +89,11 @@ async function populateFontSelector() {
             const option = document.createElement('option');
             option.value = family;
             option.textContent = family;
-            option.style.fontFamily = family;
+            option.style.fontFamily = `"${family}"`;
             DOM.fontSelect.appendChild(option);
         });
 
-        const currentFont = await window.electronAPI.getDefaultFont();
-        DOM.fontSelect.value = currentFont;
+        DOM.fontSelect.value = settings.defaultFont || 'default';
 
         fontsLoaded = true;
         DOM.fontLoadingIndicator.style.display = 'none';
@@ -106,7 +107,7 @@ async function populateFontSelector() {
 
 async function showSettingsView() {
     await window.electronAPI.hideActiveView();
-    populateFontSelector();
+    populateAppearanceSettings();
     DOM.settingsView.classList.remove('hidden');
     DOM.appChrome.classList.add('hidden');
     // refreshMaxButton needs to be called from events module
@@ -135,4 +136,24 @@ export function initViews({ fullRender }) {
     DOM.fontSelect.addEventListener('change', () => {
         window.electronAPI.setDefaultFont(DOM.fontSelect.value);
     });
+    DOM.zoomSelect.addEventListener('change', () => {
+        window.electronAPI.setGlobalZoom(parseFloat(DOM.zoomSelect.value));
+    });
+
+    document.querySelectorAll('#settings-sidebar a').forEach(link => {
+      link.addEventListener('click', e => {
+          e.preventDefault();
+          const activeLink = document.querySelector('#settings-sidebar li.active');
+          if (activeLink) activeLink.classList.remove('active');
+          e.currentTarget.parentElement.classList.add('active');
+
+          const targetId = e.currentTarget.getAttribute('href').substring(1);
+          document.querySelectorAll('#settings-main .settings-section').forEach(section => {
+              section.style.display = section.id === targetId ? 'block' : 'none';
+          });
+      });
+    });
+
+    // Set initial section visibility
+    document.querySelector('#settings-main .settings-section#appearance').style.display = 'block';
 }

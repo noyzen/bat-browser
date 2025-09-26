@@ -13,7 +13,7 @@ export function initIpc(callbacks) {
 
     window.electronAPI.onSessionRestoreUI(session => {
         session.tabs.forEach(t => {
-            state.tabs.set(t.id, { ...t, isLoading: false, isLoaded: false, zoomFactor: 1.0 });
+            state.tabs.set(t.id, { ...t, isLoading: false, isLoaded: false });
         });
         session.groups.forEach(g => state.groups.set(g.id, g));
         state.layout = session.layout;
@@ -26,7 +26,7 @@ export function initIpc(callbacks) {
     });
 
     window.electronAPI.onTabCreated(tabData => {
-        state.tabs.set(tabData.id, { ...tabData, zoomFactor: 1.0 });
+        state.tabs.set(tabData.id, { ...tabData });
         const existsInLayout = state.layout.includes(tabData.id);
         const existsInGroup = Array.from(state.groups.values()).some(g => g.tabs.includes(tabData.id));
         if (!existsInLayout && !existsInGroup) {
@@ -36,7 +36,7 @@ export function initIpc(callbacks) {
     });
 
     window.electronAPI.onTabCreatedWithLayout(({ newTab, newLayout, newGroups }) => {
-        state.tabs.set(newTab.id, { ...newTab, zoomFactor: 1.0 });
+        state.tabs.set(newTab.id, { ...newTab });
         state.layout = newLayout;
         state.groups.clear();
         newGroups.forEach(g => state.groups.set(g.id, g));

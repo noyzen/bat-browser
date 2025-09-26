@@ -43,6 +43,7 @@ export const settingsView = document.getElementById('settings-view');
 export const settingsBackBtn = document.getElementById('settings-back-to-browser-btn');
 export const fontSelect = document.getElementById('font-select');
 export const fontLoadingIndicator = document.getElementById('font-loading-indicator');
+export const zoomSelect = document.getElementById('zoom-select');
 export const settingsMinBtn = document.getElementById('settings-min-btn');
 export const settingsMaxBtn = document.getElementById('settings-max-btn');
 export const settingsMaxIcon = document.getElementById('settings-max-icon');

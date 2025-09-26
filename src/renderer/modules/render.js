@@ -39,6 +39,7 @@ function updateTabElement(tabEl, tabData) {
     tabEl.classList.toggle('active', tabData.id === state.activeTabId);
     tabEl.classList.toggle('loading', tabData.isLoading);
     tabEl.classList.toggle('hibernated', !!tabData.isHibernated);
+    tabEl.classList.toggle('shared', !!tabData.isShared);
     tabEl.style.setProperty('--tab-color', tabData.color);
     
     const titleEl = tabEl.querySelector('.tab-title');
@@ -186,6 +187,7 @@ export function renderTab(id, context = 'main') {
         tabEl.title = `${tab.title}\n${tab.url}`;
         if (id === state.activeTabId) tabEl.classList.add('active');
         if (tab.isLoading) tabEl.classList.add('loading');
+        if (tab.isShared) tabEl.classList.add('shared');
         if (tab.isHibernated) {
           tabEl.classList.add('hibernated');
           iconEl.innerHTML = '<i class="fa-solid fa-power-off"></i>';

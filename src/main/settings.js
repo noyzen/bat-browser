@@ -6,7 +6,8 @@ const { debounce } = require('./utils');
 function loadSettings() {
     try {
         if (fs.existsSync(SETTINGS_PATH)) {
-            return JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
+            const settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
+            return settings || {};
         }
     } catch (e) {
         console.error('Failed to load settings:', e);
@@ -31,7 +32,7 @@ async function applyFontSetting(tab, fontFamily) {
         try {
             await webContents.removeInsertedCSS(existingKey);
         } catch (e) {
-            // Ignore
+            // Ignore if key not found (e.g., after a reload)
         } finally {
             tab.cssKeys.delete('defaultFont');
         }

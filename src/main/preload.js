@@ -14,6 +14,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   duplicateTab: (id) => ipcRenderer.invoke('tab:duplicate', id),
   closeTab: (id) => ipcRenderer.invoke('tab:close', id),
   switchTab: (id) => ipcRenderer.invoke('tab:switch', id),
+  toggleTabShared: (id) => ipcRenderer.invoke('tab:toggle-shared', id),
+  clearCacheAndReload: (id) => ipcRenderer.invoke('tab:clear-cache-and-reload', id),
   
   // View Controls
   hideActiveView: () => ipcRenderer.invoke('view:hide'),
@@ -36,11 +38,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onFindResult: (callback) => ipcRenderer.on('find:result', (_e, result) => callback(result)),
 
   // Zoom
-  setZoom: (factor) => ipcRenderer.invoke('zoom:set', factor),
+  updateTabZoom: (id, factor) => ipcRenderer.invoke('tab:update-zoom', { id, factor }),
   
   // Settings
-  getDefaultFont: () => ipcRenderer.invoke('settings:get-default-font'),
+  getSettings: () => ipcRenderer.invoke('settings:get'),
   setDefaultFont: (fontFamily) => ipcRenderer.invoke('settings:set-default-font', fontFamily),
+  setGlobalZoom: (factor) => ipcRenderer.invoke('settings:set-global-zoom', factor),
 
   // Context Menu
   showContextMenu: (menuTemplate) => ipcRenderer.invoke('show-context-menu', menuTemplate),

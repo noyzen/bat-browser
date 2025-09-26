@@ -85,7 +85,7 @@
         <nav id="settings-sidebar">
           <ul>
             <li class="active"><a href="#appearance"><i class="fa-solid fa-palette"></i> Appearance</a></li>
-            <!-- Future sections can be added here -->
+            <li><a href="#hotkeys"><i class="fa-solid fa-keyboard"></i> Hotkeys</a></li>
           </ul>
         </nav>
         <main id="settings-main">
@@ -100,6 +100,27 @@
                     <i class="fa-solid fa-spinner fa-spin"></i> Loading system fonts...
                   </span>
                 </div>
+              </div>
+              <div class="setting-item">
+                <label for="zoom-select">Global Page Zoom</label>
+                <div class="setting-control">
+                  <select id="zoom-select">
+                    <option value="0.75">75%</option>
+                    <option value="0.9">90%</option>
+                    <option value="1">100% (Default)</option>
+                    <option value="1.1">110%</option>
+                    <option value="1.25">125%</option>
+                    <option value="1.5">150%</option>
+                    <option value="1.75">175%</option>
+                    <option value="2">200%</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+            <section id="hotkeys" class="settings-section" style="display: none;">
+              <h1>Hotkeys</h1>
+              <div class="setting-item">
+                <p>Hotkey customization is coming soon!</p>
               </div>
             </section>
           </div>

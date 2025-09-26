@@ -23,6 +23,8 @@ function saveSession() {
           url: finalUrl,
           title: t.title,
           color: t.color,
+          isShared: t.isShared,
+          zoomFactor: t.zoomFactor,
           isActive: t.id === state.activeTabId,
         };
       }),
