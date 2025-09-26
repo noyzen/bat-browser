@@ -14,11 +14,12 @@ function updateViewBounds() {
     const [width, height] = state.mainWindow.getContentSize();
     const aiSettings = state.settings.ai || {};
     const panelWidth = aiSettings.panelOpen ? (aiSettings.panelWidth || 350) : 0;
+    const handleWidth = aiSettings.panelOpen ? 8 : 0; // The resize handle is 8px wide
     
     tab.view.setBounds({ 
         x: 0, 
         y: CHROME_HEIGHT, 
-        width: width - panelWidth, 
+        width: width - panelWidth - handleWidth, 
         height: height - CHROME_HEIGHT 
     });
 }
