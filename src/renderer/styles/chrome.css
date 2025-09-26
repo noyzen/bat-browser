@@ -12,7 +12,7 @@
     align-items: center; /* Vertically center all items */
     overflow: hidden;
     flex-shrink: 0;
-    border-bottom: 2px solid var(--border-color);
+    border-bottom: 1px solid var(--titlebar-border-bottom);
 }
 #window-handle {
     -webkit-app-region: drag;

@@ -2,7 +2,7 @@ const { app } = require('electron');
 const path = require('path');
 
 module.exports = {
-    CHROME_HEIGHT: 38, // Height of the unified titlebar/toolbar + 2px border
+    CHROME_HEIGHT: 37, // Height of the unified titlebar/toolbar + 1px border
     SESSION_PATH: path.join(app.getPath('userData'), 'session.json'),
     SETTINGS_PATH: path.join(app.getPath('userData'), 'settings.json'),
     SHARED_SESSION_PARTITION: 'persist:shared-data-session',

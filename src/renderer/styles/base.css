@@ -2,12 +2,14 @@
 :root {
     --bg-primary: #111111;
     --bg-secondary: #222222;
+    --bg-tab-bar: #1a1a1a;
     --bg-tertiary: #333333;
     --bg-hover: #3c3c3c;
     --bg-active: #4a4a4a;
     --fg-primary: #cccccc;
     --fg-secondary: #8b8b8b;
-    --border-color: #000000;
+    --border-color: #111111;
+    --titlebar-border-bottom: #333333;
     --accent-color: #0e639c;
     --window-controls-close-hover: #e81123;
     --titlebar-height: 36px;
