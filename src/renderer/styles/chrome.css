@@ -3,7 +3,7 @@
     position: relative; 
     z-index: 10; 
     background-color: var(--bg-secondary);
-    border-bottom: 2px solid var(--bg-primary);
+    border-bottom: 2px solid var(--border-color);
 }
     
 /* --- Unified Title Bar Structure --- */
@@ -68,7 +68,7 @@
 #toolbar { 
     display: flex; 
     align-items: center; 
-    gap: 6px; 
+    gap: 2px; 
     width: 100%;
     height: 100%;
 }
@@ -78,7 +78,6 @@
 #toolbar button:disabled { color: var(--fg-secondary); cursor: not-allowed; opacity: 0.4; }
 
 #toolbar #add-tab-btn {
-    margin-right: 6px;
     background-color: var(--accent-color);
     color: #fff;
 }
