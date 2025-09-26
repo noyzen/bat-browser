@@ -47,8 +47,8 @@ function handleAddressBar(e) {
 }
 
 function handleGlobalShortcuts(e) {
-    // Prevent interfering with input fields, especially the hotkey recorder
-    if (e.target.matches('input, textarea') || e.target.classList.contains('recording')) {
+    // Always ignore key events when the hotkey recorder is active.
+    if (e.target.classList.contains('recording')) {
         return;
     }
 
@@ -63,8 +63,15 @@ function handleGlobalShortcuts(e) {
     ].filter(Boolean).join('+');
 
     const action = hotkeyToAction.get(combo);
-    if (!action) return;
+
+    // If the key combination doesn't map to a valid action, do nothing.
+    // This allows normal typing in input fields.
+    if (!action) {
+        return;
+    }
     
+    // If it is a valid action, prevent the default behavior (e.g., typing 't' in an input)
+    // and execute the browser action.
     e.preventDefault();
 
     const state = getState();
