@@ -33,46 +33,26 @@ async function applyFontSetting(tab, fontFamily) {
     const webContents = tab.view.webContents;
     const existingKey = tab.cssKeys.get('defaultFont');
 
+    // Always try to remove the old CSS, in case the font is being turned off.
     if (existingKey) {
         try {
             await webContents.removeInsertedCSS(existingKey);
         } catch (e) {
-            // Ignore if key not found (e.g., after a reload)
+            // Ignore if key not found (e.g., after a reload or if it was never inserted)
         } finally {
             tab.cssKeys.delete('defaultFont');
         }
     }
 
+    // Only inject new CSS if a custom font is selected.
     if (fontFamily && fontFamily !== 'default') {
+        // This CSS sets the default font for the entire page with the lowest possible specificity.
+        // Any font-family rule from the website's own CSS will override this,
+        // correctly applying the custom font only to text that the website has not styled.
+        // This avoids breaking websites' custom fonts and icon fonts.
         const css = `
-            /* Apply the custom font to the body with high specificity */
-            html body {
-                font-family: "${fontFamily}", sans-serif !important;
-            }
-
-            /* Force inheritance for elements that might not get it from body, e.g., form elements. */
-            button, input, select, textarea, code, kbd, pre, samp {
-                font-family: inherit;
-            }
-
-            /*
-             * Revert font for elements that are very likely to be icons.
-             * This is a blacklist approach to prevent the custom font from breaking icon fonts.
-             * The 'i' tag is included as a broad catch-all, as it's overwhelmingly used for icons.
-             * This may cause text in <i> tags intended for italics to not use the custom font,
-             * which is an accepted trade-off for fixing broken icons.
-             */
-            i, /* Broad catch-all for icons */
-            [data-icon], /* Elements with data-icon attribute */
-            .fa, .fas, .far, .fal, .fab, [class^="fa-"], [class*=" fa-"], /* Font Awesome */
-            .bi, [class^="bi-"], [class*=" bi-"], /* Bootstrap Icons */
-            .glyphicon, [class^="glyphicon-"], /* Glyphicons */
-            .material-icons, .material-symbols, .material-symbols-outlined, /* Material Design Icons */
-            .icon, [class^="icon-"], [class*=" icon-"], /* Generic icon classes */
-            [data-icon]::before, [data-icon]::after { /* Pseudo-elements with data-icon on parent */
-                font-family: revert !important;
-                font-style: revert !important;
-                font-weight: revert !important;
+            :root {
+                font-family: "${fontFamily}", sans-serif;
             }
         `;
         try {
@@ -84,6 +64,7 @@ async function applyFontSetting(tab, fontFamily) {
         }
     }
 }
+
 
 module.exports = {
     loadSettings,
