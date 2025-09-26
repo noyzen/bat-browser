@@ -199,7 +199,7 @@ const debouncedSaveSession = debounce(saveSession);
 async function openUrlInNewTab(url, fromTabId, inBackground) {
     if (!mainWindow || mainWindow.isDestroyed()) return;
 
-    const newTab = await createTab(url, { fromTabId });
+    const newTab = createTab(url, { fromTabId });
 
     const parentGroup = Array.from(groups.values()).find(g => g.tabs.includes(fromTabId));
     if (parentGroup) {
@@ -364,7 +364,7 @@ function attachViewListenersToTab(tabData) {
   });
 }
 
-async function createTab(url = 'about:blank', options = {}) {
+function createTab(url = 'about:blank', options = {}) {
   const { fromTabId, id: existingId } = options;
   const id = existingId || `tab-${randomUUID()}`;
   const partition = `persist:${id}`;
@@ -388,7 +388,7 @@ async function createTab(url = 'about:blank', options = {}) {
     title: 'New Tab',
     canGoBack: false,
     canGoForward: false,
-    isLoading: false,
+    isLoading: true, // Start in loading state for immediate UI feedback
     isLoaded: false,
     isHibernated: false,
     lastActive: Date.now(),
@@ -398,16 +398,19 @@ async function createTab(url = 'about:blank', options = {}) {
   tabs.set(id, tabData);
 
   attachViewListenersToTab(tabData);
-
+  
+  // Start loading the URL asynchronously. Do NOT await this call.
+  // The page will load in the background, and events will update the UI.
   if (url === 'about:blank') {
-    await view.webContents.loadFile(path.join(__dirname, '../renderer/newtab.html'));
+    view.webContents.loadFile(path.join(__dirname, '../renderer/newtab.html'));
   } else {
-    try {
-      await view.webContents.loadURL(url);
-    } catch(e) {
-      console.error("Initial loadURL failed for", url, e.message);
-      // The did-fail-load handler will show an error page.
-    }
+    view.webContents.loadURL(url).catch(e => {
+      // This catch is for the initial load promise. `did-fail-load` will
+      // handle displaying the error page to the user.
+      if (e.code !== 'ERR_ABORTED') { // Don't log benign errors
+        console.error(`Initial loadURL failed for ${url}:`, e.message);
+      }
+    });
   }
   return tabData;
 }
@@ -521,7 +524,7 @@ function createWindow() {
       createAllTabs();
 
     } else {
-      const newTab = await createTab();
+      const newTab = createTab();
       layout.push(newTab.id);
       mainWindow.webContents.send('tab:created', getSerializableTabData(newTab));
       await switchTab(newTab.id);
@@ -599,7 +602,7 @@ ipcMain.handle('window:isMaximized', () => mainWindow.isMaximized());
 
 // Tab Controls
 ipcMain.handle('tab:new', async () => {
-  const newTab = await createTab();
+  const newTab = createTab();
   layout.push(newTab.id);
   mainWindow.webContents.send('tab:created', getSerializableTabData(newTab));
   await switchTab(newTab.id);
@@ -608,7 +611,7 @@ ipcMain.handle('tab:new', async () => {
 ipcMain.handle('tab:duplicate', async (_, id) => {
     const originalTab = tabs.get(id);
     if (!originalTab) return null;
-    const newTab = await createTab(originalTab.url, { fromTabId: id });
+    const newTab = createTab(originalTab.url, { fromTabId: id });
     await switchTab(newTab.id);
     return getSerializableTabData(newTab);
 });
@@ -630,7 +633,7 @@ ipcMain.handle('tab:close', async (_, id) => {
 
     // If that was the last tab, create a new one to prevent an empty window.
     if (tabs.size === 0) {
-      const newTab = await createTab();
+      const newTab = createTab();
       layout = [newTab.id]; // Reset layout in main process
       groups.clear();
       mainWindow.webContents.send('tab:created', getSerializableTabData(newTab));
