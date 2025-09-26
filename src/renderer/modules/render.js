@@ -220,7 +220,7 @@ export function renderTab(id, context = 'main') {
 
         const textWrapper = document.createElement('div');
         textWrapper.className = 'all-tabs-text-wrapper';
-        textWrapper.append(titleEl, urlEl);
+        textWrapper.append(urlEl, titleEl);
         
         tabEl.append(iconEl, textWrapper, closeBtnEl);
     }
