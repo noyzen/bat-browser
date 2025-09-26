@@ -171,26 +171,44 @@ function initializeIpc() {
             if (shouldAttach) {
                 await webContents.debugger.attach('1.3');
             }
-        
-            await webContents.debugger.sendCommand('Input.setIgnoreInputEvents', { ignore: true });
+            
+            // Get page dimensions using reliable JS evaluation
+            const pageMetrics = await webContents.debugger.sendCommand('Runtime.evaluate', {
+                expression: `({
+                    contentHeight: Math.max(
+                        document.body.scrollHeight, document.documentElement.scrollHeight,
+                        document.body.offsetHeight, document.documentElement.offsetHeight,
+                        document.body.clientHeight, document.documentElement.clientHeight
+                    ),
+                    viewHeight: window.innerHeight,
+                })`,
+                returnByValue: true,
+            }).then(res => res.result.value);
     
-            const { contentSize } = await webContents.debugger.sendCommand('Page.getLayoutMetrics');
-            const { width, height: viewHeight } = tab.view.getBounds();
+            const { contentHeight, viewHeight } = pageMetrics;
     
-            if (contentSize.height > viewHeight) {
-                const scrolls = Math.ceil(contentSize.height / viewHeight);
+            // Scroll down the page to trigger lazy-loaded elements
+            if (contentHeight > viewHeight) {
+                const scrolls = Math.ceil(contentHeight / viewHeight);
                 for (let i = 0; i < scrolls; i++) {
-                    await webContents.debugger.sendCommand('Input.synthesizeScrollGesture', {
-                        x: width / 2, y: viewHeight / 2, yDistance: -viewHeight, speed: 800, gestureSourceType: 'mouse',
+                    const scrollPosition = i * viewHeight;
+                    await webContents.debugger.sendCommand('Runtime.evaluate', {
+                        expression: `window.scrollTo(0, ${scrollPosition})`,
                     });
-                    // Increased wait time for lazy-loaded content
-                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
+                    // Send progress update to renderer
+                    const percent = Math.round(((i + 1) / scrolls) * 100);
+                    state.mainWindow.webContents.send('screenshot:progress', { tabId, percent });
+
+                    // Use a generous delay for content to load
+                    await new Promise(resolve => setTimeout(resolve, 2000));
                 }
-                // Slower scroll back to top and longer wait
-                await webContents.debugger.sendCommand('Input.synthesizeScrollGesture', {
-                    x: width / 2, y: viewHeight / 2, yDistance: contentSize.height, speed: 800,
-                });
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                 // Scroll back to top before capture
+                await webContents.debugger.sendCommand('Runtime.evaluate', { expression: `window.scrollTo(0, 0)` });
+                await new Promise(resolve => setTimeout(resolve, 500)); // Wait for repaint
+            } else {
+                 state.mainWindow.webContents.send('screenshot:progress', { tabId, percent: 100 });
+                 await new Promise(resolve => setTimeout(resolve, 500));
             }
     
             let format = state.settings.screenshotFormat || 'png';
@@ -198,7 +216,10 @@ function initializeIpc() {
             const quality = state.settings.screenshotQuality || 90;
         
             const screenshotResult = await webContents.debugger.sendCommand('Page.captureScreenshot', {
-                format: format, quality: (format === 'jpeg' || format === 'webp') ? quality : undefined, captureBeyondViewport: true, fromSurface: true,
+                format: format,
+                quality: (format === 'jpeg' || format === 'webp') ? quality : undefined,
+                captureBeyondViewport: true,
+                fromSurface: true,
             });
                 
             const { canceled, filePath } = await dialog.showSaveDialog(state.mainWindow, {
@@ -218,11 +239,10 @@ function initializeIpc() {
             console.error('Failed to capture screenshot via CDP:', error);
             finalResult = { success: false, message: `Failed to capture page. ${error.message}` };
         } finally {
-            if (webContents.debugger.isAttached()) {
-                await webContents.debugger.sendCommand('Input.setIgnoreInputEvents', { ignore: false }).catch(err => console.error('Could not re-enable input events:', err));
-                if (shouldAttach) {
-                    await webContents.debugger.detach().catch(err => console.error('Could not detach debugger:', err));
-                }
+            // This block is crucial to prevent the UI from getting stuck.
+            // It will run regardless of success or failure.
+            if (webContents.debugger.isAttached() && shouldAttach) {
+                await webContents.debugger.detach().catch(err => console.error('Could not detach debugger:', err));
             }
             state.mainWindow.webContents.send('screenshot:end', { tabId, result: finalResult });
         }

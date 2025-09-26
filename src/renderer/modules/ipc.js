@@ -83,13 +83,24 @@ export function initIpc(callbacks) {
     });
 
     window.electronAPI.onScreenshotStart(() => {
+        DOM.screenshotProgressBarValue.style.width = '0%';
+        DOM.screenshotProgressPercent.textContent = '0%';
         DOM.screenshotOverlay.classList.remove('hidden');
+    });
+
+    window.electronAPI.onScreenshotProgress(({ percent }) => {
+        DOM.screenshotProgressBarValue.style.width = `${percent}%`;
+        DOM.screenshotProgressPercent.textContent = `${percent}%`;
     });
     
     window.electronAPI.onScreenshotEnd(({ result }) => {
-        DOM.screenshotOverlay.classList.add('hidden');
-        if (!result.success && result.message) {
-            console.error('Screenshot failed:', result.message);
-        }
+        // Add a short delay before hiding to allow user to see 100%
+        setTimeout(() => {
+            DOM.screenshotOverlay.classList.add('hidden');
+            if (!result.success && result.message) {
+                // You could implement a more user-friendly notification here
+                console.error('Screenshot failed:', result.message);
+            }
+        }, 500);
     });
 }

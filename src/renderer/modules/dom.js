@@ -50,3 +50,5 @@ export const settingsCloseBtn = document.getElementById('settings-close-btn');
 
 // Screenshot Overlay
 export const screenshotOverlay = document.getElementById('screenshot-overlay');
+export const screenshotProgressBarValue = document.getElementById('screenshot-progress-bar-value');
+export const screenshotProgressPercent = document.getElementById('screenshot-progress-percent');
