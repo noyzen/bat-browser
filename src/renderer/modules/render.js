@@ -348,12 +348,7 @@ export function updateNavControls(tab) {
 
     const urlToDisplay = (tab.isLoaded && tab.url !== 'about:blank' && !tab.isHibernated) ? tab.url : '';
     
-    // The address bar's text content is now handled exclusively by its focus and blur event handlers.
-    // This function just syncs the other controls (back, forward, reload).
-    // On initial load or tab switch, the blur handler will be called implicitly or we call it to set the default state.
-    if (document.activeElement !== DOM.addressBar) {
-        DOM.addressBar.value = formatUrlForDisplay(urlToDisplay);
-    }
+    DOM.addressBar.value = formatUrlForDisplay(urlToDisplay);
 
     DOM.backBtn.disabled = !tab.canGoBack;
     DOM.forwardBtn.disabled = !tab.canGoForward;

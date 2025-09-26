@@ -50,7 +50,7 @@ export function initIpc(callbacks) {
         fullRenderCallback();
         updateNavControlsCallback(state.tabs.get(id));
         updateAIPanelContext();
-        // scrollToTab(id); // Removed to prevent auto-scrolling on every tab switch
+        DOM.addressBar.blur();
     });
 
     window.electronAPI.onTabUpdated(update => {
