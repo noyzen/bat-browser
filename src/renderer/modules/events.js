@@ -192,7 +192,7 @@ function initTabOverflow() {
 
     new ResizeObserver(updateButtons).observe(DOM.tabsContainer);
 
-    return { updateTabScrollButtons: updateButtons };
+    return { updateTabScrollButtons: updateButtons, scrollBy };
 }
 
 export function scrollToTab(tabId) {
@@ -360,8 +360,47 @@ export function initEvents(callbacks) {
     window.addEventListener('keydown', handleGlobalShortcuts);
 
     // --- Tab Overflow ---
-    const { updateTabScrollButtons } = initTabOverflow();
+    const { updateTabScrollButtons, scrollBy } = initTabOverflow();
     callbacks.updateTabScrollButtons = updateTabScrollButtons;
+
+    // --- Tab Bar Arrow Key Scrolling ---
+    window.addEventListener('keydown', (e) => {
+        // Only act when in the main browser view
+        if (!DOM.allTabsView.classList.contains('hidden') || !DOM.settingsView.classList.contains('hidden')) {
+            return;
+        }
+
+        // Also ignore if tab search is open
+        if (!DOM.searchOverlay.classList.contains('hidden')) {
+            return;
+        }
+
+        const isScrollable = DOM.tabsContainerWrapper.scrollWidth > DOM.tabsContainerWrapper.clientWidth;
+        if (!isScrollable) {
+            return;
+        }
+
+        const activeEl = document.activeElement;
+        const isInputFocused = activeEl && (
+            activeEl.tagName === 'INPUT' ||
+            activeEl.tagName === 'TEXTAREA' ||
+            activeEl.isContentEditable
+        );
+
+        // Don't interfere with text input in the chrome UI or find bar
+        if (isInputFocused) {
+            return;
+        }
+
+        // Handle arrow keys for tab scrolling
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            scrollBy(-100);
+        } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            scrollBy(100);
+        }
+    });
 
     // --- Delegated Listeners for dynamically created items ---
     initDelegatedEventListeners();
