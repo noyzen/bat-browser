@@ -67,7 +67,6 @@ export function renderAllTabsView() {
 }
 
 // --- Settings View ---
-let fontsLoaded = false;
 let currentSettings = {};
 const aiSettingsContent = document.getElementById('ai-settings-content');
 const aiEnableToggle = document.getElementById('ai-enable-toggle');
@@ -79,6 +78,101 @@ const getApiKeyBtn = document.getElementById('get-api-key-btn');
 
 const hotkeyContainer = document.getElementById('hotkey-list');
 let currentRecordingElement = null;
+
+// --- Font Picker ---
+let allFonts = [];
+let fontsLoaded = false;
+const fontSelectBtn = document.getElementById('font-select-btn');
+const fontSelectValue = document.getElementById('font-select-value');
+const fontPickerModal = document.getElementById('font-picker-modal');
+const fontPickerCloseBtn = document.getElementById('font-picker-close-btn');
+const fontSearchInput = document.getElementById('font-search-input');
+const fontListContainer = document.getElementById('font-list-container');
+const fontList = document.getElementById('font-list');
+const fontListLoader = document.getElementById('font-list-loader');
+
+function renderFontList(filter = '') {
+    fontList.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+    const lowerCaseFilter = filter.toLowerCase();
+
+    // Add Browser Default option first
+    const defaultOption = document.createElement('li');
+    defaultOption.textContent = 'Browser Default';
+    defaultOption.dataset.font = 'default';
+    if (!currentSettings.defaultFont || currentSettings.defaultFont === 'default') {
+        defaultOption.classList.add('selected');
+    }
+    fragment.appendChild(defaultOption);
+
+    allFonts.forEach(font => {
+        if (font.toLowerCase().includes(lowerCaseFilter)) {
+            const li = document.createElement('li');
+            li.textContent = font;
+            li.dataset.font = font;
+            li.style.fontFamily = `"${font}"`;
+            if (currentSettings.defaultFont === font) {
+                li.classList.add('selected');
+            }
+            fragment.appendChild(li);
+        }
+    });
+    fontList.appendChild(fragment);
+}
+
+async function loadFonts() {
+    if (fontsLoaded) return;
+    try {
+        if (!window.queryLocalFonts) {
+            fontListLoader.textContent = "Font detection not supported.";
+            return;
+        }
+        const availableFonts = await window.queryLocalFonts();
+        const fontFamilies = new Set(availableFonts.map(f => f.family));
+        allFonts = [...fontFamilies].sort((a, b) => a.localeCompare(b));
+        fontsLoaded = true;
+        renderFontList();
+        fontListLoader.style.display = 'none';
+    } catch (err) {
+        console.error("Error getting system fonts:", err);
+        fontListLoader.textContent = "Could not load system fonts.";
+    }
+}
+
+function openFontPicker() {
+    fontPickerModal.classList.remove('hidden');
+    fontSearchInput.value = '';
+    fontSearchInput.focus();
+    if (!fontsLoaded) {
+        loadFonts();
+    } else {
+        renderFontList();
+        // Scroll to selected
+        const selected = fontList.querySelector('.selected');
+        if (selected) {
+            selected.scrollIntoView({ block: 'center', behavior: 'auto' });
+        }
+    }
+}
+
+function closeFontPicker() {
+    fontPickerModal.classList.add('hidden');
+}
+
+function selectFont(fontFamily) {
+    const newFont = (fontFamily === 'default') ? null : fontFamily;
+    
+    // Update state and save
+    currentSettings.defaultFont = newFont;
+    window.electronAPI.setDefaultFont(fontFamily);
+    
+    // Update UI
+    applyUiFont(fontFamily);
+    fontSelectValue.textContent = fontFamily === 'default' ? 'Browser Default' : fontFamily;
+    fontSelectValue.style.fontFamily = fontFamily === 'default' ? 'inherit' : `"${fontFamily}"`;
+
+    closeFontPicker();
+}
 
 const HOTKEY_COMMANDS = {
     'new-tab': { title: 'New Tab', description: 'Open a new browser tab.' },
@@ -110,38 +204,9 @@ async function populateSettings() {
     currentSettings = await window.electronAPI.getSettings();
 
     // Appearance
-    if (fontsLoaded) {
-        DOM.fontSelect.value = currentSettings.defaultFont || 'default';
-    } else {
-        try {
-            if (!window.queryLocalFonts) {
-                DOM.fontLoadingIndicator.innerHTML = "Font detection not supported.";
-                return;
-            }
-    
-            const availableFonts = await window.queryLocalFonts();
-            const fontFamilies = new Set(availableFonts.map(f => f.family));
-    
-            DOM.fontSelect.innerHTML = '<option value="default">Browser Default</option>';
-            [...fontFamilies].sort((a, b) => a.localeCompare(b)).forEach(family => {
-                const option = document.createElement('option');
-                option.value = family;
-                option.textContent = family;
-                option.style.fontFamily = `"${family}"`;
-                DOM.fontSelect.appendChild(option);
-            });
-    
-            DOM.fontSelect.value = currentSettings.defaultFont || 'default';
-    
-            fontsLoaded = true;
-            DOM.fontLoadingIndicator.style.display = 'none';
-            DOM.fontSelect.style.display = 'block';
-    
-        } catch (err) {
-            console.error("Error getting system fonts:", err);
-            DOM.fontLoadingIndicator.innerHTML = "Could not load system fonts.";
-        }
-    }
+    const font = currentSettings.defaultFont;
+    fontSelectValue.textContent = font || 'Browser Default';
+    fontSelectValue.style.fontFamily = font ? `"${font}"` : 'inherit';
 
     // Search
     const searchSelect = document.getElementById('search-engine-select');
@@ -438,11 +503,18 @@ export function initViews({ fullRender }) {
     DOM.settingsBackBtn.addEventListener('click', hideSettingsView);
     settingsSearchInput.addEventListener('input', handleSettingsSearch);
 
-    // -- Appearance
-    DOM.fontSelect.addEventListener('change', () => {
-        const fontFamily = DOM.fontSelect.value;
-        window.electronAPI.setDefaultFont(fontFamily);
-        applyUiFont(fontFamily);
+    // -- Appearance / Font Picker
+    fontSelectBtn.addEventListener('click', openFontPicker);
+    fontPickerCloseBtn.addEventListener('click', closeFontPicker);
+    fontPickerModal.addEventListener('click', (e) => {
+        if (e.target === fontPickerModal) closeFontPicker();
+    });
+    fontSearchInput.addEventListener('input', () => renderFontList(fontSearchInput.value));
+    fontList.addEventListener('click', (e) => {
+        const target = e.target.closest('li');
+        if (target) {
+            selectFont(target.dataset.font);
+        }
     });
 
     // -- Search

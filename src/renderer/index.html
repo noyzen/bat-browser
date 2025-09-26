@@ -126,12 +126,12 @@
             <section id="appearance" class="settings-section" data-keywords="appearance font theme color">
               <h1>Appearance</h1>
               <div class="setting-item" data-keywords="font default page text">
-                <label for="font-select">Default Page Font</label>
+                <label for="font-select-btn">Default Page Font</label>
                 <div class="setting-control">
-                  <select id="font-select" style="display: none;"></select>
-                  <span id="font-loading-indicator">
-                    <i class="fa-solid fa-spinner fa-spin"></i> Loading system fonts...
-                  </span>
+                  <button id="font-select-btn">
+                    <span id="font-select-value">Browser Default</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                  </button>
                 </div>
               </div>
             </section>
@@ -222,6 +222,25 @@
       </div>
     </div>
     <div id="all-tabs-list-container"></div>
+  </div>
+
+  <div id="font-picker-modal" class="hidden">
+    <div class="font-picker-dialog">
+        <div class="font-picker-header">
+            <h2>Select Default Font</h2>
+            <button id="font-picker-close-btn" title="Close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="search-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="font-search-input" placeholder="Search fonts">
+        </div>
+        <div id="font-list-container">
+            <div id="font-list-loader">
+                <i class="fa-solid fa-spinner fa-spin"></i> Loading system fonts...
+            </div>
+            <ul id="font-list"></ul>
+        </div>
+    </div>
   </div>
 
   <div id="context-menu-container"></div>

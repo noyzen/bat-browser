@@ -75,14 +75,15 @@ async function applyFontSetting(tab, fontFamily) {
     // Only inject new CSS if a custom font is selected.
     if (fontFamily && fontFamily !== 'default') {
         // Use CSS Cascade Layers to inject a low-priority default font.
-        // 1. Author origin styles (like this one) override User-Agent (browser default) styles.
-        // 2. Un-layered author styles (from the website) override layered styles, regardless of specificity.
         // This ensures our font acts as a new default but never breaks a website's custom typography.
-        // We target body and common form elements that don't always inherit fonts.
+        // We set the font on the body and force form elements to inherit, which is a robust pattern.
         const css = `
             @layer batBrowserDefaults {
-                body, input, textarea, select, button {
+                body {
                     font-family: "${fontFamily}", sans-serif;
+                }
+                input, textarea, select, button {
+                    font-family: inherit;
                 }
             }
         `;
