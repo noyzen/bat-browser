@@ -81,4 +81,15 @@ export function initIpc(callbacks) {
     window.electronAPI.onFindResult(({ matches, activeMatchOrdinal }) => {
         DOM.findMatches.textContent = `${activeMatchOrdinal}/${matches}`;
     });
+
+    window.electronAPI.onScreenshotStart(() => {
+        DOM.screenshotOverlay.classList.remove('hidden');
+    });
+    
+    window.electronAPI.onScreenshotEnd(({ result }) => {
+        DOM.screenshotOverlay.classList.add('hidden');
+        if (!result.success && result.message) {
+            console.error('Screenshot failed:', result.message);
+        }
+    });
 }

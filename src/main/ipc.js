@@ -160,79 +160,71 @@ function initializeIpc() {
         if (!tab || !tab.view || tab.view.webContents.isDestroyed()) {
             return { success: false, message: 'Tab is not available for capture.' };
         }
-
+    
+        state.mainWindow.webContents.send('screenshot:start', { tabId });
+    
         const webContents = tab.view.webContents;
         const shouldAttach = !webContents.debugger.isAttached();
-
+        let finalResult = { success: false, message: 'An unknown error occurred during screenshot.' };
+    
         try {
             if (shouldAttach) {
                 await webContents.debugger.attach('1.3');
             }
-    
-            // Disable mouse events to prevent hover effects during scrolling
+        
             await webContents.debugger.sendCommand('Input.setIgnoreInputEvents', { ignore: true });
-
-            // --- Auto-scroll to load lazy content ---
+    
             const { contentSize } = await webContents.debugger.sendCommand('Page.getLayoutMetrics');
             const { width, height: viewHeight } = tab.view.getBounds();
-
+    
             if (contentSize.height > viewHeight) {
                 const scrolls = Math.ceil(contentSize.height / viewHeight);
                 for (let i = 0; i < scrolls; i++) {
                     await webContents.debugger.sendCommand('Input.synthesizeScrollGesture', {
-                        x: width / 2,
-                        y: viewHeight / 2,
-                        yDistance: -viewHeight,
-                        speed: 800,
-                        gestureSourceType: 'mouse',
+                        x: width / 2, y: viewHeight / 2, yDistance: -viewHeight, speed: 800, gestureSourceType: 'mouse',
                     });
-                    await new Promise(resolve => setTimeout(resolve, 500)); // Wait for content to load
+                    await new Promise(resolve => setTimeout(resolve, 750));
                 }
-                // Scroll back to top to ensure consistent capture start point
                 await webContents.debugger.sendCommand('Input.synthesizeScrollGesture', {
                     x: width / 2, y: viewHeight / 2, yDistance: contentSize.height, speed: 1200,
                 });
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Final wait
+                await new Promise(resolve => setTimeout(resolve, 1000));
             }
-            // --- End auto-scroll ---
-
-            let format = state.settings.screenshotFormat || 'png';
-            if (!['jpeg', 'png', 'webp'].includes(format)) {
-                format = 'png'; // Default to a safe value
-            }
-            const quality = state.settings.screenshotQuality || 90;
     
+            let format = state.settings.screenshotFormat || 'png';
+            if (!['jpeg', 'png', 'webp'].includes(format)) format = 'png';
+            const quality = state.settings.screenshotQuality || 90;
+        
             const screenshotResult = await webContents.debugger.sendCommand('Page.captureScreenshot', {
-                format: format,
-                quality: (format === 'jpeg' || format === 'webp') ? quality : undefined,
-                captureBeyondViewport: true,
-                fromSurface: true,
+                format: format, quality: (format === 'jpeg' || format === 'webp') ? quality : undefined, captureBeyondViewport: true, fromSurface: true,
             });
-            
+                
             const { canceled, filePath } = await dialog.showSaveDialog(state.mainWindow, {
                 title: 'Save Screenshot',
                 defaultPath: `screenshot-${Date.now()}.${format}`,
                 filters: [{ name: 'Images', extensions: [format] }]
             });
-    
+        
             if (!canceled && filePath) {
                 const buffer = Buffer.from(screenshotResult.data, 'base64');
                 fs.writeFileSync(filePath, buffer);
-                return { success: true };
+                finalResult = { success: true };
+            } else {
+                finalResult = { success: false, message: 'Save dialog was canceled.' };
             }
-            return { success: false, message: 'Save dialog was canceled.' };
         } catch (error) {
             console.error('Failed to capture screenshot via CDP:', error);
-            return { success: false, message: `Failed to capture page. ${error.message}` };
+            finalResult = { success: false, message: `Failed to capture page. ${error.message}` };
         } finally {
             if (webContents.debugger.isAttached()) {
-                 // Re-enable mouse events
-                await webContents.debugger.sendCommand('Input.setIgnoreInputEvents', { ignore: false });
+                await webContents.debugger.sendCommand('Input.setIgnoreInputEvents', { ignore: false }).catch(err => console.error('Could not re-enable input events:', err));
                 if (shouldAttach) {
-                    await webContents.debugger.detach();
+                    await webContents.debugger.detach().catch(err => console.error('Could not detach debugger:', err));
                 }
             }
+            state.mainWindow.webContents.send('screenshot:end', { tabId, result: finalResult });
         }
+        return finalResult;
     });
 
     // View-specific IPC handlers

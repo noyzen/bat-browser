@@ -17,6 +17,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   toggleTabShared: (id) => ipcRenderer.invoke('tab:toggle-shared', id),
   clearCacheAndReload: (id) => ipcRenderer.invoke('tab:clear-cache-and-reload', id),
   screenshotTab: (id) => ipcRenderer.invoke('tab:screenshot', id),
+  onScreenshotStart: (callback) => ipcRenderer.on('screenshot:start', (_e, data) => callback(data)),
+  onScreenshotEnd: (callback) => ipcRenderer.on('screenshot:end', (_e, data) => callback(data)),
   
   // View Controls
   hideActiveView: () => ipcRenderer.invoke('view:hide'),

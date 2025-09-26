@@ -47,3 +47,6 @@ export const settingsMinBtn = document.getElementById('settings-min-btn');
 export const settingsMaxBtn = document.getElementById('settings-max-btn');
 export const settingsMaxIcon = document.getElementById('settings-max-icon');
 export const settingsCloseBtn = document.getElementById('settings-close-btn');
+
+// Screenshot Overlay
+export const screenshotOverlay = document.getElementById('screenshot-overlay');
