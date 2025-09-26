@@ -146,8 +146,7 @@ function initTabOverflow() {
 export function scrollToTab(tabId) {
     const tabElement = DOM.tabsContainer.querySelector(`[data-id="${tabId}"]`);
     if (!tabElement) return;
-    // Simplified scroll for modularity. Physics animation can be re-added if needed.
-    tabElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    tabElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
 }
 
 
@@ -210,6 +209,7 @@ function initDelegatedEventListeners() {
                 await window.electronAPI.switchTab(tabId);
             }
             hideAllTabsView();
+            scrollToTab(tabId); // Scroll to make the tab visible after switching from All Tabs view
             return;
         }
 

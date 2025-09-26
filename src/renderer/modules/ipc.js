@@ -47,7 +47,7 @@ export function initIpc(callbacks) {
         state.activeTabId = id;
         fullRenderCallback();
         updateNavControlsCallback(state.tabs.get(id));
-        scrollToTab(id);
+        // scrollToTab(id); // Removed to prevent auto-scrolling on every tab switch
     });
 
     window.electronAPI.onTabUpdated(update => {
