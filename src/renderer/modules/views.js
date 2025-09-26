@@ -6,6 +6,15 @@ import { applyUiFont } from './features.js';
 let fullRenderCallback;
 let settingsSearchInput;
 
+function debounce(func, delay) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), delay);
+    };
+}
+
 // --- All Tabs View ---
 export function showAllTabsView() {
     window.electronAPI.hideActiveView();
@@ -92,9 +101,16 @@ const fontList = document.getElementById('font-list');
 const fontListLoader = document.getElementById('font-list-loader');
 
 function renderFontList(filter = '') {
-    fontList.innerHTML = '';
-    const fragment = document.createDocumentFragment();
+    fontList.innerHTML = ''; // Clear previous results
     const lowerCaseFilter = filter.toLowerCase();
+
+    const filteredFonts = allFonts.filter(font => font.toLowerCase().includes(lowerCaseFilter));
+
+    // Cancel any previous rendering animation frame
+    if (fontList.dataset.rafId) {
+        cancelAnimationFrame(parseInt(fontList.dataset.rafId, 10));
+        delete fontList.dataset.rafId;
+    }
 
     // Add Browser Default option first
     const defaultOption = document.createElement('li');
@@ -103,10 +119,17 @@ function renderFontList(filter = '') {
     if (!currentSettings.defaultFont || currentSettings.defaultFont === 'default') {
         defaultOption.classList.add('selected');
     }
-    fragment.appendChild(defaultOption);
+    fontList.appendChild(defaultOption);
 
-    allFonts.forEach(font => {
-        if (font.toLowerCase().includes(lowerCaseFilter)) {
+    // Render list in batches to avoid freezing the UI
+    const BATCH_SIZE = 100;
+    let index = 0;
+
+    function renderBatch() {
+        const fragment = document.createDocumentFragment();
+        const limit = Math.min(index + BATCH_SIZE, filteredFonts.length);
+        for (let i = index; i < limit; i++) {
+            const font = filteredFonts[i];
             const li = document.createElement('li');
             li.textContent = font;
             li.dataset.font = font;
@@ -116,8 +139,18 @@ function renderFontList(filter = '') {
             }
             fragment.appendChild(li);
         }
-    });
-    fontList.appendChild(fragment);
+        fontList.appendChild(fragment);
+        index = limit;
+
+        if (index < filteredFonts.length) {
+            const rafId = requestAnimationFrame(renderBatch);
+            fontList.dataset.rafId = rafId.toString();
+        } else {
+             delete fontList.dataset.rafId;
+        }
+    }
+    
+    renderBatch();
 }
 
 async function loadFonts() {
@@ -509,7 +542,10 @@ export function initViews({ fullRender }) {
     fontPickerModal.addEventListener('click', (e) => {
         if (e.target === fontPickerModal) closeFontPicker();
     });
-    fontSearchInput.addEventListener('input', () => renderFontList(fontSearchInput.value));
+    
+    const debouncedRenderFontList = debounce((value) => renderFontList(value), 150);
+    fontSearchInput.addEventListener('input', () => debouncedRenderFontList(fontSearchInput.value));
+
     fontList.addEventListener('click', (e) => {
         const target = e.target.closest('li');
         if (target) {

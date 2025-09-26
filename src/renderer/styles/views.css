@@ -235,7 +235,7 @@
 #back-to-browser-btn, #settings-back-to-browser-btn { background: var(--accent-color); border: none; color: white; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 0; transition: background-color 150ms ease; }
 #back-to-browser-btn:hover, #settings-back-to-browser-btn:hover { background: #1f8ad2; }
 .search-wrapper { position: relative; display: flex; align-items: center; }
-.search-wrapper .fa-magnifying-glass { position: absolute; left: 12px; color: var(--fg-secondary); }
+.search-wrapper .fa-magnifying-glass { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--fg-secondary); pointer-events: none; }
 #all-tabs-search-input, #settings-search-input { width: 300px; height: 28px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--fg-primary); outline: none; padding: 0 12px 0 34px; font-size: 14px; border-radius: 0; }
 #all-tabs-search-input:focus, #settings-search-input:focus { border-color: var(--accent-color); box-shadow: 0 0 0 1px var(--accent-color); }
 

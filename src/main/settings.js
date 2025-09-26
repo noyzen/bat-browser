@@ -76,10 +76,10 @@ async function applyFontSetting(tab, fontFamily) {
     if (fontFamily && fontFamily !== 'default') {
         // Use CSS Cascade Layers to inject a low-priority default font.
         // This ensures our font acts as a new default but never breaks a website's custom typography.
-        // We set the font on the body and force form elements to inherit, which is a robust pattern.
+        // We set the font on :root (the html element) and force form elements to inherit.
         const css = `
             @layer batBrowserDefaults {
-                body {
+                :root {
                     font-family: "${fontFamily}", sans-serif;
                 }
                 input, textarea, select, button {
@@ -88,8 +88,7 @@ async function applyFontSetting(tab, fontFamily) {
             }
         `;
         try {
-            // Sanitize CSS for injection
-            const newKey = await webContents.insertCSS(css.trim().replace(/\s+/g, ' '));
+            const newKey = await webContents.insertCSS(css);
             tab.cssKeys.set('defaultFont', newKey);
         } catch (e) {
             console.error('Failed to insert font CSS:', e);
