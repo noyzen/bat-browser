@@ -10,7 +10,7 @@
     --border-color: #404040;
     --accent-color: #0e639c;
     --window-controls-close-hover: #e81123;
-    --titlebar-height: 39px;
+    --titlebar-height: 36px;
     --tab-color: var(--accent-color);
     --tab-group-color: var(--accent-color);
     --active-tab-indicator-height: 2px;

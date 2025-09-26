@@ -90,7 +90,7 @@
 /* --- All Tabs View --- */
 #all-tabs-view { position: fixed; inset: 0; background: var(--bg-primary); z-index: 50; display: flex; flex-direction: column; }
 #all-tabs-view.hidden { display: none; }
-.all-tabs-titlebar { display: flex; align-items: center; height: var(--titlebar-height); background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color); -webkit-app-region: drag; flex-shrink: 0; padding-left: 8px; }
+.all-tabs-titlebar { display: flex; align-items: center; height: var(--titlebar-height); background: var(--bg-tertiary); border-bottom: 2px solid var(--border-color); -webkit-app-region: drag; flex-shrink: 0; padding-left: 8px; }
 .all-tabs-titlebar-left { flex-grow: 1; display: flex; align-items: center; gap: 20px; -webkit-app-region: no-drag; }
 #back-to-browser-btn, #settings-back-to-browser-btn { background: var(--accent-color); border: none; color: white; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 0; transition: background-color 150ms ease; }
 #back-to-browser-btn:hover, #settings-back-to-browser-btn:hover { background: #1f8ad2; }

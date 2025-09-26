@@ -81,14 +81,12 @@
     border-right: 1px solid var(--border-color); 
     cursor: pointer; gap: 5px; padding: 0 8px; 
     background-color: var(--bg-secondary); 
-    max-width: 200px; min-width: 50px; border-radius: 0; 
-    border-bottom: 1px solid var(--border-color);
+    max-width: 200px; min-width: 50px; border-radius: 0;
 }
 .tab-item:hover { background-color: var(--bg-hover); }
 
 #tabs-container .tab-item.active { 
     background-color: #000;
-    border-bottom-color: #000;
     z-index: 2; 
 }
 
