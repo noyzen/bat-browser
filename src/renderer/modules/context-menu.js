@@ -3,7 +3,6 @@ import * as Feat from './features.js';
 import { showAIPanel } from './ai.js';
 
 let fullRenderCallback;
-let settings;
 
 async function handleContextMenuCommand(command, context) {
     const rerender = () => fullRenderCallback();
@@ -174,9 +173,7 @@ export function initContextMenu(cbs) {
         handleContextMenuCommand(action.command, action.context);
     });
 
-    window.electronAPI.getSettings().then(s => settings = s);
-
-    window.addEventListener('contextmenu', (e) => {
+    window.addEventListener('contextmenu', async (e) => {
         const targetTab = e.target.closest('.tab-item, .all-tabs-list-item');
         const targetGroup = e.target.closest('.group-header, .tab-group, .all-tabs-group-header');
         
@@ -186,6 +183,7 @@ export function initContextMenu(cbs) {
         }
         e.preventDefault();
 
+        const settings = await window.electronAPI.getSettings();
         let menuTemplate = [];
 
         if (targetTab) {

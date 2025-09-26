@@ -139,26 +139,40 @@
             <section id="ai" class="settings-section" style="display: none;" data-keywords="ai artificial intelligence gemini api key assistant">
               <h1>AI Assistant</h1>
               <div class="setting-item" data-keywords="enable disable ai assistant gemini">
-                <label for="ai-enable-toggle">Enable AI Assistant</label>
-                <div class="setting-control">
-                  <label class="switch">
-                    <input type="checkbox" id="ai-enable-toggle">
-                    <span class="slider"></span>
-                  </label>
-                </div>
+                  <div class="setting-label">
+                      <h2>Enable AI Assistant</h2>
+                      <p>Allow Bat AI to assist you with tasks like summarizing pages and analyzing content.</p>
+                  </div>
+                  <div class="setting-control">
+                      <label class="switch">
+                          <input type="checkbox" id="ai-enable-toggle">
+                          <span class="slider"></span>
+                      </label>
+                  </div>
               </div>
               <div id="ai-settings-content" class="hidden">
-                <div class="setting-item" data-keywords="api key management">
-                  <label>Gemini API Keys</label>
-                  <div class="setting-control column">
-                    <div id="api-key-list"></div>
-                    <div class="add-key-form">
-                        <input type="text" id="api-key-name-input" placeholder="Key Name (e.g., 'My Key')">
-                        <input type="password" id="api-key-input" placeholder="Enter Gemini API Key">
-                        <button id="add-api-key-btn">Add Key</button>
-                    </div>
+                  <div class="setting-item column" data-keywords="api key management gemini">
+                      <div class="setting-label">
+                          <h2>Gemini API Keys</h2>
+                          <p>Manage your Google Gemini API keys. One key must be active to use the AI Assistant.</p>
+                      </div>
+                      <div class="setting-control full-width">
+                          <div id="api-key-list"></div>
+                      </div>
                   </div>
-                </div>
+                  <div class="setting-item column" data-keywords="add new api key gemini">
+                       <div class="setting-label">
+                          <h2>Add New API Key</h2>
+                          <p>You can get a free API key from Google AI Studio.</p>
+                      </div>
+                      <div class="setting-control full-width">
+                          <div class="add-key-form">
+                              <input type="text" id="api-key-name-input" placeholder="Key Name (e.g., 'My Personal Key')">
+                              <input type="password" id="api-key-input" placeholder="Paste your Gemini API Key here">
+                              <button id="add-api-key-btn"><i class="fa-solid fa-plus"></i> Add Key</button>
+                          </div>
+                      </div>
+                  </div>
               </div>
             </section>
             <section id="hotkeys" class="settings-section" style="display: none;" data-keywords="hotkeys shortcuts keyboard">

@@ -32,35 +32,42 @@
 #settings-main { flex-grow: 1; overflow-y: auto; }
 #settings-content { max-width: 800px; margin: 0 auto; padding: 48px; }
 .settings-section > h1 { font-size: 28px; font-weight: 300; border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin: 0 0 24px 0; }
-.setting-item { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border-color); }
+.setting-item { display: flex; align-items: flex-start; justify-content: space-between; padding: 24px 0; border-bottom: 1px solid var(--border-color); gap: 24px; }
+.setting-item.column { flex-direction: column; }
 .setting-item.hidden-by-search { display: none; }
-.setting-item label { font-size: 14px; }
-.setting-control { display: flex; align-items: center; }
-.setting-control.column { flex-direction: column; align-items: stretch; gap: 16px; flex-grow: 1; max-width: 400px;}
+.setting-label { flex-grow: 1; }
+.setting-label h2 { font-size: 16px; margin: 0 0 4px 0; }
+.setting-label p { font-size: 13px; color: var(--fg-secondary); margin: 0; max-width: 450px; line-height: 1.5; }
+.setting-control { display: flex; align-items: center; flex-shrink: 0; }
+.setting-control.full-width { width: 100%; }
 #font-select, #zoom-select, #search-engine-select { background-color: var(--bg-tertiary); color: var(--fg-primary); border: 1px solid var(--border-color); padding: 8px 36px 8px 12px; border-radius: 0; min-width: 250px; font-size: 14px; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238b8b8b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; background-size: 24px; cursor: pointer; }
 #font-select:focus, #zoom-select:focus, #search-engine-select:focus { outline: none; border-color: var(--accent-color); }
 #font-loading-indicator { color: var(--fg-secondary); font-size: 14px; display: flex; align-items: center; gap: 8px; }
 
-#ai-settings-content {
-    width: 100%;
-}
-#ai-settings-content.hidden {
-    display: none;
-}
-#api-key-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-.api-key-item { display: flex; align-items: center; background-color: var(--bg-tertiary); padding: 8px 12px; border-radius: 0; border-left: 3px solid transparent; }
-.api-key-item.active { border-left-color: var(--accent-color); }
-.api-key-name { font-weight: 500; }
-.api-key-partial { color: var(--fg-secondary); margin-left: 8px; font-family: monospace; }
+#ai-settings-content { width: 100%; transition: opacity 0.3s ease, transform 0.3s ease; }
+#ai-settings-content.hidden { display: none; }
+
+#api-key-list { display: flex; flex-direction: column; gap: 10px; width: 100%; border: 1px solid var(--border-color); background-color: var(--bg-secondary); padding: 8px; }
+.api-key-item { display: flex; align-items: center; background-color: var(--bg-tertiary); padding: 12px; transition: background-color 0.2s ease; }
+.api-key-item.active { background-color: hsl(205, 87%, 25%); box-shadow: inset 3px 0 0 0 var(--accent-color); }
+.api-key-item .key-info { flex-grow: 1; }
+.api-key-name { font-weight: 500; display: block; }
+.api-key-partial { color: var(--fg-secondary); font-family: monospace; font-size: 12px; }
+.api-key-item.active .api-key-partial { color: #a4c9e1; }
+.api-key-active-badge { background-color: var(--accent-color); color: white; font-size: 10px; font-weight: bold; padding: 3px 6px; border-radius: 10px; margin-left: 8px; }
 .api-key-controls { margin-left: auto; display: flex; gap: 8px; }
-.api-key-controls button { background: none; border: 1px solid var(--border-color); color: var(--fg-secondary); padding: 4px 8px; border-radius: 0; cursor: pointer; font-size: 12px; }
+.api-key-controls button { background: none; border: 1px solid var(--border-color); color: var(--fg-secondary); padding: 6px 10px; border-radius: 0; cursor: pointer; font-size: 12px; transition: all 0.2s ease; }
 .api-key-controls button:hover:not(:disabled) { background-color: var(--bg-hover); color: var(--fg-primary); border-color: var(--fg-primary); }
 .api-key-controls button:disabled { opacity: 0.5; cursor: not-allowed; }
-.no-keys-message { color: var(--fg-secondary); font-size: 13px; text-align: center; padding: 12px; width: 100%; }
-.add-key-form { display: flex; gap: 8px; width: 100%; margin-top: 8px; }
-.add-key-form input { flex-grow: 1; background-color: var(--bg-primary); border: 1px solid var(--border-color); color: var(--fg-primary); padding: 6px 10px; border-radius: 0; outline: none; font-size: 13px; }
+.api-key-controls .delete-key-btn:hover { background-color: var(--window-controls-close-hover); color: white; border-color: var(--window-controls-close-hover); }
+.no-keys-message { color: var(--fg-secondary); font-size: 13px; text-align: center; padding: 24px; width: 100%; background-color: var(--bg-tertiary); }
+
+.add-key-form { display: flex; gap: 12px; width: 100%; }
+.add-key-form input { flex-grow: 1; background-color: var(--bg-primary); border: 1px solid var(--border-color); color: var(--fg-primary); padding: 10px 12px; border-radius: 0; outline: none; font-size: 14px; }
 .add-key-form input:focus { border-color: var(--accent-color); }
-.add-key-form button { background-color: var(--accent-color); color: white; border: none; padding: 6px 12px; border-radius: 0; cursor: pointer; }
+.add-key-form button { background-color: var(--accent-color); color: white; border: none; padding: 10px 16px; border-radius: 0; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px; transition: background-color 0.2s ease; }
+.add-key-form button:hover { background-color: #1f8ad2; }
+
 
 /* --- All Tabs View --- */
 #all-tabs-view { position: fixed; inset: 0; background: var(--bg-primary); z-index: 50; display: flex; flex-direction: column; }

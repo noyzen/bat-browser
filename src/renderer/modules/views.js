@@ -145,7 +145,11 @@ function renderAPIKeyList() {
     aiConf.apiKeys.forEach(key => {
         const keyEl = document.createElement('div');
         keyEl.className = 'api-key-item';
-        keyEl.classList.toggle('active', key.id === aiConf.activeApiKeyId);
+        const isActive = key.id === aiConf.activeApiKeyId;
+        keyEl.classList.toggle('active', isActive);
+
+        const infoWrapper = document.createElement('div');
+        infoWrapper.className = 'key-info';
 
         const nameEl = document.createElement('span');
         nameEl.className = 'api-key-name';
@@ -154,21 +158,32 @@ function renderAPIKeyList() {
         const partialKeyEl = document.createElement('span');
         partialKeyEl.className = 'api-key-partial';
         partialKeyEl.textContent = `(...${key.key.slice(-4)})`;
+
+        infoWrapper.append(nameEl, partialKeyEl);
         
         const controlsEl = document.createElement('div');
         controlsEl.className = 'api-key-controls';
 
-        const setActiveBtn = document.createElement('button');
-        setActiveBtn.textContent = 'Set Active';
-        setActiveBtn.disabled = key.id === aiConf.activeApiKeyId;
-        setActiveBtn.addEventListener('click', () => {
-            currentSettings.ai.activeApiKeyId = key.id;
-            window.electronAPI.settingsSetAI(currentSettings.ai);
-            renderAPIKeyList();
-        });
+        if (isActive) {
+            const activeBadge = document.createElement('span');
+            activeBadge.className = 'api-key-active-badge';
+            activeBadge.textContent = 'Active';
+            controlsEl.appendChild(activeBadge);
+        } else {
+            const setActiveBtn = document.createElement('button');
+            setActiveBtn.textContent = 'Set Active';
+            setActiveBtn.addEventListener('click', () => {
+                currentSettings.ai.activeApiKeyId = key.id;
+                window.electronAPI.settingsSetAI(currentSettings.ai);
+                renderAPIKeyList();
+            });
+            controlsEl.appendChild(setActiveBtn);
+        }
 
         const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-key-btn';
         deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+        deleteBtn.title = 'Delete Key';
         deleteBtn.addEventListener('click', () => {
             currentSettings.ai.apiKeys = currentSettings.ai.apiKeys.filter(k => k.id !== key.id);
             if (currentSettings.ai.activeApiKeyId === key.id) {
@@ -178,8 +193,8 @@ function renderAPIKeyList() {
             renderAPIKeyList();
         });
 
-        controlsEl.append(setActiveBtn, deleteBtn);
-        keyEl.append(nameEl, partialKeyEl, controlsEl);
+        controlsEl.append(deleteBtn);
+        keyEl.append(infoWrapper, controlsEl);
         apiKeyList.appendChild(keyEl);
     });
 }
