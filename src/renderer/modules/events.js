@@ -257,6 +257,8 @@ function initDelegatedEventListeners() {
         if (tabItem) {
             const tabId = tabItem.dataset.id;
             if (tabId !== state.activeTabId) {
+                // Explicitly blur address bar before switching to prevent focus jumps.
+                DOM.addressBar.blur();
                 window.electronAPI.switchTab(tabId);
             }
             return;
