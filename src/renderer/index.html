@@ -192,16 +192,21 @@
   </div>
 
   <div id="screenshot-preview-overlay" class="hidden">
+    <div class="preview-image-container">
+      <img id="screenshot-preview-image" alt="Screenshot Preview" />
+    </div>
     <div class="preview-toolbar">
-      <span class="preview-title">Capture Preview</span>
+      <div class="preview-metadata">
+        <span id="screenshot-filename"></span>
+        <span id="screenshot-dimensions"></span>
+      </div>
       <div class="preview-actions">
         <button id="screenshot-copy-btn" title="Copy to Clipboard"><i class="fa-solid fa-copy"></i> Copy</button>
         <button id="screenshot-save-btn" class="ok-btn" title="Save to File"><i class="fa-solid fa-save"></i> Save As...</button>
-        <button id="screenshot-discard-btn" title="Discard Capture" class="cancel-btn"><i class="fa-solid fa-xmark"></i></button>
       </div>
-    </div>
-    <div class="preview-image-container">
-      <img id="screenshot-preview-image" alt="Screenshot Preview" />
+      <div class="preview-close">
+        <button id="screenshot-discard-btn" title="Discard Capture"><i class="fa-solid fa-xmark"></i></button>
+      </div>
     </div>
   </div>
 

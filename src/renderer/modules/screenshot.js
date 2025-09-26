@@ -153,6 +153,16 @@ function showPreview(dataUrl) {
     currentCapture = dataUrl;
     DOM.screenshotPreviewImage.src = dataUrl;
     DOM.screenshotPreviewOverlay.classList.remove('hidden');
+
+    DOM.screenshotPreviewImage.onload = () => {
+        const { naturalWidth, naturalHeight } = DOM.screenshotPreviewImage;
+        DOM.screenshotDimensions.textContent = `${naturalWidth} x ${naturalHeight}`;
+
+        window.electronAPI.getSettings().then(settings => {
+            const format = settings.screenshotFormat || 'png';
+            DOM.screenshotFilename.textContent = `screenshot-${Date.now()}.${format}`;
+        });
+    };
 }
 
 async function saveCapture() {

@@ -60,3 +60,5 @@ export const screenshotCopyBtn = document.getElementById('screenshot-copy-btn');
 export const screenshotSaveBtn = document.getElementById('screenshot-save-btn');
 export const screenshotDiscardBtn = document.getElementById('screenshot-discard-btn');
 export const screenshotPreviewImage = document.getElementById('screenshot-preview-image');
+export const screenshotFilename = document.getElementById('screenshot-filename');
+export const screenshotDimensions = document.getElementById('screenshot-dimensions');

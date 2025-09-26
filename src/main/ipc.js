@@ -229,8 +229,10 @@ function initializeIpc() {
         let finalResult = { success: false, message: 'An unknown error occurred.' };
         let finalDataUrl = null;
         let debuggerWasAttachedByUs = false;
+        let originalStyles = null;
     
         try {
+            // --- SCROLLING PHASE TO TRIGGER LAZY-LOADED CONTENT ---
             const pageMetrics = await webContents.executeJavaScript(`Promise.resolve({ contentHeight: Math.max(document.body.scrollHeight, document.documentElement.scrollHeight), viewHeight: window.innerHeight })`);
             const { contentHeight, viewHeight } = pageMetrics;
     
@@ -255,7 +257,19 @@ function initializeIpc() {
     
             if (activeCaptures.get(tabId)?.cancelled) throw new Error('CAPTURE_CANCELLED');
             if (webContents.isDestroyed()) throw new Error('TAB_CLOSED');
-    
+            
+            // --- PRE-CAPTURE SCRIPTING TO PREVENT ARTIFACTS ---
+            originalStyles = await webContents.executeJavaScript(`
+                const original = {
+                    overflow: document.documentElement.style.overflow,
+                    bodyMargin: document.body.style.marginTop,
+                };
+                document.documentElement.style.overflow = 'hidden';
+                document.body.style.marginTop = '0';
+                original; // return original styles
+            `);
+
+            // --- CAPTURE PHASE ---
             if (!webContents.debugger.isAttached()) {
                 await webContents.debugger.attach('1.3');
                 debuggerWasAttachedByUs = true;
@@ -272,6 +286,7 @@ function initializeIpc() {
                 format: format,
                 quality: (format === 'jpeg' || format === 'webp') ? quality : undefined,
                 captureBeyondViewport: true,
+                fromSurface: true, // Use fromSurface for more accurate rendering
                 clip: { x: 0, y: 0, width: contentSize.width, height: contentSize.height, scale: 1 }
             });
             
@@ -286,12 +301,21 @@ function initializeIpc() {
                 finalResult = { success: false, message: `Failed to capture page: ${error.message}` };
             }
         } finally {
+            // --- POST-CAPTURE CLEANUP ---
             try {
+                // Restore original page styles
+                if (originalStyles && webContents && !webContents.isDestroyed()) {
+                    await webContents.executeJavaScript(`
+                        document.documentElement.style.overflow = '${originalStyles.overflow}';
+                        document.body.style.marginTop = '${originalStyles.bodyMargin}';
+                    `).catch(e => console.error('Non-critical error restoring page styles:', e));
+                }
+                // Detach debugger if we attached it
                 if (debuggerWasAttachedByUs && webContents && !webContents.isDestroyed() && webContents.debugger.isAttached()) {
                     await webContents.debugger.detach();
                 }
-            } catch (detachError) {
-                console.error('Non-critical error while detaching debugger:', detachError);
+            } catch (cleanupError) {
+                console.error('Non-critical error during screenshot cleanup:', cleanupError);
             } finally {
                 if (state.mainWindow && !state.mainWindow.isDestroyed()) {
                     state.mainWindow.webContents.send('screenshot:end', { tabId, result: { ...finalResult, dataUrl: finalDataUrl } });
