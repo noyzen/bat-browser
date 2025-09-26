@@ -29,7 +29,7 @@ const debouncedSaveSettings = debounce(() => {
 }, 500);
 
 async function applyFontSetting(tab, fontFamily) {
-    if (!tab || !tab.view || !tab.view.webContents.isDestroyed()) return;
+    if (!tab || !tab.view || tab.view.webContents.isDestroyed()) return;
     const webContents = tab.view.webContents;
     const existingKey = tab.cssKeys.get('defaultFont');
 
