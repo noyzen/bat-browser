@@ -393,8 +393,8 @@ export function initEvents(callbacks) {
         }
         
         if (state.activeTabId) {
-            // After the container resizes (200ms transition), scroll the active tab to the right.
-            setTimeout(() => scrollToTab(state.activeTabId, 'right'), 210);
+            // After the container resizes (200ms transition), scroll the active tab to the center.
+            setTimeout(() => scrollToTab(state.activeTabId, 'center'), 210);
         }
     });
 
