@@ -83,6 +83,11 @@ const customUaWrapper = document.getElementById('custom-user-agent-wrapper');
 const customUaInput = document.getElementById('user-agent-custom-input');
 const testUserAgentBtn = document.getElementById('test-user-agent-btn');
 
+const proxyModeRadios = document.querySelectorAll('input[name="proxy-mode"]');
+const proxyManualSettings = document.getElementById('proxy-manual-settings');
+const proxyRulesInput = document.getElementById('proxy-rules-input');
+const proxyBypassInput = document.getElementById('proxy-bypass-input');
+
 const aiSettingsContent = document.getElementById('ai-settings-content');
 const aiEnableToggle = document.getElementById('ai-enable-toggle');
 const apiKeyList = document.getElementById('api-key-list');
@@ -269,6 +274,9 @@ async function populateSettings() {
     // Identity
     await populateUserAgentSettings();
 
+    // Network
+    populateProxySettings();
+
     // AI
     populateAISettings();
     // Hotkeys
@@ -319,6 +327,26 @@ function saveUserAgentSettings() {
     };
     currentSettings.userAgent = newSettings;
     window.electronAPI.settingsSetUserAgent(newSettings);
+}
+
+function populateProxySettings() {
+    const proxy = currentSettings.proxy || { mode: 'autodetect', rules: '', bypass: '' };
+    const radio = document.querySelector(`input[name="proxy-mode"][value="${proxy.mode}"]`);
+    if (radio) radio.checked = true;
+
+    proxyRulesInput.value = proxy.rules;
+    proxyBypassInput.value = proxy.bypass;
+    proxyManualSettings.classList.toggle('hidden', proxy.mode !== 'manual');
+}
+
+function saveProxySettings() {
+    const newSettings = {
+        mode: document.querySelector('input[name="proxy-mode"]:checked').value,
+        rules: proxyRulesInput.value.trim(),
+        bypass: proxyBypassInput.value.trim(),
+    };
+    currentSettings.proxy = newSettings;
+    window.electronAPI.settingsSetProxy(newSettings);
 }
 
 function populateAISettings() {
@@ -645,6 +673,14 @@ export function initViews({ fullRender }) {
     testUserAgentBtn.addEventListener('click', () => {
         window.electronAPI.newTabWithUrl('https://www.whatismybrowser.com/detect/what-is-my-user-agent');
     });
+
+    // -- Network
+    proxyModeRadios.forEach(radio => radio.addEventListener('change', () => {
+        proxyManualSettings.classList.toggle('hidden', radio.value !== 'manual');
+        saveProxySettings();
+    }));
+    proxyRulesInput.addEventListener('input', debounce(saveProxySettings, 500));
+    proxyBypassInput.addEventListener('input', debounce(saveProxySettings, 500));
     
     // -- AI
     getApiKeyBtn.addEventListener('click', () => {

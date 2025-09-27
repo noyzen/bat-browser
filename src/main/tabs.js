@@ -32,7 +32,9 @@ function getUserAgentInfo() {
 }
 
 async function applyProxyToSession(tabSession) {
-    if (!tabSession || tabSession.isDestroyed()) return;
+    if (!tabSession || (typeof tabSession.isDestroyed === 'function' && tabSession.isDestroyed())) {
+        return;
+    }
 
     const proxy = state.settings.proxy || { mode: 'autodetect' };
     let config = {};
