@@ -1,6 +1,7 @@
 import { state, isTabInAnyGroup, persistState } from '../renderer.js';
 import * as Feat from './features.js';
 import { showAIPanel } from './ai.js';
+import { showHistoryPopup } from './views.js';
 
 let fullRenderCallback;
 
@@ -78,6 +79,10 @@ async function handleContextMenuCommand(command, context) {
                 await window.electronAPI.switchTab(context.tabId);
             }
             showAIPanel();
+            break;
+        }
+        case 'show-history': {
+            showHistoryPopup(tabId);
             break;
         }
         case 'close-tab':
@@ -228,6 +233,7 @@ export function initContextMenu(cbs) {
                     ]
                 },
                 { type: 'separator' },
+                { label: 'URL Change History', action: { command: 'show-history', context: { tabId } } },
                 { label: 'Clear Cache and Reload', action: { command: 'clear-cache-reload', context: { tabId } } },
                 { label: 'AI Assistant', action: { command: 'show-ai-assistant', context: { tabId } }, visible: settings?.ai?.enabled },
                 { type: 'separator' },

@@ -1,7 +1,7 @@
 import * as DOM from './dom.js';
 import { state, isTabInAnyGroup } from '../renderer.js';
 import { renderTab, renderGroup } from './render.js';
-import { applyUiFont } from './features.js';
+import { applyUiFont, showConfirmationDialog } from './features.js';
 
 let fullRenderCallback;
 let settingsSearchInput;
@@ -113,6 +113,55 @@ const fontListDefault = document.getElementById('font-list-default');
 const fontList = document.getElementById('font-list');
 const fontListScrollWrapper = document.getElementById('font-list-scroll-wrapper');
 const fontListLoader = document.getElementById('font-list-loader');
+
+// --- History Modal ---
+const historyModal = document.getElementById('history-modal');
+const historyModalTitle = document.getElementById('history-modal-title');
+const historyModalCloseBtn = document.getElementById('history-modal-close-btn');
+const historyClearBtn = document.getElementById('history-clear-btn');
+const historyList = document.getElementById('history-list');
+let activeHistoryTabId = null;
+
+export async function showHistoryPopup(tabId) {
+    activeHistoryTabId = tabId;
+    await window.electronAPI.hideActiveView();
+    const tab = state.tabs.get(tabId);
+    if (!tab) return;
+    
+    historyModalTitle.textContent = `History for: ${tab.title}`;
+    const { history, historyIndex } = await window.electronAPI.getTabHistory(tabId);
+    
+    historyList.innerHTML = '';
+    if (history.length === 0) {
+        historyList.innerHTML = '<li class="no-history">No history for this tab.</li>';
+    } else {
+        history.forEach((item, index) => {
+            const li = document.createElement('li');
+            li.dataset.index = index;
+            li.className = 'history-item';
+            if (index === historyIndex) {
+                li.classList.add('active');
+            }
+            li.innerHTML = `
+                <span class="history-item-title">${item.title || 'No Title'}</span>
+                <span class="history-item-url">${item.url}</span>
+            `;
+            historyList.appendChild(li);
+        });
+        const activeItem = historyList.querySelector('.active');
+        if (activeItem) {
+            activeItem.scrollIntoView({ block: 'center' });
+        }
+    }
+
+    historyModal.classList.remove('hidden');
+}
+
+function hideHistoryPopup() {
+    historyModal.classList.add('hidden');
+    window.electronAPI.showActiveView();
+    activeHistoryTabId = null;
+}
 
 function renderFontList(filter = '') {
     fontList.innerHTML = '';
@@ -276,6 +325,10 @@ async function populateSettings() {
 
     // Network
     populateProxySettings();
+
+    // Privacy
+    const historyLimitInput = document.getElementById('history-limit-input');
+    historyLimitInput.value = currentSettings.history?.limit || 100;
 
     // AI
     populateAISettings();
@@ -681,6 +734,19 @@ export function initViews({ fullRender }) {
     }));
     proxyRulesInput.addEventListener('input', debounce(saveProxySettings, 500));
     proxyBypassInput.addEventListener('input', debounce(saveProxySettings, 500));
+
+    // -- Privacy
+    const historyLimitInput = document.getElementById('history-limit-input');
+    historyLimitInput.addEventListener('change', () => {
+        window.electronAPI.settingsSetHistoryLimit(historyLimitInput.value);
+    });
+    const clearAllHistoryBtn = document.getElementById('clear-all-history-btn');
+    clearAllHistoryBtn.addEventListener('click', async () => {
+        const confirmed = await showConfirmationDialog('Clear All History?', 'This will permanently delete the browsing history for all tabs. This action cannot be undone.');
+        if (confirmed) {
+            window.electronAPI.settingsClearAllHistory();
+        }
+    });
     
     // -- AI
     getApiKeyBtn.addEventListener('click', () => {
@@ -733,6 +799,32 @@ export function initViews({ fullRender }) {
           });
       });
     });
+
+    // -- History Modal Listeners
+    historyModalCloseBtn.addEventListener('click', hideHistoryPopup);
+    historyModal.addEventListener('click', (e) => {
+        if (e.target === historyModal) hideHistoryPopup();
+    });
+    historyList.addEventListener('click', async (e) => {
+        const item = e.target.closest('.history-item');
+        if (item && activeHistoryTabId) {
+            const index = parseInt(item.dataset.index, 10);
+            if (state.activeTabId !== activeHistoryTabId) {
+                await window.electronAPI.switchTab(activeHistoryTabId);
+            }
+            window.electronAPI.goToHistoryIndex({ tabId: activeHistoryTabId, index });
+            hideHistoryPopup();
+        }
+    });
+    historyClearBtn.addEventListener('click', async () => {
+        if (!activeHistoryTabId) return;
+        const confirmed = await showConfirmationDialog('Clear History?', 'This will clear the history for the current tab. This action cannot be undone.');
+        if (confirmed) {
+            window.electronAPI.clearTabHistory(activeHistoryTabId);
+            hideHistoryPopup();
+        }
+    });
+
 
     // Set initial section visibility
     document.querySelector('#settings-main .settings-section#appearance').style.display = 'block';

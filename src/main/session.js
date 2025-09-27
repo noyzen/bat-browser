@@ -27,6 +27,8 @@ function saveSession() {
           isShared: t.isShared,
           zoomFactor: t.zoomFactor === 1.0 ? undefined : t.zoomFactor,
           isActive: t.id === state.activeTabId,
+          history: t.history,
+          historyIndex: t.historyIndex,
         };
       }),
       groups: Array.from(state.groups.values()),

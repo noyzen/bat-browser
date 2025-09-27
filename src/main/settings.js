@@ -35,6 +35,9 @@ function loadSettings() {
             'go-back': 'Alt+ArrowLeft',
             'go-forward': 'Alt+ArrowRight',
         },
+        history: {
+            limit: 100,
+        },
     };
 
     try {
@@ -53,6 +56,9 @@ function loadSettings() {
             }
             if (savedSettings.hotkeys) {
                 merged.hotkeys = { ...defaults.hotkeys, ...savedSettings.hotkeys };
+            }
+            if (savedSettings.history) {
+                merged.history = { ...defaults.history, ...savedSettings.history };
             }
             return merged;
         }

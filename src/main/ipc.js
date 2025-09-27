@@ -122,8 +122,22 @@ function initializeIpc() {
 
     // Navigation
     ipcMain.handle('tab:loadURL', (_, query) => loadQueryOrURL(state.getActiveTab()?.view.webContents, query));
-    ipcMain.handle('tab:goBack', () => state.getActiveTab()?.view.webContents.goBack());
-    ipcMain.handle('tab:goForward', () => state.getActiveTab()?.view.webContents.goForward());
+    ipcMain.handle('tab:goBack', () => {
+        const tab = state.getActiveTab();
+        if (tab && tab.view && tab.historyIndex > 0) {
+            tab.isNavigatingHistory = true;
+            tab.historyIndex--;
+            tab.view.webContents.loadURL(tab.history[tab.historyIndex].url);
+        }
+    });
+    ipcMain.handle('tab:goForward', () => {
+        const tab = state.getActiveTab();
+        if (tab && tab.view && tab.historyIndex < tab.history.length - 1) {
+            tab.isNavigatingHistory = true;
+            tab.historyIndex++;
+            tab.view.webContents.loadURL(tab.history[tab.historyIndex].url);
+        }
+    });
     ipcMain.handle('tab:reload', () => {
         const view = state.getActiveTab()?.view;
         if (view) {
@@ -186,6 +200,36 @@ function initializeIpc() {
         menu.popup({ window: state.mainWindow, x: Math.round(x), y: Math.round(y) });
     });
 
+    // History
+    ipcMain.handle('tab:get-history', (_, id) => {
+        const tab = state.tabs.get(id);
+        if (!tab) return { history: [], historyIndex: -1 };
+        return { history: tab.history, historyIndex: tab.historyIndex };
+    });
+    ipcMain.handle('tab:go-to-history-index', (_, { tabId, index }) => {
+        const tab = state.tabs.get(tabId);
+        if (tab && tab.view && tab.history[index]) {
+            tab.isNavigatingHistory = true;
+            tab.historyIndex = index;
+            tab.view.webContents.loadURL(tab.history[index].url);
+        }
+    });
+    ipcMain.handle('tab:clear-history', (_, id) => {
+        const tab = state.tabs.get(id);
+        if (tab) {
+            if (tab.history[tab.historyIndex]) {
+                tab.history = [tab.history[tab.historyIndex]];
+            } else {
+                tab.history = [];
+            }
+            tab.historyIndex = tab.history.length > 0 ? 0 : -1;
+            tab.canGoBack = false;
+            tab.canGoForward = false;
+            state.mainWindow.webContents.send('tab:updated', { id: tab.id, canGoBack: false, canGoForward: false });
+            sessionModule.debouncedSaveSession();
+        }
+    });
+
     // Settings
     ipcMain.handle('settings:get', () => state.settings);
     ipcMain.handle('settings:set-default-font', async (_, fontFamily) => {
@@ -237,6 +281,42 @@ function initializeIpc() {
         state.settings.proxy = proxySettings;
         settingsModule.debouncedSaveSettings();
         await tabsModule.applyProxyToAllSessions();
+    });
+    ipcMain.handle('settings:set-history-limit', (_, limit) => {
+        const newLimit = parseInt(limit, 10) || 100;
+        if (!state.settings.history) state.settings.history = {};
+        state.settings.history.limit = newLimit;
+        settingsModule.debouncedSaveSettings();
+
+        for (const tab of state.tabs.values()) {
+            if (tab.history.length > newLimit) {
+                const excess = tab.history.length - newLimit;
+                tab.history.splice(0, excess);
+                tab.historyIndex -= excess;
+                if (tab.historyIndex < 0) tab.historyIndex = 0;
+            }
+        }
+        sessionModule.debouncedSaveSession();
+    });
+    ipcMain.handle('settings:clear-all-history', () => {
+        for (const tab of state.tabs.values()) {
+             if (tab.history.length > 1) {
+                if(tab.history[tab.historyIndex]) {
+                    tab.history = [tab.history[tab.historyIndex]];
+                    tab.historyIndex = 0;
+                } else {
+                    tab.history = [];
+                    tab.historyIndex = -1;
+                }
+            }
+        }
+        const activeTab = state.getActiveTab();
+        if (activeTab) {
+            activeTab.canGoBack = false;
+            activeTab.canGoForward = false;
+            state.mainWindow.webContents.send('tab:updated', { id: activeTab.id, canGoBack: false, canGoForward: false });
+        }
+        sessionModule.saveSession();
     });
 
 

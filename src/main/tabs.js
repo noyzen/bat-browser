@@ -253,6 +253,9 @@ function attachViewListenersToTab(tabData) {
   
     view.webContents.on('page-title-updated', (_, title) => {
       tabData.title = title;
+      if (tabData.history[tabData.historyIndex]) {
+          tabData.history[tabData.historyIndex].title = title;
+      }
       state.mainWindow.webContents.send('tab:updated', { id, title });
       sessionModule.debouncedSaveSession();
     });
@@ -286,27 +289,56 @@ function attachViewListenersToTab(tabData) {
     });
   
     view.webContents.on('did-navigate', async (_, newUrl) => {
-      if (newUrl.startsWith('file://') && newUrl.includes('error.html')) {
-        tabData.canGoBack = view.webContents.canGoBack();
-        tabData.canGoForward = view.webContents.canGoForward();
-        state.mainWindow.webContents.send('tab:updated', { id, canGoBack: tabData.canGoBack, canGoForward: tabData.canGoForward });
-        return;
-      }
-  
-      const isNewTabPage = newUrl.endsWith('newtab.html');
-      if (isNewTabPage) {
-          tabData.url = 'about:blank';
-          tabData.title = 'New Tab';
-          tabData.favicon = null;
-          tabData.canGoBack = false;
-          tabData.canGoForward = false;
-          state.mainWindow.webContents.send('tab:updated', { id, url: '', title: 'New Tab', favicon: null, canGoBack: false, canGoForward: false });
+      if (newUrl.startsWith('file://') && (newUrl.includes('error.html') || newUrl.includes('newtab.html'))) {
+          const isNewTabPage = newUrl.includes('newtab.html');
+          if (isNewTabPage) {
+              tabData.url = 'about:blank';
+              tabData.title = 'New Tab';
+              tabData.favicon = null;
+          }
+          // For history-based navigations, the index is already set. For new navigations, it needs to be updated.
+          if (!tabData.isNavigatingHistory) {
+              // Clear potential forward history if this is a new navigation from a "back" state
+              if (tabData.historyIndex < tabData.history.length - 1) {
+                  tabData.history = tabData.history.slice(0, tabData.historyIndex + 1);
+              }
+              // Only add new tab page as the very first history entry
+              if (isNewTabPage && tabData.history.length === 0) {
+                  tabData.history.push({ url: 'about:blank', title: 'New Tab' });
+                  tabData.historyIndex = 0;
+              }
+          }
+          tabData.canGoBack = tabData.historyIndex > 0;
+          tabData.canGoForward = tabData.historyIndex < tabData.history.length - 1;
+          const urlToSend = isNewTabPage ? '' : newUrl;
+          const titleToSend = isNewTabPage ? 'New Tab' : tabData.title;
+          state.mainWindow.webContents.send('tab:updated', { id, url: urlToSend, title: titleToSend, favicon: null, canGoBack: tabData.canGoBack, canGoForward: tabData.canGoForward });
+          if (tabData.isNavigatingHistory) tabData.isNavigatingHistory = false;
           return;
       }
   
+      if (tabData.isNavigatingHistory) {
+          tabData.isNavigatingHistory = false;
+      } else {
+          const currentHistoryEntry = tabData.history[tabData.historyIndex];
+          if (!currentHistoryEntry || newUrl !== currentHistoryEntry.url) {
+              if (tabData.historyIndex < tabData.history.length - 1) {
+                  tabData.history = tabData.history.slice(0, tabData.historyIndex + 1);
+              }
+              tabData.history.push({ url: newUrl, title: view.webContents.getTitle() });
+              tabData.historyIndex++;
+              
+              const historyLimit = state.settings.history?.limit || 100;
+              if (tabData.history.length > historyLimit) {
+                  tabData.history.shift();
+                  tabData.historyIndex--;
+              }
+          }
+      }
+
       tabData.url = newUrl;
-      tabData.canGoBack = view.webContents.canGoBack();
-      tabData.canGoForward = view.webContents.canGoForward();
+      tabData.canGoBack = tabData.historyIndex > 0;
+      tabData.canGoForward = tabData.historyIndex < tabData.history.length - 1;
       state.mainWindow.webContents.send('tab:updated', { id, url: newUrl, canGoBack: tabData.canGoBack, canGoForward: tabData.canGoForward });
       
       await settingsModule.applyFontSetting(tabData, state.settings.defaultFont);
@@ -408,6 +440,9 @@ async function createTab(url = 'about:blank', options = {}) {
       lastActive: Date.now(),
       color: fromTabId ? (state.tabs.get(fromTabId)?.color || getRandomColor()) : getRandomColor(),
       cssKeys: new Map(),
+      history: [],
+      historyIndex: -1,
+      isNavigatingHistory: false,
     };
     state.tabs.set(id, tabData);
   

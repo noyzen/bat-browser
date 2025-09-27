@@ -109,11 +109,14 @@ function createWindow() {
             ...t,
             zoomFactor: t.zoomFactor === undefined ? globalZoom : t.zoomFactor,
             view: null, session: null,
-            canGoBack: false, canGoForward: false,
+            canGoBack: (t.historyIndex ?? -1) > 0, 
+            canGoForward: false,
             isLoading: !isHibernated, isLoaded: false,
             isHibernated,
             lastActive: Date.now(),
             cssKeys: new Map(),
+            history: t.history || [],
+            historyIndex: t.historyIndex ?? -1,
           });
         });
         
