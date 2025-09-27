@@ -124,6 +124,7 @@
             <li><a href="#downloads"><i class="fa-solid fa-download"></i> Downloads</a></li>
             <li><a href="#ai"><i class="fa-solid fa-robot"></i> AI Assistant</a></li>
             <li><a href="#hotkeys"><i class="fa-solid fa-keyboard"></i> Hotkeys</a></li>
+            <li><a href="#backup"><i class="fa-solid fa-floppy-disk"></i> Backup & Restore</a></li>
           </ul>
         </nav>
         <main id="settings-main">
@@ -333,6 +334,27 @@
               <h1>Hotkeys</h1>
               <div id="hotkey-list">
                 <!-- Hotkey items will be dynamically inserted here -->
+              </div>
+            </section>
+            <section id="backup" class="settings-section" style="display: none;" data-keywords="backup restore save export import session tabs groups">
+              <h1>Backup & Restore</h1>
+              <div class="setting-item" data-keywords="export save backup session tabs groups to file">
+                <div class="setting-label">
+                  <h2>Backup Session</h2>
+                  <p>Save all your current tabs, groups, and their history to a single file. You can use this file to restore your session on this or another computer.</p>
+                </div>
+                <div class="setting-control">
+                  <button id="backup-session-btn" class="cta-button"><i class="fa-solid fa-download"></i> Create Backup</button>
+                </div>
+              </div>
+              <div class="setting-item" data-keywords="import restore load session tabs groups from file">
+                <div class="setting-label">
+                  <h2>Restore Session</h2>
+                  <p>Load a session from a backup file. This will replace your current session and restart the browser. Make sure you've saved any work.</p>
+                </div>
+                <div class="setting-control">
+                  <button id="restore-session-btn" class="danger-button"><i class="fa-solid fa-upload"></i> Restore from Backup</button>
+                </div>
               </div>
             </section>
           </div>

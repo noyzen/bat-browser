@@ -58,6 +58,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   goToHistoryIndex: (payload) => ipcRenderer.invoke('tab:go-to-history-index', payload),
   clearTabHistory: (id) => ipcRenderer.invoke('tab:clear-history', id),
 
+  // Session Backup & Restore
+  sessionBackup: () => ipcRenderer.invoke('session:backup'),
+  sessionRestore: () => ipcRenderer.invoke('session:restore'),
+
   // Settings
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setDefaultFont: (fontFamily) => ipcRenderer.invoke('settings:set-default-font', fontFamily),

@@ -785,6 +785,14 @@ export function initViews({ fullRender }) {
       handleHotkeyReset(e);
     });
 
+    // -- Backup & Restore
+    document.getElementById('backup-session-btn').addEventListener('click', () => {
+        window.electronAPI.sessionBackup();
+    });
+    document.getElementById('restore-session-btn').addEventListener('click', () => {
+        window.electronAPI.sessionRestore();
+    });
+
     // -- Sidebar navigation
     document.querySelectorAll('#settings-sidebar a').forEach(link => {
       link.addEventListener('click', e => {

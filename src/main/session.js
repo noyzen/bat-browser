@@ -3,38 +3,45 @@ const state = require('./state');
 const { SESSION_PATH } = require('./constants');
 const { debounce } = require('./utils');
 
+function getSerializableSession() {
+  if (!state.mainWindow || state.tabs.size === 0) return null;
+
+  const sessionState = {
+    tabs: Array.from(state.tabs.values()).map(t => {
+      let finalUrl = t.url;
+      if (!t.isHibernated && t.view && !t.view.webContents.isDestroyed()) {
+        const currentWebContentsUrl = t.view.webContents.getURL();
+        if (currentWebContentsUrl && currentWebContentsUrl.endsWith('newtab.html')) {
+          finalUrl = 'about:blank';
+        } else {
+          finalUrl = currentWebContentsUrl || t.url;
+        }
+      }
+      return {
+        id: t.id,
+        url: finalUrl,
+        title: t.title,
+        favicon: t.favicon,
+        color: t.color,
+        isShared: t.isShared,
+        zoomFactor: t.zoomFactor === 1.0 ? undefined : t.zoomFactor,
+        isActive: t.id === state.activeTabId,
+        history: t.history,
+        historyIndex: t.historyIndex,
+      };
+    }),
+    groups: Array.from(state.groups.values()),
+    layout: state.layout,
+    activeTabId: state.activeTabId,
+  };
+  return sessionState;
+}
+
 function saveSession() {
-  if (!state.mainWindow || state.tabs.size === 0) return;
+  const sessionState = getSerializableSession();
+  if (!sessionState) return;
 
   try {
-    const sessionState = {
-      tabs: Array.from(state.tabs.values()).map(t => {
-        let finalUrl = t.url;
-        if (!t.isHibernated && t.view) {
-          const currentWebContentsUrl = t.view.webContents.getURL();
-          if (currentWebContentsUrl && currentWebContentsUrl.endsWith('newtab.html')) {
-            finalUrl = 'about:blank';
-          } else {
-            finalUrl = currentWebContentsUrl || t.url;
-          }
-        }
-        return {
-          id: t.id,
-          url: finalUrl,
-          title: t.title,
-          favicon: t.favicon,
-          color: t.color,
-          isShared: t.isShared,
-          zoomFactor: t.zoomFactor === 1.0 ? undefined : t.zoomFactor,
-          isActive: t.id === state.activeTabId,
-          history: t.history,
-          historyIndex: t.historyIndex,
-        };
-      }),
-      groups: Array.from(state.groups.values()),
-      layout: state.layout,
-      activeTabId: state.activeTabId,
-    };
     const tempPath = SESSION_PATH + '.tmp';
     fs.writeFileSync(tempPath, JSON.stringify(sessionState, null, 2));
     fs.renameSync(tempPath, SESSION_PATH);
@@ -72,6 +79,7 @@ function loadSession() {
 const debouncedSaveSession = debounce(saveSession, 500);
 
 module.exports = {
+    getSerializableSession,
     saveSession,
     loadSession,
     debouncedSaveSession,

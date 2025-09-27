@@ -1,5 +1,6 @@
-const { ipcMain, Menu, clipboard, shell, session, dialog } = require('electron');
+const { ipcMain, Menu, clipboard, shell, session, dialog, app } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const state = require('./state');
 const tabsModule = require('./tabs');
 const settingsModule = require('./settings');
@@ -7,7 +8,7 @@ const sessionModule = require('./session');
 const downloadManager = require('./downloadManager');
 const utils = require('./utils');
 const { getSerializableTabData } = require('./utils');
-const { SEARCH_ENGINES, USER_AGENTS } = require('./constants');
+const { SEARCH_ENGINES, USER_AGENTS, SESSION_PATH } = require('./constants');
 
 // URL Loading Helper
 function loadQueryOrURL(webContents, query) {
@@ -346,6 +347,92 @@ function initializeIpc() {
         }
         return null;
     });
+
+    // Session Backup & Restore
+    ipcMain.handle('session:backup', async () => {
+        const sessionData = sessionModule.getSerializableSession();
+        if (!sessionData) {
+            dialog.showErrorBox('Backup Failed', 'There is no session data to back up.');
+            return;
+        }
+
+        const backupData = {
+            backupVersion: 1,
+            createdAt: new Date().toISOString(),
+            session: sessionData,
+        };
+
+        const defaultPath = `bat-browser-backup-${new Date().toISOString().split('T')[0]}.json`;
+        const { canceled, filePath } = await dialog.showSaveDialog(state.mainWindow, {
+            title: 'Save Session Backup',
+            defaultPath,
+            filters: [{ name: 'JSON Files', extensions: ['json'] }],
+        });
+
+        if (!canceled && filePath) {
+            try {
+                fs.writeFileSync(filePath, JSON.stringify(backupData, null, 2));
+                dialog.showMessageBox(state.mainWindow, {
+                    type: 'info',
+                    title: 'Backup Successful',
+                    message: `Session has been successfully backed up to:\n${filePath}`,
+                });
+            } catch (e) {
+                console.error('Failed to save session backup:', e);
+                dialog.showErrorBox('Backup Failed', `An error occurred while saving the backup file: ${e.message}`);
+            }
+        }
+    });
+
+    ipcMain.handle('session:restore', async () => {
+        const { response } = await dialog.showMessageBox(state.mainWindow, {
+            type: 'warning',
+            title: 'Confirm Restore',
+            message: 'Are you sure you want to restore a session?',
+            detail: 'This will overwrite your current tabs and groups and restart the browser. Make sure you have saved any important work.',
+            buttons: ['Restore and Restart', 'Cancel'],
+            defaultId: 1,
+            cancelId: 1,
+        });
+
+        if (response === 1) return; // User cancelled
+
+        const { canceled, filePaths } = await dialog.showOpenDialog(state.mainWindow, {
+            title: 'Select Backup File',
+            filters: [{ name: 'JSON Files', extensions: ['json'] }],
+            properties: ['openFile'],
+        });
+
+        if (!canceled && filePaths.length > 0) {
+            try {
+                const backupContent = fs.readFileSync(filePaths[0], 'utf-8');
+                const backupData = JSON.parse(backupContent);
+
+                let sessionToRestore;
+                if (backupData.backupVersion === 1 && backupData.session) {
+                    sessionToRestore = backupData.session;
+                } else if (backupData.tabs && backupData.groups) {
+                    // Attempt to restore older, unversioned format
+                    sessionToRestore = backupData;
+                } else {
+                    throw new Error('Invalid or unrecognized backup file format.');
+                }
+                
+                // Validate required keys
+                if (!sessionToRestore.tabs || !sessionToRestore.groups || !sessionToRestore.layout) {
+                     throw new Error('Backup file is missing required session data.');
+                }
+                
+                fs.writeFileSync(SESSION_PATH, JSON.stringify(sessionToRestore, null, 2));
+                app.relaunch();
+                app.quit();
+            } catch (e) {
+                console.error('Failed to restore session:', e);
+                dialog.showErrorBox('Restore Failed', `An error occurred while restoring the session: ${e.message}`);
+            }
+        }
+    });
+
 
     // Download Controls
     ipcMain.handle('download:pause', (_, id) => downloadManager.pause(id));
