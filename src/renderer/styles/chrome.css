@@ -97,7 +97,8 @@
 
 /* --- Dynamic Address Bar --- */
 #titlebar.address-bar-expanded #toolbar-wrapper {
-    flex-grow: 1;
+    /* Use flex shorthand for more explicit control, ensuring the toolbar grows to fill available space. */
+    flex: 1 0 0;
 }
 #titlebar.address-bar-expanded #address-bar-container {
     max-width: none;
@@ -106,5 +107,4 @@
     flex-grow: 0;
     flex-shrink: 1;
     min-width: 210px; /* Reserve space for one max-width tab + padding */
-    opacity: 1;
 }
