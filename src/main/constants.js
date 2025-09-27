@@ -35,6 +35,20 @@ module.exports = {
             value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15',
         }
     },
+    USER_AGENT_CLIENT_HINTS: {
+        'chrome-win': {
+            brands: '"Not/A)Brand";v="8", "Chromium";v="126", "Google Chrome";v="126"',
+            mobile: '?0',
+            platform: '"Windows"',
+        },
+        'firefox-win': null, // Firefox does not send Client Hints
+        'edge-win': {
+            brands: '"Not/A)Brand";v="8", "Chromium";v="126", "Microsoft Edge";v="126"',
+            mobile: '?0',
+            platform: '"Windows"',
+        },
+        'safari-mac': null, // Safari does not send Client Hints
+    },
 
     BROWSER_VIEW_WEBCONTENTS_CONFIG: {
         nodeIntegration: false,

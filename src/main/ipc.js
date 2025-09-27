@@ -191,13 +191,9 @@ function initializeIpc() {
         state.settings.userAgent = uaSettings;
         settingsModule.debouncedSaveSettings();
     
-        const newUserAgentString = uaSettings.current === 'custom'
-            ? uaSettings.custom
-            : (USER_AGENTS[uaSettings.current]?.value || USER_AGENTS['chrome-win'].value);
-    
         for (const tab of state.tabs.values()) {
             if (tab.session && !tab.session.isDestroyed()) {
-                tab.session.setUserAgent(newUserAgentString);
+                tabsModule.configureSession(tab.session);
                 if (tab.view && !tab.view.webContents.isDestroyed() && !tab.isHibernated && tab.url !== 'about:blank') {
                     tab.view.webContents.reload();
                 }
