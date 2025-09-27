@@ -8,7 +8,7 @@ function loadSettings() {
         defaultFont: null,
         searchEngine: 'google',
         userAgent: {
-            current: 'windows-chrome', // key from constants.USER_AGENTS
+            current: 'windows-firefox', // key from constants.USER_AGENTS
             custom: '',
         },
         ai: {

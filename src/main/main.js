@@ -12,10 +12,11 @@ const tabsModule = require('./tabs');
 const { getSerializableTabData, debounce } = require('./utils');
 
 // Set a global User-Agent fallback. This is a crucial step to make the browser
-// appear as a standard Chrome browser to services like Google, which block
-// logins from unidentified or Electron-based user agents. This must be set
-// before the app 'ready' event.
-app.userAgentFallback = constants.USER_AGENTS.windows.chrome.value;
+// appear as a standard browser to services like Google, which block logins from
+// unidentified or Electron-based user agents. The user-provided guide strongly
+// suggests using a Firefox User-Agent as Google is less strict with it in
+// Electron contexts.
+app.userAgentFallback = constants.USER_AGENTS.windows.firefox.value;
 
 // Gracefully handle unhandled exceptions
 process.on('uncaughtException', (error, origin) => {
