@@ -130,6 +130,7 @@ export function render() {
                 updateTabElement(element, itemData);
             } else {
                 const group = itemData;
+                const headerEl = element.querySelector('.group-header');
                 element.style.setProperty('--tab-group-color', group.color);
                 element.classList.toggle('collapsed', group.collapsed);
                 
@@ -147,10 +148,22 @@ export function render() {
                     if (!indicator) {
                         const activeIndicatorIcon = document.createElement('i');
                         activeIndicatorIcon.className = 'fa-solid fa-circle active-in-group-indicator';
-                        element.querySelector('.group-header').appendChild(activeIndicatorIcon);
+                        headerEl.appendChild(activeIndicatorIcon);
                     }
                 } else if (indicator) {
                     indicator.remove();
+                }
+
+                let tabCountEl = element.querySelector('.group-tab-count-badge');
+                if (group.collapsed) {
+                    if (!tabCountEl) {
+                        tabCountEl = document.createElement('span');
+                        tabCountEl.className = 'group-tab-count-badge';
+                        headerEl.appendChild(tabCountEl);
+                    }
+                    tabCountEl.textContent = group.tabs.length;
+                } else if (tabCountEl) {
+                    tabCountEl.remove();
                 }
 
                 let tabsWrapper = element.querySelector('.tab-group-tabs');
@@ -269,8 +282,16 @@ export function renderGroup(id, context = 'main', visibleTabIds = null) {
 
         toggleIcon.className = `fa-solid ${group.collapsed ? 'fa-plus' : 'fa-minus'} group-toggle-icon`;
 
+        headerEl.append(toggleIcon, titleEl);
+
         if (group.collapsed) {
             groupContainer.classList.add('collapsed');
+
+            const tabCountEl = document.createElement('span');
+            tabCountEl.className = 'group-tab-count-badge';
+            tabCountEl.textContent = group.tabs.length;
+            headerEl.appendChild(tabCountEl);
+
             if (group.tabs.includes(state.activeTabId)) {
                 groupContainer.classList.add('active-child');
                 const activeIndicatorIcon = document.createElement('i');
@@ -278,7 +299,7 @@ export function renderGroup(id, context = 'main', visibleTabIds = null) {
                 headerEl.appendChild(activeIndicatorIcon);
             }
         }
-        headerEl.append(toggleIcon, titleEl);
+
         groupContainer.appendChild(headerEl);
         if (!group.collapsed) {
             const tabsWrapper = document.createElement('div');

@@ -127,6 +127,15 @@
 .tab-group.collapsed .group-header:hover .group-toggle-icon { color: #fff; }
 .tab-group-tabs { display: contents; }
 .active-in-group-indicator { color: white; font-size: 7px; }
+.group-tab-count-badge {
+    background-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 1px 5px;
+    border-radius: 8px;
+    line-height: 1;
+}
 
 .tab-group:not(.collapsed) {
     border-left: 2px solid var(--tab-group-color);
