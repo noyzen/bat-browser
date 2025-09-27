@@ -1,6 +1,7 @@
 import * as DOM from './dom.js';
 import * as Feat from './features.js';
 import { showAllTabsView, hideAllTabsView } from './views.js';
+import { showDownloadsView } from './downloads.js';
 
 let getState, updateNavControls, fullRender, persistState;
 let hotkeyToAction = new Map();
@@ -27,6 +28,8 @@ async function refreshMaxButton() {
     DOM.allTabsMaxBtn.title = title;
     DOM.settingsMaxIcon.className = iconClass;
     DOM.settingsMaxBtn.title = title;
+    DOM.downloadsMaxIcon.className = iconClass;
+    DOM.downloadsMaxBtn.title = title;
 }
 
 function handleAddressBar(e) {
@@ -343,6 +346,7 @@ export function initEvents(callbacks) {
     DOM.forwardBtn.addEventListener('click', () => window.electronAPI.goForward());
     DOM.reloadBtn.addEventListener('click', () => window.electronAPI.reload());
     DOM.allTabsBtn.addEventListener('click', showAllTabsView);
+    DOM.downloadsBtn.addEventListener('click', showDownloadsView);
 
     // --- Window Controls ---
     DOM.minBtn.addEventListener('click', () => window.electronAPI.minimizeWindow());
@@ -354,7 +358,10 @@ export function initEvents(callbacks) {
     DOM.settingsMinBtn.addEventListener('click', () => window.electronAPI.minimizeWindow());
     DOM.settingsMaxBtn.addEventListener('click', () => window.electronAPI.maximizeWindow());
     DOM.settingsCloseBtn.addEventListener('click', () => window.electronAPI.closeWindow());
-    
+    DOM.downloadsMinBtn.addEventListener('click', () => window.electronAPI.minimizeWindow());
+    DOM.downloadsMaxBtn.addEventListener('click', () => window.electronAPI.maximizeWindow());
+    DOM.downloadsCloseBtn.addEventListener('click', () => window.electronAPI.closeWindow());
+
     window.electronAPI.onMaximizeChanged(refreshMaxButton);
     document.addEventListener('DOMContentLoaded', refreshMaxButton);
 

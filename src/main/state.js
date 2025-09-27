@@ -2,6 +2,7 @@ const state = {
     mainWindow: null,
     tabs: new Map(),
     groups: new Map(),
+    downloads: new Map(),
     layout: [],
     activeTabId: null,
     settings: {},

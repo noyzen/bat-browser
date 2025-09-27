@@ -1,9 +1,10 @@
-const { ipcMain, Menu, clipboard, shell, session } = require('electron');
+const { ipcMain, Menu, clipboard, shell, session, dialog } = require('electron');
 const path = require('path');
 const state = require('./state');
 const tabsModule = require('./tabs');
 const settingsModule = require('./settings');
 const sessionModule = require('./session');
+const downloadManager = require('./downloadManager');
 const utils = require('./utils');
 const { getSerializableTabData } = require('./utils');
 const { SEARCH_ENGINES, USER_AGENTS } = require('./constants');
@@ -330,6 +331,30 @@ function initializeIpc() {
         }
         sessionModule.saveSession();
     });
+
+    ipcMain.handle('settings:set-downloads', (_, settings) => {
+        if (!state.settings.downloads) state.settings.downloads = {};
+        Object.assign(state.settings.downloads, settings);
+        settingsModule.debouncedSaveSettings();
+    });
+    ipcMain.handle('settings:select-download-dir', async () => {
+        const { canceled, filePaths } = await dialog.showOpenDialog(state.mainWindow, {
+            properties: ['openDirectory']
+        });
+        if (!canceled && filePaths.length > 0) {
+            return filePaths[0];
+        }
+        return null;
+    });
+
+    // Download Controls
+    ipcMain.handle('download:pause', (_, id) => downloadManager.pause(id));
+    ipcMain.handle('download:resume', (_, id) => downloadManager.resume(id));
+    ipcMain.handle('download:cancel', (_, id) => downloadManager.cancel(id));
+    ipcMain.handle('download:open-file', (_, id) => downloadManager.openFile(id));
+    ipcMain.handle('download:show-in-folder', (_, id) => downloadManager.showInFolder(id));
+    ipcMain.handle('download:remove', (_, id) => downloadManager.remove(id));
+    ipcMain.handle('download:clear-all', () => downloadManager.clearAll());
 
 
     // View-specific IPC handlers

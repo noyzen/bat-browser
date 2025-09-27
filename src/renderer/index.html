@@ -24,6 +24,7 @@
             <button id="all-tabs-btn" title="List all tabs" aria-label="List all tabs">
                <i class="fa-solid fa-chevron-down"></i>
             </button>
+            <button id="downloads-btn" title="Downloads" aria-label="Downloads"><i class="fa-solid fa-download"></i></button>
             <button id="settings-btn" title="Settings" aria-label="Settings"><i class="fa-solid fa-cog"></i></button>
             <button id="back-btn" title="Back" aria-label="Back" disabled><i class="fa-solid fa-arrow-left"></i></button>
             <button id="forward-btn" title="Forward" aria-label="Forward" disabled><i class="fa-solid fa-arrow-right"></i></button>
@@ -120,6 +121,7 @@
             <li><a href="#identity"><i class="fa-solid fa-user-secret"></i> Identity</a></li>
             <li><a href="#network"><i class="fa-solid fa-network-wired"></i> Network</a></li>
             <li><a href="#privacy"><i class="fa-solid fa-shield-halved"></i> Privacy</a></li>
+            <li><a href="#downloads"><i class="fa-solid fa-download"></i> Downloads</a></li>
             <li><a href="#ai"><i class="fa-solid fa-robot"></i> AI Assistant</a></li>
             <li><a href="#hotkeys"><i class="fa-solid fa-keyboard"></i> Hotkeys</a></li>
           </ul>
@@ -232,6 +234,54 @@
                 </div>
               </div>
             </section>
+             <section id="downloads" class="settings-section" style="display: none;" data-keywords="downloads files save location folder multi-connection speed">
+                <h1>Downloads</h1>
+                <div class="setting-item" data-keywords="download location folder directory">
+                    <div class="setting-label">
+                        <h2>Save Location</h2>
+                        <p>Choose the default folder where downloaded files will be saved.</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="directory-picker">
+                            <span id="download-location-display"></span>
+                            <button id="select-download-dir-btn">Change...</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="setting-item" data-keywords="ask save location file prompt">
+                    <div class="setting-label">
+                        <h2>Ask Before Saving</h2>
+                        <p>Always ask where to save a file before starting the download.</p>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            <input type="checkbox" id="ask-before-saving-toggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-item" data-keywords="multi connection parallel speed performance">
+                    <div class="setting-label">
+                        <h2>Multi-Connection Downloads</h2>
+                        <p>Download files in parallel chunks to potentially increase speed. May not be supported by all servers.</p>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            <input type="checkbox" id="multi-connection-toggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="download-connections-wrapper" class="setting-item" data-keywords="connections number parallel threads">
+                    <div class="setting-label">
+                        <h2>Number of Connections</h2>
+                        <p>How many parallel connections to use for each multi-connection download (2-8).</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" id="download-connections-input" min="2" max="8" step="1">
+                    </div>
+                </div>
+            </section>
             <section id="ai" class="settings-section" style="display: none;" data-keywords="ai artificial intelligence gemini api key assistant">
               <h1>AI Assistant</h1>
                <div class="setting-item" data-keywords="get api key gemini google ai studio">
@@ -310,6 +360,27 @@
       </div>
     </div>
     <div id="all-tabs-list-container"></div>
+  </div>
+
+  <div id="downloads-view" class="hidden">
+    <div class="all-tabs-titlebar"> <!-- Reuse class for styling -->
+      <div class="all-tabs-titlebar-left">
+        <button id="downloads-back-to-browser-btn" title="Back to Browser">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back to Browser</span>
+        </button>
+        <h2>Downloads</h2>
+        <button id="downloads-clear-all-btn">Clear All</button>
+      </div>
+      <div class="window-controls">
+        <button id="downloads-min-btn" title="Minimize" aria-label="Minimize"><i class="fa-solid fa-window-minimize"></i></button>
+        <button id="downloads-max-btn" title="Maximize" aria-label="Maximize"><i id="downloads-max-icon" class="fa-regular fa-window-maximize"></i></button>
+        <button id="downloads-close-btn" title="Close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+    <div id="downloads-list-container">
+        <!-- Download items will be rendered here -->
+    </div>
   </div>
 
   <div id="font-picker-modal" class="hidden">

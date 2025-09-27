@@ -67,10 +67,24 @@ contextBridge.exposeInMainWorld('electronAPI', {
   settingsSetAI: (settings) => ipcRenderer.invoke('settings:set-ai', settings),
   settingsSetHotkeys: (hotkeys) => ipcRenderer.invoke('settings:set-hotkeys', hotkeys),
   settingsSetProxy: (settings) => ipcRenderer.invoke('settings:set-proxy', settings),
+  settingsSetDownloads: (settings) => ipcRenderer.invoke('settings:set-downloads', settings),
+  selectDownloadDirectory: () => ipcRenderer.invoke('settings:select-download-dir'),
 
   // AI Assistant
   aiChatStream: (payload) => ipcRenderer.send('ai:chat-stream', payload),
   onAIChatStreamChunk: (callback) => ipcRenderer.on('ai:chat-stream-chunk', (_e, chunk) => callback(chunk)),
+
+  // Downloads
+  onDownloadsLoadHistory: (callback) => ipcRenderer.once('downloads:load-history', (_e, items) => callback(items)),
+  onDownloadStarted: (callback) => ipcRenderer.on('download:started', (_e, item) => callback(item)),
+  onDownloadUpdated: (callback) => ipcRenderer.on('download:updated', (_e, update) => callback(update)),
+  downloadPause: (id) => ipcRenderer.invoke('download:pause', id),
+  downloadResume: (id) => ipcRenderer.invoke('download:resume', id),
+  downloadCancel: (id) => ipcRenderer.invoke('download:cancel', id),
+  downloadOpenFile: (id) => ipcRenderer.invoke('download:open-file', id),
+  downloadShowInFolder: (id) => ipcRenderer.invoke('download:show-in-folder', id),
+  downloadRemove: (id) => ipcRenderer.invoke('download:remove', id),
+  downloadClearAll: () => ipcRenderer.invoke('download:clear-all'),
 
   // Listeners from Main
   onSessionRestoreUI: (callback) => ipcRenderer.once('session:restore-ui', (_e, data) => callback(data)),

@@ -37,6 +37,18 @@ export const allTabsMaxBtn = document.getElementById('all-tabs-max-btn');
 export const allTabsMaxIcon = document.getElementById('all-tabs-max-icon');
 export const allTabsCloseBtn = document.getElementById('all-tabs-close-btn');
 
+// Downloads View Elements
+export const downloadsBtn = document.getElementById('downloads-btn');
+export const downloadsView = document.getElementById('downloads-view');
+export const downloadsBackBtn = document.getElementById('downloads-back-to-browser-btn');
+export const downloadsClearAllBtn = document.getElementById('downloads-clear-all-btn');
+export const downloadsListContainer = document.getElementById('downloads-list-container');
+export const downloadsMinBtn = document.getElementById('downloads-min-btn');
+export const downloadsMaxBtn = document.getElementById('downloads-max-btn');
+export const downloadsMaxIcon = document.getElementById('downloads-max-icon');
+export const downloadsCloseBtn = document.getElementById('downloads-close-btn');
+
+
 // Settings View Elements
 export const settingsBtn = document.getElementById('settings-btn');
 export const settingsView = document.getElementById('settings-view');

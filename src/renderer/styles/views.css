@@ -41,9 +41,9 @@
 .setting-label p { font-size: 13px; color: var(--fg-secondary); margin: 0; max-width: 450px; line-height: 1.5; }
 .setting-control { display: flex; align-items: center; flex-shrink: 0; }
 .setting-control.full-width { width: 100%; margin-top: 16px; }
-#search-engine-select, #user-agent-select, #history-limit-input { background-color: var(--bg-tertiary); color: var(--fg-primary); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 0; min-width: 250px; font-size: 14px; }
+#search-engine-select, #user-agent-select, #history-limit-input, #download-connections-input { background-color: var(--bg-tertiary); color: var(--fg-primary); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 0; min-width: 250px; font-size: 14px; }
 #search-engine-select, #user-agent-select { -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238b8b8b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; background-size: 24px; cursor: pointer; padding-right: 36px; }
-#search-engine-select:focus, #user-agent-select:focus, #history-limit-input:focus { outline: none; border-color: var(--accent-color); }
+#search-engine-select:focus, #user-agent-select:focus, #history-limit-input:focus, #download-connections-input:focus { outline: none; border-color: var(--accent-color); }
 
 .danger-button {
     background-color: transparent;
@@ -356,8 +356,8 @@
 #all-tabs-view.hidden { display: none; }
 .all-tabs-titlebar { display: flex; align-items: center; height: var(--titlebar-height); background: var(--bg-tertiary); border-bottom: 2px solid var(--border-color); -webkit-app-region: drag; flex-shrink: 0; padding-left: 8px; }
 .all-tabs-titlebar-left { flex-grow: 1; display: flex; align-items: center; gap: 20px; -webkit-app-region: no-drag; }
-#back-to-browser-btn, #settings-back-to-browser-btn { background: var(--accent-color); border: none; color: white; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 0; transition: background-color 150ms ease; }
-#back-to-browser-btn:hover, #settings-back-to-browser-btn:hover { background: #1f8ad2; }
+#back-to-browser-btn, #settings-back-to-browser-btn, #downloads-back-to-browser-btn { background: var(--accent-color); border: none; color: white; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 0; transition: background-color 150ms ease; }
+#back-to-browser-btn:hover, #settings-back-to-browser-btn:hover, #downloads-back-to-browser-btn:hover { background: #1f8ad2; }
 .search-wrapper { position: relative; display: flex; align-items: center; }
 .search-wrapper .fa-magnifying-glass { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--fg-secondary); pointer-events: none; }
 #all-tabs-search-input, #settings-search-input { width: 300px; height: 28px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--fg-primary); outline: none; padding: 0 12px 0 34px; font-size: 14px; border-radius: 0; }
@@ -496,6 +496,43 @@
 #proxy-rules-input:focus, #proxy-bypass-input:focus {
     border-color: var(--accent-color);
 }
+
+/* --- Downloads Settings --- */
+.directory-picker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    padding: 4px;
+    border-radius: 0;
+    min-width: 250px;
+}
+#download-location-display {
+    flex-grow: 1;
+    padding: 4px 8px;
+    font-size: 13px;
+    color: var(--fg-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#select-download-dir-btn {
+    background-color: var(--bg-hover);
+    border: 1px solid var(--border-color);
+    color: var(--fg-primary);
+    padding: 4px 12px;
+    border-radius: 0;
+    cursor: pointer;
+}
+#select-download-dir-btn:hover {
+    border-color: var(--fg-secondary);
+}
+#download-connections-wrapper.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
 
 /* --- History Modal --- */
 #history-modal {

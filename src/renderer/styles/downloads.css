@@ -1,0 +1,172 @@
+/* --- Downloads View --- */
+#downloads-view {
+    position: fixed; inset: 0; background: var(--bg-primary); 
+    z-index: 50; display: flex; flex-direction: column;
+}
+#downloads-view.hidden { display: none; }
+
+#downloads-view .all-tabs-titlebar h2 {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+}
+
+#downloads-view .all-tabs-titlebar-left {
+    gap: 16px;
+}
+
+#downloads-clear-all-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--fg-secondary);
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 0;
+}
+#downloads-clear-all-btn:hover {
+    background-color: var(--bg-hover);
+    color: var(--fg-primary);
+}
+
+#downloads-list-container {
+    overflow-y: auto;
+    padding: 24px;
+    -webkit-app-region: no-drag;
+    max-width: 860px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.downloads-no-items {
+    text-align: center;
+    color: var(--fg-secondary);
+    padding: 60px 0;
+    font-size: 16px;
+}
+
+.download-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+}
+
+.download-file-icon {
+    font-size: 28px;
+    width: 40px;
+    text-align: center;
+    flex-shrink: 0;
+    color: var(--fg-secondary);
+}
+
+.download-details {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+}
+
+.download-filename {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+.download-progress-bar {
+    width: 100%;
+    height: 6px;
+    background-color: var(--bg-tertiary);
+    border-radius: 0;
+    overflow: hidden;
+}
+
+.download-progress-bar-fill {
+    height: 100%;
+    background-color: var(--accent-color);
+    transition: width 0.2s linear;
+}
+
+.download-item[data-state="completed"] .download-progress-bar-fill {
+    background-color: #4db6ac;
+}
+.download-item[data-state="interrupted"] .download-progress-bar-fill,
+.download-item[data-state="cancelled"] .download-progress-bar-fill {
+    background-color: #e57373;
+}
+
+
+.download-info {
+    font-size: 12px;
+    color: var(--fg-secondary);
+    display: flex;
+    justify-content: space-between;
+}
+
+.download-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.download-actions button {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    border-radius: 0;
+}
+.download-actions button:hover {
+    background-color: var(--bg-hover);
+    color: var(--fg-primary);
+}
+
+.download-item[data-state="completed"] .download-action-pause,
+.download-item[data-state="completed"] .download-action-resume,
+.download-item[data-state="completed"] .download-action-cancel {
+    display: none;
+}
+
+.download-item[data-state="progressing"] .download-action-resume,
+.download-item[data-state="progressing"] .download-action-open,
+.download-item[data-state="progressing"] .download-action-show,
+.download-item[data-state="progressing"] .download-action-remove {
+     display: none;
+}
+
+.download-item[data-state="paused"] .download-action-pause,
+.download-item[data-state="paused"] .download-action-open,
+.download-item[data-state="paused"] .download-action-show,
+.download-item[data-state="paused"] .download-action-remove {
+    display: none;
+}
+
+.download-item[data-state="cancelled"] .download-action-pause,
+.download-item[data-state="cancelled"] .download-action-resume,
+.download-item[data-state="cancelled"] .download-action-cancel,
+.download-item[data-state="cancelled"] .download-action-open,
+.download-item[data-state="cancelled"] .download-action-show {
+    display: none;
+}
+
+.download-item[data-state="interrupted"] .download-action-pause,
+.download-item[data-state="interrupted"] .download-action-open,
+.download-item[data-state="interrupted"] .download-action-show {
+    display: none;
+}

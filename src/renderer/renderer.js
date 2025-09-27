@@ -6,12 +6,14 @@ import { initDragDrop } from './modules/drag-drop.js';
 import { initViews, renderAllTabsView } from './modules/views.js';
 import { initFeatures, applyUiFont } from './modules/features.js';
 import { initAI } from './modules/ai.js';
+import { initDownloads } from './modules/downloads.js';
 import { render, updateNavControls } from './modules/render.js';
 
 // --- State ---
 export const state = {
     tabs: new Map(),
     groups: new Map(),
+    downloads: new Map(),
     layout: [],
     activeTabId: null,
 };
@@ -63,6 +65,7 @@ function initialize() {
     initViews(callbacks);
     initFeatures(callbacks);
     initAI(callbacks);
+    initDownloads(callbacks);
 
     // Apply custom UI font on startup
     window.electronAPI.getSettings().then(settings => {

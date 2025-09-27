@@ -53,7 +53,7 @@
     border-radius: 0;
 }
 .window-controls button:hover { background: var(--bg-hover); }
-.window-controls #close-btn:hover, .window-controls #all-tabs-close-btn:hover, .window-controls #settings-close-btn:hover { background: var(--window-controls-close-hover); color: white; }
+.window-controls #close-btn:hover, .window-controls #all-tabs-close-btn:hover, .window-controls #settings-close-btn:hover, .window-controls #downloads-close-btn:hover { background: var(--window-controls-close-hover); color: white; }
 
 /* --- Toolbar --- */
 #toolbar-wrapper {

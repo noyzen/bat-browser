@@ -9,6 +9,7 @@ const { initializeIpc } = require('./ipc');
 const sessionModule = require('./session');
 const settingsModule = require('./settings');
 const tabsModule = require('./tabs');
+const downloadManager = require('./downloadManager');
 const { getSerializableTabData, debounce } = require('./utils');
 
 // Add command line switches to reduce fingerprinting, as suggested by the guide
@@ -85,6 +86,7 @@ function createWindow() {
   
   win.on('close', (e) => {
     if (state.tabs.size > 0) sessionModule.saveSession();
+    downloadManager.saveDownloads();
   });
 
   win.on('closed', () => {
@@ -92,6 +94,8 @@ function createWindow() {
   });
 
   win.webContents.on('did-finish-load', async () => {
+    win.webContents.send('downloads:load-history', downloadManager.loadDownloads());
+    
     const savedSession = sessionModule.loadSession();
     if (savedSession && savedSession.tabs.length > 0) {
       win.webContents.send('session:restore-ui', {
@@ -138,6 +142,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   initializeIpc();
+  downloadManager.initialize();
 
   app.on('web-contents-created', (_, contents) => {
     if (contents.getType() === 'browserView') {

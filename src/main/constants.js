@@ -5,6 +5,7 @@ module.exports = {
     CHROME_HEIGHT: 37, // Height of the unified titlebar/toolbar + 1px border
     SESSION_PATH: path.join(app.getPath('userData'), 'session.json'),
     SETTINGS_PATH: path.join(app.getPath('userData'), 'settings.json'),
+    DOWNLOADS_PATH: path.join(app.getPath('userData'), 'downloads.json'),
     SHARED_SESSION_PARTITION: 'persist:shared-data-session',
     PREDEFINED_COLORS: [
         '#e57373', '#f06292', '#ba68c8', '#9575cd', '#7986cb',

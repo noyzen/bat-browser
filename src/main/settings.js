@@ -1,3 +1,4 @@
+const { app } = require('electron');
 const fs = require('fs');
 const state = require('./state');
 const { SETTINGS_PATH } = require('./constants');
@@ -15,6 +16,12 @@ function loadSettings() {
             mode: 'autodetect', // 'none', 'autodetect', 'manual'
             rules: '', // e.g., 'http=myproxy:80;https=myproxy:80'
             bypass: '', // e.g., '<local>,*.google.com'
+        },
+        downloads: {
+            location: app.getPath('downloads'),
+            askBeforeSaving: false,
+            multiConnection: true,
+            connections: 4,
         },
         ai: {
             enabled: false,
@@ -50,6 +57,9 @@ function loadSettings() {
             }
             if (savedSettings.proxy) {
                 merged.proxy = { ...defaults.proxy, ...savedSettings.proxy };
+            }
+            if (savedSettings.downloads) {
+                merged.downloads = { ...defaults.downloads, ...savedSettings.downloads };
             }
             if (savedSettings.ai) {
                 merged.ai = { ...defaults.ai, ...savedSettings.ai };
