@@ -2,7 +2,7 @@
 #tab-bar-wrapper {
     flex: 1 1 auto; /* Default to growing and shrinking */
     min-width: 50px;
-    transition: flex 200ms ease-in-out, min-width 200ms ease-in-out;
+    transition: flex 200ms ease-in-out, min-width 200ms ease-in-out, opacity 200ms ease-in-out;
     overflow: hidden;
     background-color: var(--bg-tab-bar);
 }

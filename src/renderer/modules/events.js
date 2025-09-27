@@ -391,11 +391,6 @@ export function initEvents(callbacks) {
             setTimeout(() => DOM.addressBar.select(), 0);
             wasAddressBarClicked = false; // Reset flag after use
         }
-        
-        if (state.activeTabId) {
-            // After the container resizes (200ms transition), scroll the active tab to the center.
-            setTimeout(() => scrollToTab(state.activeTabId, 'center'), 210);
-        }
     });
 
     DOM.addressBar.addEventListener('blur', () => {
