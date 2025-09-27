@@ -51,6 +51,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   showChromeContextMenu: (payload) => ipcRenderer.invoke('chrome:show-context-menu', payload),
   onContextMenuCommand: (callback) => ipcRenderer.on('chrome:context-menu-command', (_e, action) => callback(action)),
   
+  // History
+  getTabHistory: (id) => ipcRenderer.invoke('tab:get-history', id),
+  goToHistoryIndex: (payload) => ipcRenderer.invoke('tab:go-to-history-index', payload),
+  clearTabHistory: (id) => ipcRenderer.invoke('tab:clear-history', id),
+
   // Settings
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setDefaultFont: (fontFamily) => ipcRenderer.invoke('settings:set-default-font', fontFamily),
