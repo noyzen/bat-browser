@@ -199,7 +199,7 @@ function initTabOverflow() {
     return { updateTabScrollButtons: updateButtons, scrollBy };
 }
 
-export function scrollToTab(tabId) {
+export function scrollToTab(tabId, alignment = 'center') {
     const state = getState();
     const tab = state.tabs.get(tabId);
     if (!tab) return;
@@ -225,11 +225,16 @@ export function scrollToTab(tabId) {
     const containerRect = container.getBoundingClientRect();
     const targetRect = targetElement.getBoundingClientRect();
     
-    // Calculate the element's center relative to the container's left edge
-    const targetCenter = (targetRect.left - containerRect.left) + (targetRect.width / 2);
-
-    // Calculate the desired scroll position to center the target element
-    const desiredScrollLeft = container.scrollLeft + targetCenter - (containerRect.width / 2);
+    let desiredScrollLeft;
+    if (alignment === 'right') {
+        // Align the right edge of the target with the right edge of the container
+        desiredScrollLeft = container.scrollLeft + (targetRect.right - containerRect.right);
+    } else { // default to 'center'
+        // Calculate the element's center relative to the container's left edge
+        const targetCenter = (targetRect.left - containerRect.left) + (targetRect.width / 2);
+        // Calculate the desired scroll position to center the target element
+        desiredScrollLeft = container.scrollLeft + targetCenter - (containerRect.width / 2);
+    }
     
     // Clamp the scroll position to be within the valid range
     const maxScrollLeft = container.scrollWidth - container.clientWidth;
@@ -385,6 +390,11 @@ export function initEvents(callbacks) {
         if (wasAddressBarClicked) {
             setTimeout(() => DOM.addressBar.select(), 0);
             wasAddressBarClicked = false; // Reset flag after use
+        }
+        
+        if (state.activeTabId) {
+            // After the container resizes (200ms transition), scroll the active tab to the right.
+            setTimeout(() => scrollToTab(state.activeTabId, 'right'), 210);
         }
     });
 

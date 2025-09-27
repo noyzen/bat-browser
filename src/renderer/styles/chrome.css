@@ -104,7 +104,7 @@
 }
 #titlebar.address-bar-expanded #tab-bar-wrapper {
     flex-grow: 0;
-    flex-basis: 0;
-    min-width: 0;
-    opacity: 0;
+    flex-shrink: 1;
+    min-width: 210px; /* Reserve space for one max-width tab + padding */
+    opacity: 1;
 }
