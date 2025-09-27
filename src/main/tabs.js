@@ -486,6 +486,7 @@ async function toggleTabSharedState(id) {
     const wasActive = state.activeTabId === id;
     const currentUrl = tab.isHibernated ? tab.url : tab.view.webContents.getURL();
     
+    const wasShared = tab.isShared;
     tab.isShared = !tab.isShared;
 
     if (tab.view && !tab.view.webContents.isDestroyed()) {
@@ -493,13 +494,15 @@ async function toggleTabSharedState(id) {
         tab.view.webContents.destroy();
     }
     
-    // Clear the old session data if it was an isolated tab
-    if (!tab.isShared) { // it was just toggled from shared to isolated
-      await tab.session?.clearStorageData();
-    } else { // it was just toggled from isolated to shared
+    // If the tab was isolated and is now shared, we must clear the data
+    // from its old isolated partition to prevent it from being orphaned.
+    if (!wasShared) {
       const oldPartition = `persist:${id}`;
       await session.fromPartition(oldPartition).clearStorageData();
     }
+    // If it was shared and is now isolated, we DO NOT clear the shared partition's
+    // data, as other shared tabs may still be using it. The new isolated
+    // partition will be created fresh automatically.
 
     const newPartition = tab.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
     const newSession = session.fromPartition(newPartition);
@@ -552,11 +555,14 @@ async function toggleTabSharedState(id) {
 
 async function clearCacheAndReload(id) {
     const tab = state.tabs.get(id);
-    if (tab && tab.session && tab.view && !tab.view.webContents.isDestroyed()) {
+    if (tab && tab.session) {
         // clearStorageData is more comprehensive than clearCache. It removes cookies,
         // localStorage, IndexedDB, etc., fulfilling the user's expectation of a complete data clear.
-        await tab.session.clearStorageData();
-        tab.view.webContents.reload();
+        await tab.session.clearStorageData({ storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage'] });
+        
+        if (tab.view && !tab.view.webContents.isDestroyed()) {
+          tab.view.webContents.reload();
+        }
     }
 }
 

@@ -36,9 +36,23 @@ async function handleContextMenuCommand(command, context) {
         case 'toggle-shared':
             window.electronAPI.toggleTabShared(tabId);
             break;
-        case 'clear-cache-reload':
-            window.electronAPI.clearCacheAndReload(tabId);
+        case 'clear-cache-reload': {
+            const tab = state.tabs.get(tabId);
+            if (!tab) break;
+
+            if (tab.isShared) {
+                const confirmed = await Feat.showConfirmationDialog(
+                    'Clear Shared Data?',
+                    'This is a shared tab. This action will clear cookies, cache, and all other site data for ALL shared tabs. Are you sure you want to proceed?'
+                );
+                if (confirmed) {
+                    window.electronAPI.clearCacheAndReload(tabId);
+                }
+            } else {
+                window.electronAPI.clearCacheAndReload(tabId);
+            }
             break;
+        }
         case 'zoom-in': {
             if (!tab) break;
             const newFactor = Math.min((tab.zoomFactor || 1.0) + 0.1, 3.0);
