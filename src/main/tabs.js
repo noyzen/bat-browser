@@ -93,7 +93,7 @@ async function openUrlInNewTab(url, fromTabId, inBackground) {
     if (!state.mainWindow || state.mainWindow.isDestroyed()) return;
 
     const fromTab = state.tabs.get(fromTabId);
-    const newTab = createTab(url, { fromTabId, isShared: fromTab?.isShared });
+    const newTab = await createTab(url, { fromTabId, isShared: fromTab?.isShared });
 
     const parentGroup = Array.from(state.groups.values()).find(g => g.tabs.includes(fromTabId));
     if (parentGroup) {
@@ -280,29 +280,27 @@ function attachViewListenersToTab(tabData) {
     });
 }
 
-function createTab(url = 'about:blank', options = {}) {
+async function createTab(url = 'about:blank', options = {}) {
     const { fromTabId, id: existingId } = options;
     const id = existingId || `tab-${randomUUID()}`;
     const partition = options.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
     const tabSession = session.fromPartition(partition);
 
-    const { value: userAgentString } = getUserAgentInfo();
-
     // Explicitly configure proxy settings for the new session to match the default.
-    // This can resolve network issues like ERR_INTERNET_DISCONNECTED on some systems
-    // where new sessions don't automatically inherit the correct network configuration.
-    session.defaultSession.resolveProxy('https://www.google.com')
-        .then((proxy) => {
-            if (tabSession) {
-                tabSession.setProxy({ proxyRules: proxy });
-            }
-        })
-        .catch(err => {
-            console.error('Failed to resolve and set proxy:', err);
-        });
+    // This MUST be awaited to prevent race conditions where navigation starts before
+    // the proxy is configured, causing ERR_PROXY_CONNECTION_FAILED.
+    try {
+        const proxy = await session.defaultSession.resolveProxy('https://www.google.com');
+        if (tabSession) {
+            await tabSession.setProxy({ proxyRules: proxy });
+        }
+    } catch (err) {
+        console.error('Failed to resolve and set proxy:', err);
+    }
   
     configureSession(tabSession);
   
+    const { value: userAgentString } = getUserAgentInfo();
     const view = new BrowserView({
       webPreferences: {
         userAgent: userAgentString,
@@ -358,21 +356,20 @@ async function switchTab(id) {
           console.log(`Waking up tab ${id}`);
           const partition = newTab.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
           const tabSession = session.fromPartition(partition);
-          const { value: userAgentString } = getUserAgentInfo();
-
-          // Explicitly configure proxy settings for the new session to match the default.
-          session.defaultSession.resolveProxy('https://www.google.com')
-              .then((proxy) => {
-                  if (tabSession) {
-                      tabSession.setProxy({ proxyRules: proxy });
-                  }
-              })
-              .catch(err => {
-                  console.error('Failed to resolve and set proxy on wake:', err);
-              });
+          
+          // This MUST be awaited to prevent race conditions.
+          try {
+              const proxy = await session.defaultSession.resolveProxy('https://www.google.com');
+              if (tabSession) {
+                  await tabSession.setProxy({ proxyRules: proxy });
+              }
+          } catch (err) {
+              console.error('Failed to resolve and set proxy on wake:', err);
+          }
               
           configureSession(tabSession);
           
+          const { value: userAgentString } = getUserAgentInfo();
           const view = new BrowserView({
             webPreferences: {
               userAgent: userAgentString,
@@ -429,7 +426,7 @@ async function closeTab(id) {
         state.mainWindow.webContents.send('tab:closed', id);
 
         if (state.tabs.size === 0) {
-            const newTab = createTab();
+            const newTab = await createTab();
             state.layout = [newTab.id];
             state.groups.clear();
             state.mainWindow.webContents.send('tab:created', getSerializableTabData(newTab));

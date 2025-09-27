@@ -66,14 +66,14 @@ function initializeIpc() {
 
     // Tab Controls
     ipcMain.handle('tab:new', async () => {
-        const newTab = tabsModule.createTab();
+        const newTab = await tabsModule.createTab();
         state.layout.push(newTab.id);
         state.mainWindow.webContents.send('tab:created', getSerializableTabData(newTab));
         await tabsModule.switchTab(newTab.id);
     });
 
     ipcMain.handle('tab:new-with-url', async (_, url) => {
-        const newTab = tabsModule.createTab(url);
+        const newTab = await tabsModule.createTab(url);
         state.layout.push(newTab.id);
         state.mainWindow.webContents.send('tab:created', getSerializableTabData(newTab));
         await tabsModule.switchTab(newTab.id);
@@ -82,13 +82,13 @@ function initializeIpc() {
     ipcMain.handle('tab:duplicate', async (_, id) => {
         const originalTab = state.tabs.get(id);
         if (!originalTab) return null;
-        const newTab = tabsModule.createTab(originalTab.url, { fromTabId: id, isShared: originalTab.isShared, zoomFactor: originalTab.zoomFactor });
+        const newTab = await tabsModule.createTab(originalTab.url, { fromTabId: id, isShared: originalTab.isShared, zoomFactor: originalTab.zoomFactor });
         await tabsModule.switchTab(newTab.id);
         return getSerializableTabData(newTab);
     });
 
     ipcMain.handle('tab:close', async (_, id) => tabsModule.closeTab(id));
-    ipcMain.handle('tab:switch', (_, id) => tabsModule.switchTab(id));
+    ipcMain.handle('tab:switch', async (_, id) => await tabsModule.switchTab(id));
     ipcMain.handle('tab:toggle-shared', async (_, id) => tabsModule.toggleTabSharedState(id));
     ipcMain.handle('tab:clear-cache-and-reload', async (_, id) => tabsModule.clearCacheAndReload(id));
 

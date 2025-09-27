@@ -115,7 +115,7 @@ function createWindow() {
       createAllTabs();
 
     } else {
-      const newTab = tabsModule.createTab();
+      const newTab = await tabsModule.createTab();
       state.layout.push(newTab.id);
       win.webContents.send('tab:created', getSerializableTabData(newTab));
       await tabsModule.switchTab(newTab.id);
