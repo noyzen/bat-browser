@@ -116,6 +116,10 @@
     z-index: 1;
 }
 
+.tab-status-icon:empty {
+    display: none;
+}
+
 /* Default state for non-loading icons (shared, hibernated) */
 .tab-status-icon {
     bottom: -2px;
