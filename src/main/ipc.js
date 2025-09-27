@@ -1,4 +1,4 @@
-const { ipcMain, Menu, clipboard, shell } = require('electron');
+const { ipcMain, Menu, clipboard, shell, session } = require('electron');
 const path = require('path');
 const state = require('./state');
 const tabsModule = require('./tabs');
@@ -219,6 +219,8 @@ function initializeIpc() {
                 }
             }
         }
+        // Also re-configure the default session for future popups.
+        tabsModule.configureSession(session.defaultSession);
     });
     ipcMain.handle('settings:get-predefined-user-agents', () => USER_AGENTS);
     ipcMain.handle('settings:set-ai', (_, settings) => {

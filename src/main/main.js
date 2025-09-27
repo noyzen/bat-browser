@@ -67,6 +67,12 @@ function createWindow() {
   mainWindowState.manage(win);
   state.settings = settingsModule.loadSettings();
 
+  // Configure the default session to align with user settings. This ensures
+  // that popup windows (like Google OAuth) which use the default session
+  // have the correct User-Agent and client hint headers, preventing them
+  // from being blocked.
+  tabsModule.configureSession(session.defaultSession);
+
   win.loadFile('src/renderer/index.html');
   // win.webContents.openDevTools({ mode: 'detach' });
 
