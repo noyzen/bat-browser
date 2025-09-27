@@ -125,6 +125,50 @@ async function openUrlInNewTab(url, fromTabId, inBackground) {
 
 function attachViewListenersToTab(tabData) {
     const { id, view } = tabData;
+
+    view.webContents.on('dom-ready', () => {
+        const { clientHints } = getUserAgentInfo();
+        let injectionScript = `
+            (() => {
+                // Hide webdriver flag, a common bot detection technique.
+                if (navigator.webdriver) {
+                    try {
+                        Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+                    } catch (e) {
+                        console.error('Failed to hide webdriver flag:', e.message);
+                    }
+                }
+        `;
+
+        // If spoofing a non-Chromium browser (Firefox, Safari), remove "window.chrome"
+        // which is a major fingerprinting inconsistency.
+        if (!clientHints) {
+            injectionScript += `
+                if (window.chrome) {
+                    try {
+                        Object.defineProperty(window, 'chrome', {
+                            value: undefined,
+                            writable: false,
+                            configurable: true
+                        });
+                    } catch (e) {
+                        console.error('Failed to remove window.chrome:', e.message);
+                    }
+                }
+            `;
+        }
+
+        injectionScript += `})();`;
+        
+        view.webContents.executeJavaScript(injectionScript).catch(e => {
+            // This can fail on pages with strict CSP, but we try anyway.
+            if (e.message.includes('Refused to execute inline script')) {
+                // console.warn('CSP prevented anti-fingerprinting script injection.');
+            } else {
+                console.error('Failed to inject anti-fingerprinting script:', e);
+            }
+        });
+    });
   
     view.webContents.on('before-input-event', (event, input) => {
       if (input.type === 'keyDown' && !input.isAutoRepeat) {
