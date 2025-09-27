@@ -285,6 +285,18 @@ async function switchTab(id) {
           console.log(`Waking up tab ${id}`);
           const partition = newTab.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
           const tabSession = session.fromPartition(partition);
+
+          // Explicitly configure proxy settings for the new session to match the default.
+          session.defaultSession.resolveProxy('https://www.google.com')
+              .then((proxy) => {
+                  if (tabSession && !tabSession.isDestroyed()) {
+                      tabSession.setProxy({ proxyRules: proxy });
+                  }
+              })
+              .catch(err => {
+                  console.error('Failed to resolve and set proxy on wake:', err);
+              });
+              
           tabSession.setUserAgent(USER_AGENT);
           
           const view = new BrowserView({ webPreferences: { partition, ...BROWSER_VIEW_WEBCONTENTS_CONFIG } });
