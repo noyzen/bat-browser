@@ -231,6 +231,12 @@ function initializeIpc() {
         state.settings.hotkeys = hotkeys;
         settingsModule.debouncedSaveSettings();
     });
+    ipcMain.handle('settings:set-proxy', async (_, proxySettings) => {
+        state.settings.proxy = proxySettings;
+        settingsModule.debouncedSaveSettings();
+        await tabsModule.applyProxyToAllSessions();
+    });
+
 
     // View-specific IPC handlers
     ipcMain.on('view:reload-current', (event) => {

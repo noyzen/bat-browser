@@ -22,6 +22,7 @@ function saveSession() {
           id: t.id,
           url: finalUrl,
           title: t.title,
+          favicon: t.favicon,
           color: t.color,
           isShared: t.isShared,
           zoomFactor: t.zoomFactor === 1.0 ? undefined : t.zoomFactor,

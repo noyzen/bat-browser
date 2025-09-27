@@ -118,6 +118,7 @@
             <li class="active"><a href="#appearance"><i class="fa-solid fa-palette"></i> Appearance</a></li>
             <li><a href="#search"><i class="fa-solid fa-magnifying-glass"></i> Search</a></li>
             <li><a href="#identity"><i class="fa-solid fa-user-secret"></i> Identity</a></li>
+            <li><a href="#network"><i class="fa-solid fa-network-wired"></i> Network</a></li>
             <li><a href="#ai"><i class="fa-solid fa-robot"></i> AI Assistant</a></li>
             <li><a href="#hotkeys"><i class="fa-solid fa-keyboard"></i> Hotkeys</a></li>
           </ul>
@@ -174,6 +175,40 @@
                     <button id="test-user-agent-btn"><i class="fa-solid fa-vial"></i> Test Current Identity</button>
                 </div>
               </div>
+            </section>
+            <section id="network" class="settings-section" style="display: none;" data-keywords="network proxy http https socks bypass">
+                <h1>Network Proxy</h1>
+                <div class="setting-item column" data-keywords="proxy connection mode">
+                    <div class="setting-label">
+                        <h2>Configure Proxy</h2>
+                        <p>Choose how Bat Browser connects to the internet. Changes apply to all tabs instantly.</p>
+                    </div>
+                    <div class="setting-control proxy-mode-selector">
+                        <label><input type="radio" name="proxy-mode" value="none"> No Proxy</label>
+                        <label><input type="radio" name="proxy-mode" value="autodetect" checked> Auto-detect proxy settings</label>
+                        <label><input type="radio" name="proxy-mode" value="manual"> Manual proxy configuration</label>
+                    </div>
+                </div>
+                <div id="proxy-manual-settings" class="hidden">
+                    <div class="setting-item column" data-keywords="http proxy server address port">
+                        <div class="setting-label">
+                            <h2>Proxy Rules</h2>
+                            <p>Enter the proxy server address and port. Example: `http=myproxy.com:8080;https=myproxy.com:8080;socks5=127.0.0.1:1080`</p>
+                        </div>
+                        <div class="setting-control full-width">
+                            <input type="text" id="proxy-rules-input" placeholder="scheme=host:port;...">
+                        </div>
+                    </div>
+                    <div class="setting-item column" data-keywords="proxy bypass list hosts domains">
+                        <div class="setting-label">
+                            <h2>Bypass List</h2>
+                            <p>Enter a comma-separated list of hosts that should not use the proxy. Use `&lt;local&gt;` to bypass local addresses.</p>
+                        </div>
+                        <div class="setting-control full-width">
+                            <textarea id="proxy-bypass-input" rows="3" placeholder="<local>,*.google.com,192.168.1.0/24"></textarea>
+                        </div>
+                    </div>
+                </div>
             </section>
             <section id="ai" class="settings-section" style="display: none;" data-keywords="ai artificial intelligence gemini api key assistant">
               <h1>AI Assistant</h1>

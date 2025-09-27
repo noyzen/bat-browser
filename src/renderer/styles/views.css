@@ -359,7 +359,7 @@
     font-size: 14px;
 }
 .all-tabs-list-item .tab-close-btn { margin-left: auto; visibility: visible; }
-.all-tabs-list-item.loading .tab-icon .fa-spinner { animation: spin 1s linear infinite; }
+.all-tabs-list-item.loading .tab-status-icon .fa-spinner { animation: spin 1s linear infinite; }
 .all-tabs-list-item.hibernated .tab-title { font-style: italic; }
 .all-tabs-list-item.hibernated { opacity: 0.7; }
 .all-tabs-group-container { display: flex; flex-direction: column; background-color: var(--bg-secondary); border-radius: 0; border: 2px solid var(--tab-group-color); }
@@ -441,4 +441,38 @@
 .hotkey-reset-btn:hover {
     background-color: var(--bg-hover);
     color: var(--fg-primary);
+}
+
+/* --- Proxy Settings --- */
+.proxy-mode-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+.proxy-mode-selector label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+#proxy-manual-settings {
+    width: 100%;
+}
+#proxy-rules-input, #proxy-bypass-input {
+    width: 100%;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--fg-primary);
+    padding: 10px 12px;
+    border-radius: 0;
+    outline: none;
+    font-size: 14px;
+    font-family: monospace;
+    resize: vertical;
+    -webkit-user-select: text;
+    user-select: text;
+}
+#proxy-rules-input:focus, #proxy-bypass-input:focus {
+    border-color: var(--accent-color);
 }

@@ -40,8 +40,11 @@ function createTabElement(id) {
     tabEl.draggable = true;
     tabEl.className = 'tab-item';
 
-    const iconEl = document.createElement('div');
-    iconEl.className = 'tab-icon';
+    const faviconEl = document.createElement('div');
+    faviconEl.className = 'tab-favicon';
+
+    const statusIconEl = document.createElement('div');
+    statusIconEl.className = 'tab-status-icon';
 
     const titleEl = document.createElement('span');
     titleEl.className = 'tab-title';
@@ -51,7 +54,7 @@ function createTabElement(id) {
     closeBtnEl.innerHTML = '<i class="fa-solid fa-xmark"></i>';
     closeBtnEl.title = 'Close Tab';
     
-    tabEl.append(iconEl, titleEl, closeBtnEl);
+    tabEl.append(faviconEl, statusIconEl, titleEl, closeBtnEl);
     updateTabElement(tabEl, tabData);
     return tabEl;
 }
@@ -68,22 +71,31 @@ function updateTabElement(tabEl, tabData) {
         titleEl.textContent = tabData.title;
     }
 
-    const iconEl = tabEl.querySelector('.tab-icon');
-    let newIconHTML = '';
-    // A loading tab should always show the spinner.
-    if (tabData.isLoading) {
-        newIconHTML = '<i class="fa-solid fa-spinner"></i>';
+    const faviconEl = tabEl.querySelector('.tab-favicon');
+    if (tabData.url === 'about:blank') {
+        faviconEl.style.backgroundImage = '';
+        faviconEl.innerHTML = '<i class="fa-solid fa-moon"></i>';
+    } else if (tabData.favicon) {
+        faviconEl.style.backgroundImage = `url('${tabData.favicon}')`;
+        faviconEl.innerHTML = '';
     } else {
-        // If not loading, show a persistent state icon (shared) or another transient one (hibernated).
-        if (tabData.isShared) {
-            newIconHTML = '<i class="fa-solid fa-users" title="This tab shares data with other shared tabs"></i>';
-        } else if (tabData.isHibernated) {
-            newIconHTML = '<i class="fa-solid fa-power-off"></i>';
-        }
+        faviconEl.style.backgroundImage = '';
+        faviconEl.innerHTML = '<i class="fa-solid fa-globe"></i>';
     }
 
-    if (iconEl.innerHTML !== newIconHTML) {
-        iconEl.innerHTML = newIconHTML;
+
+    const statusIconEl = tabEl.querySelector('.tab-status-icon');
+    let newIconHTML = '';
+    if (tabData.isLoading) {
+        newIconHTML = '<i class="fa-solid fa-spinner"></i>';
+    } else if (tabData.isShared) {
+        newIconHTML = '<i class="fa-solid fa-users" title="This tab shares data with other shared tabs"></i>';
+    } else if (tabData.isHibernated) {
+        newIconHTML = '<i class="fa-solid fa-power-off"></i>';
+    }
+
+    if (statusIconEl.innerHTML !== newIconHTML) {
+        statusIconEl.innerHTML = newIconHTML;
     }
 
 
@@ -211,8 +223,8 @@ export function renderTab(id, context = 'main') {
     tabEl.dataset.type = 'tab';
     tabEl.draggable = true;
     
-    const iconEl = document.createElement('div');
-    iconEl.className = 'tab-icon';
+    const faviconEl = document.createElement('div');
+    faviconEl.className = 'tab-favicon';
     
     const titleEl = document.createElement('span');
     
@@ -224,7 +236,9 @@ export function renderTab(id, context = 'main') {
        tabEl.className = 'tab-item';
        titleEl.className = 'tab-title';
        closeBtnEl.className = 'tab-close-btn';
-       tabEl.append(iconEl, titleEl, closeBtnEl);
+       const statusIconEl = document.createElement('div');
+       statusIconEl.className = 'tab-status-icon';
+       tabEl.append(faviconEl, statusIconEl, titleEl, closeBtnEl);
        updateTabElement(tabEl, tab);
 
     } else { // context === 'all-tabs'
@@ -233,18 +247,27 @@ export function renderTab(id, context = 'main') {
         if (id === state.activeTabId) tabEl.classList.add('active');
         if (tab.isLoading) tabEl.classList.add('loading');
         
-        let iconHTML = '';
+        const statusIconEl = document.createElement('div');
+        statusIconEl.className = 'tab-status-icon';
+        
+        let statusIconHTML = '';
         if (tab.isLoading) {
-            iconHTML = '<i class="fa-solid fa-spinner"></i>';
-        } else {
-            if (tab.isShared) {
-                iconHTML = '<i class="fa-solid fa-users" title="This tab shares data with other shared tabs"></i>';
-            } else if (tab.isHibernated) {
-                tabEl.classList.add('hibernated');
-                iconHTML = '<i class="fa-solid fa-power-off"></i>';
-            }
+            statusIconHTML = '<i class="fa-solid fa-spinner"></i>';
+        } else if (tab.isShared) {
+            statusIconHTML = '<i class="fa-solid fa-users" title="This tab shares data with other shared tabs"></i>';
+        } else if (tab.isHibernated) {
+            tabEl.classList.add('hibernated');
+            statusIconHTML = '<i class="fa-solid fa-power-off"></i>';
         }
-        iconEl.innerHTML = iconHTML;
+        statusIconEl.innerHTML = statusIconHTML;
+
+        if (tab.url === 'about:blank') {
+            faviconEl.innerHTML = '<i class="fa-solid fa-moon"></i>';
+        } else if (tab.favicon) {
+            faviconEl.style.backgroundImage = `url('${tab.favicon}')`;
+        } else {
+            faviconEl.innerHTML = '<i class="fa-solid fa-globe"></i>';
+        }
 
         titleEl.className = 'tab-title';
         titleEl.textContent = tab.title;
@@ -254,7 +277,7 @@ export function renderTab(id, context = 'main') {
         textWrapper.className = 'all-tabs-text-wrapper';
         textWrapper.append(titleEl);
         
-        tabEl.append(iconEl, textWrapper, closeBtnEl);
+        tabEl.append(faviconEl, statusIconEl, textWrapper, closeBtnEl);
     }
     
     return tabEl;

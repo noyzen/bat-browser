@@ -59,6 +59,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPredefinedUserAgents: () => ipcRenderer.invoke('settings:get-predefined-user-agents'),
   settingsSetAI: (settings) => ipcRenderer.invoke('settings:set-ai', settings),
   settingsSetHotkeys: (hotkeys) => ipcRenderer.invoke('settings:set-hotkeys', hotkeys),
+  settingsSetProxy: (settings) => ipcRenderer.invoke('settings:set-proxy', settings),
 
   // AI Assistant
   aiChatStream: (payload) => ipcRenderer.send('ai:chat-stream', payload),

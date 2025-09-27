@@ -15,8 +15,8 @@ function getRandomColor() {
 
 function getSerializableTabData(tab) {
     if (!tab) return null;
-    const { id, url, title, canGoBack, canGoForward, isLoading, isLoaded, isHibernated, color, isShared, zoomFactor } = tab;
-    return { id, url, title, canGoBack, canGoForward, isLoading, isLoaded, isHibernated, color, isShared, zoomFactor };
+    const { id, url, title, favicon, canGoBack, canGoForward, isLoading, isLoaded, isHibernated, color, isShared, zoomFactor } = tab;
+    return { id, url, title, favicon, canGoBack, canGoForward, isLoading, isLoaded, isHibernated, color, isShared, zoomFactor };
 }
 
 function findTabByWebContents(webContents) {

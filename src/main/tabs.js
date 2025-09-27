@@ -31,6 +31,44 @@ function getUserAgentInfo() {
     return { value, clientHints };
 }
 
+async function applyProxyToSession(tabSession) {
+    if (!tabSession || tabSession.isDestroyed()) return;
+
+    const proxy = state.settings.proxy || { mode: 'autodetect' };
+    let config = {};
+
+    switch (proxy.mode) {
+        case 'none':
+            config = { mode: 'direct' };
+            break;
+        case 'manual':
+            config = {
+                mode: 'fixed_servers',
+                proxyRules: proxy.rules,
+                proxyBypassRules: proxy.bypass
+            };
+            break;
+        case 'autodetect':
+        default:
+            config = { mode: 'auto_detect' };
+            break;
+    }
+
+    try {
+        await tabSession.setProxy(config);
+    } catch (err) {
+        console.error(`Failed to apply proxy settings:`, err);
+    }
+}
+
+async function applyProxyToAllSessions() {
+    for (const tab of state.tabs.values()) {
+        if (tab.session && !tab.session.isDestroyed()) {
+            await applyProxyToSession(tab.session);
+        }
+    }
+}
+
 function configureSession(tabSession) {
     const { value: userAgentString, clientHints } = getUserAgentInfo();
 
@@ -216,6 +254,14 @@ function attachViewListenersToTab(tabData) {
       state.mainWindow.webContents.send('tab:updated', { id, title });
       sessionModule.debouncedSaveSession();
     });
+
+    view.webContents.on('page-favicon-updated', (_, favicons) => {
+      if (favicons && favicons.length > 0) {
+        tabData.favicon = favicons[0]; // Take the first one
+        state.mainWindow.webContents.send('tab:updated', { id, favicon: tabData.favicon });
+        sessionModule.debouncedSaveSession();
+      }
+    });
   
     view.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
       if (errorCode === -3) return; // Ignore ERR_ABORTED
@@ -249,9 +295,10 @@ function attachViewListenersToTab(tabData) {
       if (isNewTabPage) {
           tabData.url = 'about:blank';
           tabData.title = 'New Tab';
+          tabData.favicon = null;
           tabData.canGoBack = false;
           tabData.canGoForward = false;
-          state.mainWindow.webContents.send('tab:updated', { id, url: '', title: 'New Tab', canGoBack: false, canGoForward: false });
+          state.mainWindow.webContents.send('tab:updated', { id, url: '', title: 'New Tab', favicon: null, canGoBack: false, canGoForward: false });
           return;
       }
   
@@ -330,17 +377,7 @@ async function createTab(url = 'about:blank', options = {}) {
     const partition = options.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
     const tabSession = session.fromPartition(partition);
 
-    // Explicitly set the session to auto-detect proxy settings. This is more
-    // robust than resolving the proxy from the default session and applying it,
-    // as it lets Chromium manage the network configuration directly. This MUST
-    // be awaited to prevent ERR_PROXY_CONNECTION_FAILED race conditions.
-    try {
-        if (tabSession) {
-            await tabSession.setProxy({ autoDetect: true });
-        }
-    } catch (err) {
-        console.error(`Failed to set auto-detect proxy for new tab ${id}:`, err);
-    }
+    await applyProxyToSession(tabSession);
   
     configureSession(tabSession);
   
@@ -357,6 +394,7 @@ async function createTab(url = 'about:blank', options = {}) {
       id, view, session: tabSession, url, title: 'New Tab', canGoBack: false,
       canGoForward: false, isLoading: true, isLoaded: false, isHibernated: false,
       isShared: !!options.isShared,
+      favicon: null,
       zoomFactor: options.zoomFactor || 1.0,
       lastActive: Date.now(),
       color: fromTabId ? (state.tabs.get(fromTabId)?.color || getRandomColor()) : getRandomColor(),
@@ -401,15 +439,7 @@ async function switchTab(id) {
           const partition = newTab.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
           const tabSession = session.fromPartition(partition);
           
-          // Set proxy to auto-detect on wake-up. This is more reliable than
-          // resolving and applying rules manually.
-          try {
-              if (tabSession) {
-                  await tabSession.setProxy({ autoDetect: true });
-              }
-          } catch (err) {
-              console.error(`Failed to set auto-detect proxy on wake for tab ${id}:`, err);
-          }
+          await applyProxyToSession(tabSession);
               
           configureSession(tabSession);
           
@@ -507,14 +537,7 @@ async function toggleTabSharedState(id) {
     const newPartition = tab.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
     const newSession = session.fromPartition(newPartition);
 
-    // Set proxy to auto-detect for the new session.
-    try {
-        if (newSession) {
-            await newSession.setProxy({ autoDetect: true });
-        }
-    } catch (err) {
-        console.error(`Failed to set auto-detect proxy on toggle-share for tab ${id}:`, err);
-    }
+    await applyProxyToSession(newSession);
     
     configureSession(newSession);
 
@@ -576,4 +599,5 @@ module.exports = {
     toggleTabSharedState,
     clearCacheAndReload,
     configureSession,
+    applyProxyToAllSessions,
 };

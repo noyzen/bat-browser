@@ -11,6 +11,11 @@ function loadSettings() {
             current: 'windows-firefox', // key from constants.USER_AGENTS
             custom: '',
         },
+        proxy: {
+            mode: 'autodetect', // 'none', 'autodetect', 'manual'
+            rules: '', // e.g., 'http=myproxy:80;https=myproxy:80'
+            bypass: '', // e.g., '<local>,*.google.com'
+        },
         ai: {
             enabled: false,
             apiKeys: [], // { id, name, key }
@@ -39,6 +44,9 @@ function loadSettings() {
             // Deep merge nested objects
             if (savedSettings.userAgent) {
                 merged.userAgent = { ...defaults.userAgent, ...savedSettings.userAgent };
+            }
+            if (savedSettings.proxy) {
+                merged.proxy = { ...defaults.proxy, ...savedSettings.proxy };
             }
             if (savedSettings.ai) {
                 merged.ai = { ...defaults.ai, ...savedSettings.ai };
