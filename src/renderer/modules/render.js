@@ -40,11 +40,16 @@ function createTabElement(id) {
     tabEl.draggable = true;
     tabEl.className = 'tab-item';
 
+    const faviconWrapper = document.createElement('div');
+    faviconWrapper.className = 'tab-favicon-wrapper';
+
     const faviconEl = document.createElement('div');
     faviconEl.className = 'tab-favicon';
 
     const statusIconEl = document.createElement('div');
     statusIconEl.className = 'tab-status-icon';
+
+    faviconWrapper.append(faviconEl, statusIconEl);
 
     const titleEl = document.createElement('span');
     titleEl.className = 'tab-title';
@@ -54,7 +59,7 @@ function createTabElement(id) {
     closeBtnEl.innerHTML = '<i class="fa-solid fa-xmark"></i>';
     closeBtnEl.title = 'Close Tab';
     
-    tabEl.append(faviconEl, statusIconEl, titleEl, closeBtnEl);
+    tabEl.append(faviconWrapper, titleEl, closeBtnEl);
     updateTabElement(tabEl, tabData);
     return tabEl;
 }
@@ -236,9 +241,16 @@ export function renderTab(id, context = 'main') {
        tabEl.className = 'tab-item';
        titleEl.className = 'tab-title';
        closeBtnEl.className = 'tab-close-btn';
+
+       const faviconWrapper = document.createElement('div');
+       faviconWrapper.className = 'tab-favicon-wrapper';
+
        const statusIconEl = document.createElement('div');
        statusIconEl.className = 'tab-status-icon';
-       tabEl.append(faviconEl, statusIconEl, titleEl, closeBtnEl);
+       
+       faviconWrapper.append(faviconEl, statusIconEl);
+
+       tabEl.append(faviconWrapper, titleEl, closeBtnEl);
        updateTabElement(tabEl, tab);
 
     } else { // context === 'all-tabs'

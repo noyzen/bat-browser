@@ -1,10 +1,11 @@
 const { BrowserView, session, clipboard, Menu } = require('electron');
 const path = require('path');
+const http = require('http');
 const { randomUUID } = require('crypto');
 const state = require('./state');
 const sessionModule = require('./session');
 const settingsModule = require('./settings');
-const { getSerializableTabData, getRandomColor } = require('./utils');
+const { getSerializableTabData, getRandomColor, findTabByWebContents } = require('./utils');
 const { BROWSER_VIEW_WEBCONTENTS_CONFIG, CHROME_HEIGHT, SHARED_SESSION_PARTITION, USER_AGENTS, USER_AGENT_CLIENT_HINTS } = require('./constants');
 
 function getUserAgentInfo() {
@@ -79,6 +80,7 @@ function configureSession(tabSession) {
 
     // Clear any existing listeners to prevent duplicates.
     tabSession.webRequest.onBeforeSendHeaders(null);
+    tabSession.webRequest.onCompleted(null);
 
     // This robust, universal listener modifies headers for all network requests.
     // It correctly spoofs the selected identity by managing both the User-Agent
@@ -109,6 +111,27 @@ function configureSession(tabSession) {
         }
         
         callback({ requestHeaders });
+    });
+
+    // Add HTTP error handling for main frame requests.
+    tabSession.webRequest.onCompleted({ urls: ['<all_urls>'] }, (details) => {
+        if (details.resourceType === 'main_frame' && details.statusCode >= 400 && details.webContents) {
+            const tab = findTabByWebContents(details.webContents);
+            if (!tab) return;
+            
+            const statusMessage = http.STATUS_CODES[details.statusCode] || 'HTTP Error';
+            
+            const errorPagePath = path.join(__dirname, '../renderer/error.html');
+            const encodedURL = encodeURIComponent(details.url);
+            const encodedDesc = encodeURIComponent(statusMessage);
+
+            // Use a timeout to ensure this load happens after the current navigation flow has settled.
+            setTimeout(() => {
+                if (details.webContents && !details.webContents.isDestroyed()) {
+                    details.webContents.loadFile(errorPagePath, { hash: `code=${details.statusCode}&desc=${encodedDesc}&url=${encodedURL}` });
+                }
+            }, 10);
+        }
     });
 }
 
@@ -289,6 +312,15 @@ function attachViewListenersToTab(tabData) {
     });
   
     view.webContents.on('did-navigate', async (_, newUrl) => {
+      // If we navigate to about:blank, load the new tab page instead.
+      // This happens when navigating back in history to the initial empty tab.
+      if (newUrl === 'about:blank') {
+          view.webContents.loadFile(path.join(__dirname, '../renderer/newtab.html'));
+          // The loadFile call will trigger another 'did-navigate' event, so we return early
+          // to avoid processing this one further. The next event will handle history updates.
+          return;
+      }
+
       if (newUrl.startsWith('file://') && (newUrl.includes('error.html') || newUrl.includes('newtab.html'))) {
           const isNewTabPage = newUrl.includes('newtab.html');
           if (isNewTabPage) {
