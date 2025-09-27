@@ -33,24 +33,48 @@ function getUserAgentInfo() {
 
 function configureSession(tabSession) {
     const { value: userAgentString, clientHints } = getUserAgentInfo();
-    
+    const firefoxUa = USER_AGENTS.windows.firefox.value;
+
+    // This sets the UA for the JS environment (navigator.userAgent)
     tabSession.setUserAgent(userAgentString);
-    
-    // Always clear old listeners to prevent duplicates
+
+    // Clear any existing listeners to prevent duplicates.
     tabSession.webRequest.onBeforeSendHeaders(null);
-    
-    // Only add a listener if there are client hints to spoof (i.e., for Chrome/Edge)
-    if (clientHints) {
-        tabSession.webRequest.onBeforeSendHeaders((details, callback) => {
-            // Re-affirm the User-Agent header and add spoofed client hints
-            details.requestHeaders['User-Agent'] = userAgentString;
-            details.requestHeaders['sec-ch-ua'] = clientHints.brands;
-            details.requestHeaders['sec-ch-ua-mobile'] = clientHints.mobile;
-            details.requestHeaders['sec-ch-ua-platform'] = clientHints.platform;
-            
-            callback({ requestHeaders: details.requestHeaders });
-        });
-    }
+
+    // A single, powerful listener to modify headers for network requests.
+    tabSession.webRequest.onBeforeSendHeaders((details, callback) => {
+        const requestHeaders = details.requestHeaders;
+        const isGoogleAuth = details.url.startsWith('https://accounts.google.com/');
+
+        if (isGoogleAuth) {
+            // As per the user's guide, Google's login is stricter and can detect
+            // Electron even with a spoofed Chrome/Edge UA. Forcing a Firefox UA
+            // for the login flow circumvents this more advanced detection.
+            requestHeaders['User-Agent'] = firefoxUa;
+
+            // CRITICAL: We must remove any Chromium-specific client hint headers,
+            // as their presence would contradict the Firefox User-Agent and fail
+            // Google's consistency checks.
+            delete requestHeaders['sec-ch-ua'];
+            delete requestHeaders['sec-ch-ua-mobile'];
+            delete requestHeaders['sec-ch-ua-platform'];
+        } else if (clientHints) {
+            // For all other sites, respect the user's choice. If they've chosen a
+            // Chromium-based browser, we spoof the matching client hints to
+            // complete the identity.
+            requestHeaders['User-Agent'] = userAgentString;
+            requestHeaders['sec-ch-ua'] = clientHints.brands;
+            requestHeaders['sec-ch-ua-mobile'] = clientHints.mobile;
+            requestHeaders['sec-ch-ua-platform'] = clientHints.platform;
+        } else {
+            // If the user chose a non-Chromium browser (like Firefox or Safari),
+            // we just ensure the User-Agent header matches their selection.
+            // No client hints are needed.
+            requestHeaders['User-Agent'] = userAgentString;
+        }
+        
+        callback({ requestHeaders });
+    });
 }
 
 function updateViewBounds() {
