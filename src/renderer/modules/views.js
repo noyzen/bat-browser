@@ -77,6 +77,11 @@ export function renderAllTabsView() {
 
 // --- Settings View ---
 let currentSettings = {};
+
+const userAgentSelect = document.getElementById('user-agent-select');
+const customUaWrapper = document.getElementById('custom-user-agent-wrapper');
+const customUaInput = document.getElementById('user-agent-custom-input');
+
 const aiSettingsContent = document.getElementById('ai-settings-content');
 const aiEnableToggle = document.getElementById('ai-enable-toggle');
 const apiKeyList = document.getElementById('api-key-list');
@@ -260,10 +265,44 @@ async function populateSettings() {
     `;
     searchSelect.value = currentSettings.searchEngine || 'google';
 
+    // Identity
+    await populateUserAgentSettings();
+
     // AI
     populateAISettings();
     // Hotkeys
     populateHotkeys();
+}
+
+async function populateUserAgentSettings() {
+    const uaSettings = currentSettings.userAgent || { current: 'chrome-win', custom: '' };
+    const predefinedUAs = await window.electronAPI.getPredefinedUserAgents();
+    
+    userAgentSelect.innerHTML = '';
+    for (const [key, { name }] of Object.entries(predefinedUAs)) {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = name;
+        userAgentSelect.appendChild(option);
+    }
+    const customOption = document.createElement('option');
+    customOption.value = 'custom';
+    customOption.textContent = 'Custom...';
+    userAgentSelect.appendChild(customOption);
+    
+    userAgentSelect.value = uaSettings.current;
+    customUaInput.value = uaSettings.custom;
+    
+    customUaWrapper.classList.toggle('hidden', uaSettings.current !== 'custom');
+}
+
+function saveUserAgentSettings() {
+    const newSettings = {
+        current: userAgentSelect.value,
+        custom: customUaInput.value.trim()
+    };
+    currentSettings.userAgent = newSettings;
+    window.electronAPI.settingsSetUserAgent(newSettings);
 }
 
 function populateAISettings() {
@@ -577,6 +616,16 @@ export function initViews({ fullRender }) {
     document.getElementById('search-engine-select').addEventListener('change', (e) => {
         window.electronAPI.settingsSetSearchEngine(e.target.value);
     });
+
+    // -- Identity
+    userAgentSelect.addEventListener('change', () => {
+        customUaWrapper.classList.toggle('hidden', userAgentSelect.value !== 'custom');
+        if (userAgentSelect.value === 'custom') {
+            customUaInput.focus();
+        }
+        saveUserAgentSettings();
+    });
+    customUaInput.addEventListener('input', debounce(saveUserAgentSettings, 500));
     
     // -- AI
     getApiKeyBtn.addEventListener('click', () => {

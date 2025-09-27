@@ -5,7 +5,18 @@ const state = require('./state');
 const sessionModule = require('./session');
 const settingsModule = require('./settings');
 const { getSerializableTabData, getRandomColor } = require('./utils');
-const { BROWSER_VIEW_WEBCONTENTS_CONFIG, CHROME_HEIGHT, SHARED_SESSION_PARTITION, USER_AGENT } = require('./constants');
+const { BROWSER_VIEW_WEBCONTENTS_CONFIG, CHROME_HEIGHT, SHARED_SESSION_PARTITION, USER_AGENTS } = require('./constants');
+
+function getCurrentUserAgent() {
+    const uaSettings = state.settings.userAgent || { current: 'chrome-win', custom: '' };
+    const key = uaSettings.current;
+    if (key === 'custom') {
+        // Use custom if not empty, otherwise fallback to default
+        return uaSettings.custom || USER_AGENTS['chrome-win'].value;
+    }
+    // Use predefined, fallback to default if key is invalid
+    return USER_AGENTS[key]?.value || USER_AGENTS['chrome-win'].value;
+}
 
 function updateViewBounds() {
     const tab = state.getActiveTab();
@@ -234,7 +245,7 @@ function createTab(url = 'about:blank', options = {}) {
             console.error('Failed to resolve and set proxy:', err);
         });
   
-    tabSession.setUserAgent(USER_AGENT);
+    tabSession.setUserAgent(getCurrentUserAgent());
   
     const view = new BrowserView({ webPreferences: { partition, ...BROWSER_VIEW_WEBCONTENTS_CONFIG } });
   
@@ -297,7 +308,7 @@ async function switchTab(id) {
                   console.error('Failed to resolve and set proxy on wake:', err);
               });
               
-          tabSession.setUserAgent(USER_AGENT);
+          tabSession.setUserAgent(getCurrentUserAgent());
           
           const view = new BrowserView({ webPreferences: { partition, ...BROWSER_VIEW_WEBCONTENTS_CONFIG } });
   
@@ -382,7 +393,7 @@ async function toggleTabSharedState(id) {
 
     const newPartition = tab.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
     const newSession = session.fromPartition(newPartition);
-    newSession.setUserAgent(USER_AGENT);
+    newSession.setUserAgent(getCurrentUserAgent());
     const newView = new BrowserView({ webPreferences: { partition: newPartition, ...BROWSER_VIEW_WEBCONTENTS_CONFIG }});
 
     tab.view = newView;

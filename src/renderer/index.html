@@ -117,7 +117,8 @@
           <ul>
             <li class="active"><a href="#appearance"><i class="fa-solid fa-palette"></i> Appearance</a></li>
             <li><a href="#search"><i class="fa-solid fa-magnifying-glass"></i> Search</a></li>
-            <li><a href="#ai"><i class="fa-solid fa-robot"></i> AI</a></li>
+            <li><a href="#identity"><i class="fa-solid fa-user-secret"></i> Identity</a></li>
+            <li><a href="#ai"><i class="fa-solid fa-robot"></i> AI Assistant</a></li>
             <li><a href="#hotkeys"><i class="fa-solid fa-keyboard"></i> Hotkeys</a></li>
           </ul>
         </nav>
@@ -143,6 +144,27 @@
                       <select id="search-engine-select"></select>
                   </div>
                 </div>
+            </section>
+             <section id="identity" class="settings-section" style="display: none;" data-keywords="identity privacy user agent browser fingerprinting chrome firefox edge safari">
+              <h1>Identity</h1>
+              <div class="setting-item" data-keywords="user agent string browser chrome firefox safari edge">
+                <div class="setting-label">
+                    <h2>User Agent</h2>
+                    <p>Choose which browser Bat Browser should identify as. Some websites may behave differently based on this setting. Changes will reload all open tabs.</p>
+                </div>
+                <div class="setting-control">
+                    <select id="user-agent-select"></select>
+                </div>
+              </div>
+              <div id="custom-user-agent-wrapper" class="setting-item column hidden" data-keywords="custom user agent string">
+                   <div class="setting-label">
+                      <h2>Custom User Agent</h2>
+                      <p>Enter the full User Agent string you want to use.</p>
+                  </div>
+                  <div class="setting-control full-width">
+                      <textarea id="user-agent-custom-input" rows="3" placeholder="e.g., Mozilla/5.0..."></textarea>
+                  </div>
+              </div>
             </section>
             <section id="ai" class="settings-section" style="display: none;" data-keywords="ai artificial intelligence gemini api key assistant">
               <h1>AI Assistant</h1>

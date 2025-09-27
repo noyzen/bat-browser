@@ -7,6 +7,10 @@ function loadSettings() {
     const defaults = {
         defaultFont: null,
         searchEngine: 'google',
+        userAgent: {
+            current: 'chrome-win', // key from constants.USER_AGENTS
+            custom: '',
+        },
         ai: {
             enabled: false,
             apiKeys: [], // { id, name, key }
@@ -32,11 +36,13 @@ function loadSettings() {
         if (fs.existsSync(SETTINGS_PATH)) {
             const savedSettings = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
             const merged = { ...defaults, ...savedSettings };
-            // Deep merge AI settings
+            // Deep merge nested objects
+            if (savedSettings.userAgent) {
+                merged.userAgent = { ...defaults.userAgent, ...savedSettings.userAgent };
+            }
             if (savedSettings.ai) {
                 merged.ai = { ...defaults.ai, ...savedSettings.ai };
             }
-            // Deep merge hotkeys to ensure new defaults are added for existing users
             if (savedSettings.hotkeys) {
                 merged.hotkeys = { ...defaults.hotkeys, ...savedSettings.hotkeys };
             }

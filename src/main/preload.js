@@ -51,6 +51,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setDefaultFont: (fontFamily) => ipcRenderer.invoke('settings:set-default-font', fontFamily),
   settingsSetSearchEngine: (engine) => ipcRenderer.invoke('settings:set-search-engine', engine),
+  settingsSetUserAgent: (ua) => ipcRenderer.invoke('settings:set-user-agent', ua),
+  getPredefinedUserAgents: () => ipcRenderer.invoke('settings:get-predefined-user-agents'),
   settingsSetAI: (settings) => ipcRenderer.invoke('settings:set-ai', settings),
   settingsSetHotkeys: (hotkeys) => ipcRenderer.invoke('settings:set-hotkeys', hotkeys),
 

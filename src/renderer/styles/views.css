@@ -35,13 +35,32 @@
 .setting-item { display: flex; align-items: flex-start; justify-content: space-between; padding: 24px 0; border-bottom: 1px solid var(--border-color); gap: 24px; }
 .setting-item.column { flex-direction: column; align-items: flex-start; }
 .setting-item.hidden-by-search { display: none; }
+.setting-item.column.hidden { display: none; }
 .setting-label { flex-grow: 1; }
 .setting-label h2 { font-size: 16px; margin: 0 0 4px 0; }
 .setting-label p { font-size: 13px; color: var(--fg-secondary); margin: 0; max-width: 450px; line-height: 1.5; }
 .setting-control { display: flex; align-items: center; flex-shrink: 0; }
 .setting-control.full-width { width: 100%; margin-top: 16px; }
-#search-engine-select { background-color: var(--bg-tertiary); color: var(--fg-primary); border: 1px solid var(--border-color); padding: 8px 36px 8px 12px; border-radius: 0; min-width: 250px; font-size: 14px; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238b8b8b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; background-size: 24px; cursor: pointer; }
-#search-engine-select:focus { outline: none; border-color: var(--accent-color); }
+#search-engine-select, #user-agent-select { background-color: var(--bg-tertiary); color: var(--fg-primary); border: 1px solid var(--border-color); padding: 8px 36px 8px 12px; border-radius: 0; min-width: 250px; font-size: 14px; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238b8b8b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; background-size: 24px; cursor: pointer; }
+#search-engine-select:focus, #user-agent-select:focus { outline: none; border-color: var(--accent-color); }
+
+#user-agent-custom-input {
+    width: 100%;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--fg-primary);
+    padding: 10px 12px;
+    border-radius: 0;
+    outline: none;
+    font-size: 14px;
+    font-family: monospace;
+    resize: vertical;
+    -webkit-user-select: text;
+    user-select: text;
+}
+#user-agent-custom-input:focus {
+    border-color: var(--accent-color);
+}
 
 /* Custom Font Selector Button */
 #font-select-btn {

@@ -6,7 +6,7 @@ const settingsModule = require('./settings');
 const sessionModule = require('./session');
 const utils = require('./utils');
 const { getSerializableTabData } = require('./utils');
-const { SEARCH_ENGINES, CHROME_HEIGHT } = require('./constants');
+const { SEARCH_ENGINES, USER_AGENTS } = require('./constants');
 
 // URL Loading Helper
 function loadQueryOrURL(webContents, query) {
@@ -187,6 +187,24 @@ function initializeIpc() {
             settingsModule.debouncedSaveSettings();
         }
     });
+    ipcMain.handle('settings:set-user-agent', (_, uaSettings) => {
+        state.settings.userAgent = uaSettings;
+        settingsModule.debouncedSaveSettings();
+    
+        const newUserAgentString = uaSettings.current === 'custom'
+            ? uaSettings.custom
+            : (USER_AGENTS[uaSettings.current]?.value || USER_AGENTS['chrome-win'].value);
+    
+        for (const tab of state.tabs.values()) {
+            if (tab.session && !tab.session.isDestroyed()) {
+                tab.session.setUserAgent(newUserAgentString);
+                if (tab.view && !tab.view.webContents.isDestroyed() && !tab.isHibernated && tab.url !== 'about:blank') {
+                    tab.view.webContents.reload();
+                }
+            }
+        }
+    });
+    ipcMain.handle('settings:get-predefined-user-agents', () => USER_AGENTS);
     ipcMain.handle('settings:set-ai', (_, settings) => {
         if (!state.settings.ai) state.settings.ai = {};
         Object.assign(state.settings.ai, settings);
