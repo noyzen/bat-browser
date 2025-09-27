@@ -14,7 +14,8 @@ const { getSerializableTabData, debounce } = require('./utils');
 // Add command line switches to reduce fingerprinting, as suggested by the guide
 // to solve Google sign-in issues. These can help mask the Electron environment.
 app.commandLine.appendSwitch('disable-gpu-rasterization');
-app.commandLine.appendSwitch('enable-features', 'NetworkService');
+// Add cookie-related features to appear more like a standard, secure browser.
+app.commandLine.appendSwitch('enable-features', 'NetworkService,SameSiteByDefaultCookies,CookiesWithoutSameSiteMustBeSecure');
 
 // Set a global User-Agent fallback. This is a crucial step to make the browser
 // appear as a standard browser to services like Google, which block logins from
@@ -55,6 +56,7 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
+      webSecurity: true, // Enforce same-origin policy for better security posture.
     },
   });
 
