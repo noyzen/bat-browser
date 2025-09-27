@@ -11,6 +11,12 @@ const settingsModule = require('./settings');
 const tabsModule = require('./tabs');
 const { getSerializableTabData, debounce } = require('./utils');
 
+// Set a global User-Agent fallback. This is a crucial step to make the browser
+// appear as a standard Chrome browser to services like Google, which block
+// logins from unidentified or Electron-based user agents. This must be set
+// before the app 'ready' event.
+app.userAgentFallback = constants.USER_AGENTS['chrome-win'].value;
+
 // Gracefully handle unhandled exceptions
 process.on('uncaughtException', (error, origin) => {
   console.error(`Caught exception: ${error}\n` + `Exception origin: ${origin}`);

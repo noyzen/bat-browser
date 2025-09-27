@@ -20,15 +20,15 @@ module.exports = {
     USER_AGENTS: {
         'chrome-win': {
             name: 'Chrome on Windows',
-            value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+            value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
         },
         'firefox-win': {
             name: 'Firefox on Windows',
-            value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/127.0',
+            value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0',
         },
         'edge-win': {
             name: 'Edge on Windows',
-            value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0',
+            value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0',
         },
         'safari-mac': {
             name: 'Safari on macOS',
@@ -37,13 +37,13 @@ module.exports = {
     },
     USER_AGENT_CLIENT_HINTS: {
         'chrome-win': {
-            brands: '"Not/A)Brand";v="8", "Chromium";v="126", "Google Chrome";v="126"',
+            brands: '"Not A;Brand";v="99", "Google Chrome";v="128", "Chromium";v="128"',
             mobile: '?0',
             platform: '"Windows"',
         },
         'firefox-win': null, // Firefox does not send Client Hints
         'edge-win': {
-            brands: '"Not/A)Brand";v="8", "Chromium";v="126", "Microsoft Edge";v="126"',
+            brands: '"Not A;Brand";v="99", "Microsoft Edge";v="128", "Chromium";v="128"',
             mobile: '?0',
             platform: '"Windows"',
         },
