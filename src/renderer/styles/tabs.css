@@ -141,12 +141,12 @@
 .tab-group-tabs { display: contents; }
 .active-in-group-indicator { color: white; font-size: 7px; }
 .group-tab-count-badge {
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: transparent;
     color: #fff;
     font-size: 10px;
     font-weight: bold;
-    padding: 1px 5px;
-    border-radius: 8px;
+    padding: 0;
+    border-radius: 0;
     line-height: 1;
 }
 
