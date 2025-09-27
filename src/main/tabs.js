@@ -633,6 +633,36 @@ async function clearCacheAndReload(id) {
     }
 }
 
+async function hibernateTab(id) {
+    const tab = state.tabs.get(id);
+    // Check if tab exists, has a view, and is not already hibernated
+    if (tab && tab.view && !tab.isHibernated) {
+        if (!tab.view.webContents.isDestroyed()) {
+            const currentURL = tab.view.webContents.getURL();
+            const currentTitle = tab.view.webContents.getTitle();
+
+            // Persist URL and title before destroying view. Don't save internal pages.
+            if (currentURL && !currentURL.startsWith('file://')) {
+                tab.url = currentURL;
+                tab.title = currentTitle;
+            } else if (currentURL.includes('newtab.html')) {
+                tab.url = 'about:blank';
+                tab.title = 'New Tab';
+            }
+            
+            tab.view.webContents.destroy();
+        }
+
+        tab.view = null;
+        tab.session = null;
+        tab.isHibernated = true;
+        tab.isLoading = false; // It's not loading, it's sleeping
+        
+        state.mainWindow.webContents.send('tab:updated', getSerializableTabData(tab));
+        sessionModule.debouncedSaveSession();
+    }
+}
+
 
 module.exports = {
     updateViewBounds,
@@ -644,4 +674,5 @@ module.exports = {
     clearCacheAndReload,
     configureSession,
     applyProxyToAllSessions,
+    hibernateTab,
 };

@@ -23,6 +23,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   switchTab: (id) => ipcRenderer.invoke('tab:switch', id),
   toggleTabShared: (id) => ipcRenderer.invoke('tab:toggle-shared', id),
   clearCacheAndReload: (id) => ipcRenderer.invoke('tab:clear-cache-and-reload', id),
+  hibernateTab: (id) => ipcRenderer.invoke('tab:hibernate', id),
+  hibernateTabsInGroup: (groupId) => ipcRenderer.invoke('group:hibernate-tabs', groupId),
   
   // View Controls
   hideActiveView: () => ipcRenderer.invoke('view:hide'),

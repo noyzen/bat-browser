@@ -85,6 +85,78 @@ async function handleContextMenuCommand(command, context) {
             showHistoryPopup(tabId);
             break;
         }
+        case 'hibernate-tab': {
+            const { tabId } = context;
+            const tabToHibernate = state.tabs.get(tabId);
+            if (!tabToHibernate || tabToHibernate.isHibernated) break;
+
+            const wasActive = state.activeTabId === tabId;
+            window.electronAPI.hibernateTab(tabId);
+
+            if (wasActive) {
+                let nextTabId = null;
+                // Find any other tab.
+                for (const item of state.layout) {
+                    if (state.tabs.has(item) && item !== tabId) {
+                        nextTabId = item;
+                        break;
+                    }
+                    if (state.groups.has(item)) {
+                        const group = state.groups.get(item);
+                        const found = group.tabs.find(tId => tId !== tabId);
+                        if (found) {
+                            nextTabId = found;
+                            break;
+                        }
+                    }
+                }
+                
+                if (nextTabId) {
+                    window.electronAPI.switchTab(nextTabId);
+                } else {
+                    // It was the only tab.
+                    window.electronAPI.newTab();
+                }
+            }
+            break;
+        }
+        case 'hibernate-group-tabs': {
+            const { groupId } = context;
+            const group = state.groups.get(groupId);
+            if (!group) break;
+        
+            const activeTabIsInGroup = group.tabs.includes(state.activeTabId);
+            
+            window.electronAPI.hibernateTabsInGroup(groupId);
+        
+            if (activeTabIsInGroup) {
+                let nextTabId = null;
+                // Find next tab outside of this group.
+                for (const id of state.layout) {
+                    if (id === groupId) continue;
+        
+                    if (state.tabs.has(id)) {
+                        nextTabId = id;
+                        break;
+                    }
+                    if (state.groups.has(id)) {
+                        const otherGroup = state.groups.get(id);
+                        if (otherGroup.tabs.length > 0) {
+                            nextTabId = otherGroup.tabs[0];
+                            break;
+                        }
+                    }
+                }
+                
+                if (nextTabId) {
+                    window.electronAPI.switchTab(nextTabId);
+                } else {
+                    // All tabs are in this group.
+                    window.electronAPI.newTab();
+                }
+            }
+            break;
+        }
         case 'close-tab':
             Feat.handleCloseTab(context.tabId, callbacks);
             break;
@@ -236,6 +308,11 @@ export function initContextMenu(cbs) {
                 { label: 'URL Change History', action: { command: 'show-history', context: { tabId } } },
                 { label: 'Clear Cache and Reload', action: { command: 'clear-cache-reload', context: { tabId } } },
                 { label: 'AI Assistant', action: { command: 'show-ai-assistant', context: { tabId } }, visible: settings?.ai?.enabled },
+                { 
+                    label: 'Hibernate Tab', 
+                    action: { command: 'hibernate-tab', context: { tabId } },
+                    visible: !tab.isHibernated && tab.url !== 'about:blank'
+                },
                 { type: 'separator' },
                 { label: 'Share data with other shared tabs', type: 'checkbox', checked: tab.isShared, action: { command: 'toggle-shared', context: { tabId } } },
                 { type: 'separator' },
@@ -259,6 +336,7 @@ export function initContextMenu(cbs) {
             menuTemplate = [
                 { label: 'Rename Group', action: { command: 'rename-group', context: { groupId } } },
                 { label: 'Ungroup', action: { command: 'ungroup', context: { groupId } } },
+                { label: 'Hibernate All Tabs', action: { command: 'hibernate-group-tabs', context: { groupId } } },
                 { label: 'Close all tabs in group', action: { command: 'close-group-tabs', context: { groupId } } }
             ];
         } else {

@@ -91,6 +91,18 @@ function initializeIpc() {
     ipcMain.handle('tab:switch', async (_, id) => await tabsModule.switchTab(id));
     ipcMain.handle('tab:toggle-shared', async (_, id) => tabsModule.toggleTabSharedState(id));
     ipcMain.handle('tab:clear-cache-and-reload', async (_, id) => tabsModule.clearCacheAndReload(id));
+    ipcMain.handle('tab:hibernate', async (_, id) => {
+        await tabsModule.hibernateTab(id);
+    });
+    ipcMain.handle('group:hibernate-tabs', async (_, groupId) => {
+        const group = state.groups.get(groupId);
+        if (group) {
+            const tabsToHibernate = [...group.tabs];
+            for (const tabId of tabsToHibernate) {
+                await tabsModule.hibernateTab(tabId);
+            }
+        }
+    });
 
     // Active View Controls (for All Tabs page)
     ipcMain.handle('view:hide', () => {
