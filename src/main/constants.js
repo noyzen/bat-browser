@@ -55,6 +55,18 @@ module.exports = {
                 name: 'Firefox',
                 value: 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0',
             },
+        },
+        android: {
+            chrome: {
+                name: 'Chrome Mobile',
+                value: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36'
+            }
+        },
+        ios: {
+            safari: {
+                name: 'Safari Mobile (iPhone)',
+                value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'
+            }
         }
     },
     USER_AGENT_CLIENT_HINTS: {
@@ -84,6 +96,13 @@ module.exports = {
                 platform: '"Linux"',
             },
         },
+        android: {
+            chrome: {
+                brands: '"Not A;Brand";v="99", "Google Chrome";v="128", "Chromium";v="128"',
+                mobile: '?1',
+                platform: '"Android"',
+            }
+        }
     },
 
     BROWSER_VIEW_WEBCONTENTS_CONFIG: {

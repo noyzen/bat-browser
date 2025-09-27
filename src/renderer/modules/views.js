@@ -284,7 +284,9 @@ async function populateUserAgentSettings() {
     const osNameMap = {
         windows: 'Windows',
         macos: 'macOS',
-        linux: 'Linux'
+        linux: 'Linux',
+        android: 'Android',
+        ios: 'iOS'
     };
 
     for (const [osKey, browsers] of Object.entries(predefinedUAs)) {
