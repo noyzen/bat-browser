@@ -8,7 +8,7 @@ const { getSerializableTabData, getRandomColor } = require('./utils');
 const { BROWSER_VIEW_WEBCONTENTS_CONFIG, CHROME_HEIGHT, SHARED_SESSION_PARTITION, USER_AGENTS, USER_AGENT_CLIENT_HINTS } = require('./constants');
 
 function getUserAgentInfo() {
-    const settings = state.settings.userAgent || { current: 'windows-chrome', custom: '' };
+    const settings = state.settings.userAgent || { current: 'windows-firefox', custom: '' };
     const key = settings.current;
     let value, clientHints;
 
@@ -24,8 +24,8 @@ function getUserAgentInfo() {
             clientHints = USER_AGENT_CLIENT_HINTS[os]?.[browser] || null;
         } else {
             // Fallback to default if key is invalid
-            value = USER_AGENTS.windows.chrome.value;
-            clientHints = USER_AGENT_CLIENT_HINTS.windows.chrome;
+            value = USER_AGENTS.windows.firefox.value;
+            clientHints = null;
         }
     }
     return { value, clientHints };
@@ -33,7 +33,6 @@ function getUserAgentInfo() {
 
 function configureSession(tabSession) {
     const { value: userAgentString, clientHints } = getUserAgentInfo();
-    const firefoxUa = USER_AGENTS.windows.firefox.value;
 
     // This sets the UA for the JS environment (navigator.userAgent)
     tabSession.setUserAgent(userAgentString);
@@ -41,36 +40,32 @@ function configureSession(tabSession) {
     // Clear any existing listeners to prevent duplicates.
     tabSession.webRequest.onBeforeSendHeaders(null);
 
-    // A single, powerful listener to modify headers for network requests.
+    // This robust, universal listener modifies headers for all network requests.
+    // It correctly spoofs the selected identity by managing both the User-Agent
+    // string and the Chromium-specific Client-Hint headers.
     tabSession.webRequest.onBeforeSendHeaders((details, callback) => {
         const requestHeaders = details.requestHeaders;
-        const isGoogleAuth = details.url.startsWith('https://accounts.google.com/');
 
-        if (isGoogleAuth) {
-            // As per the user's guide, Google's login is stricter and can detect
-            // Electron even with a spoofed Chrome/Edge UA. Forcing a Firefox UA
-            // for the login flow circumvents this more advanced detection.
-            requestHeaders['User-Agent'] = firefoxUa;
+        // 1. Set the primary User-Agent string for all requests.
+        requestHeaders['User-Agent'] = userAgentString;
 
-            // CRITICAL: We must remove any Chromium-specific client hint headers,
-            // as their presence would contradict the Firefox User-Agent and fail
-            // Google's consistency checks.
-            delete requestHeaders['sec-ch-ua'];
-            delete requestHeaders['sec-ch-ua-mobile'];
-            delete requestHeaders['sec-ch-ua-platform'];
-        } else if (clientHints) {
-            // For all other sites, respect the user's choice. If they've chosen a
-            // Chromium-based browser, we spoof the matching client hints to
-            // complete the identity.
-            requestHeaders['User-Agent'] = userAgentString;
+        // 2. Clean up any default Electron/Chromium client hint headers. This is
+        //    CRITICAL for correctly spoofing non-Chromium browsers (like Firefox)
+        //    as it prevents the underlying engine from leaking its identity.
+        for (const header in requestHeaders) {
+            if (header.toLowerCase().startsWith('sec-ch-')) {
+                delete requestHeaders[header];
+            }
+        }
+
+        // 3. If the chosen identity is a Chromium-based browser (which has hints),
+        //    add its specific client hint headers to complete the disguise.
+        //    If it's Firefox/Safari (no hints), this block is skipped, and the
+        //    browser appears clean, just as it should.
+        if (clientHints) {
             requestHeaders['sec-ch-ua'] = clientHints.brands;
             requestHeaders['sec-ch-ua-mobile'] = clientHints.mobile;
             requestHeaders['sec-ch-ua-platform'] = clientHints.platform;
-        } else {
-            // If the user chose a non-Chromium browser (like Firefox or Safari),
-            // we just ensure the User-Agent header matches their selection.
-            // No client hints are needed.
-            requestHeaders['User-Agent'] = userAgentString;
         }
         
         callback({ requestHeaders });
