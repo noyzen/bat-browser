@@ -12,6 +12,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onMaximizeChanged: (callback) => ipcRenderer.on('window:maximize-changed', (_e, state) => callback(state)),
   onWindowBlurred: (callback) => ipcRenderer.on('window:blurred', (_e) => callback()),
 
+  // Input Controls
+  showInputContextMenu: () => ipcRenderer.invoke('input:show-context-menu'),
+
   // Tab Controls
   newTab: () => ipcRenderer.invoke('tab:new'),
   newTabWithUrl: (url) => ipcRenderer.invoke('tab:new-with-url', url),

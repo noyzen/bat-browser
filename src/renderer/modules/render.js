@@ -353,9 +353,10 @@ export function updateNavControls(tab) {
         return;
     }
 
-    const urlToDisplay = (tab.isLoaded && tab.url !== 'about:blank' && !tab.isHibernated) ? tab.url : '';
-    
-    DOM.addressBar.value = formatUrlForDisplay(urlToDisplay);
+    // The address bar should show the URL even if the tab is loading or hibernated.
+    // `formatUrlForDisplay` will correctly handle 'about:blank' and other internal URLs.
+    // When the address bar is focused, the full URL will be shown by the 'focus' event handler.
+    DOM.addressBar.value = formatUrlForDisplay(tab.url);
 
     DOM.backBtn.disabled = !tab.canGoBack;
     DOM.forwardBtn.disabled = !tab.canGoForward;

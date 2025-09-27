@@ -20,6 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    urlInput.addEventListener('contextmenu', () => {
+        if (window.viewAPI && window.viewAPI.showInputContextMenu) {
+            window.viewAPI.showInputContextMenu();
+        }
+    });
+
     closeBtn.addEventListener('click', () => {
         if (window.viewAPI && window.viewAPI.closeTab) {
             window.viewAPI.closeTab();

@@ -336,6 +336,9 @@ export function initEvents(callbacks) {
     // --- UI Element Listeners ---
     DOM.addTabBtn.addEventListener('click', () => window.electronAPI.newTab());
     DOM.addressBar.addEventListener('keydown', handleAddressBar);
+    DOM.addressBar.addEventListener('contextmenu', () => {
+        window.electronAPI.showInputContextMenu();
+    });
     DOM.backBtn.addEventListener('click', () => window.electronAPI.goBack());
     DOM.forwardBtn.addEventListener('click', () => window.electronAPI.goForward());
     DOM.reloadBtn.addEventListener('click', () => window.electronAPI.reload());

@@ -53,6 +53,17 @@ function initializeIpc() {
     ipcMain.handle('window:close', () => state.mainWindow.close());
     ipcMain.handle('window:isMaximized', () => state.mainWindow.isMaximized());
 
+    // Input Context Menu
+    ipcMain.handle('input:show-context-menu', () => {
+        const template = [
+            { role: 'undo' }, { role: 'redo' }, { type: 'separator' },
+            { role: 'cut' }, { role: 'copy' }, { role: 'paste' },
+            { type: 'separator' }, { role: 'selectAll' }
+        ];
+        const menu = Menu.buildFromTemplate(template);
+        menu.popup({ window: state.mainWindow });
+    });
+
     // Tab Controls
     ipcMain.handle('tab:new', async () => {
         const newTab = tabsModule.createTab();

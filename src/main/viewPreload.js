@@ -7,4 +7,5 @@ contextBridge.exposeInMainWorld('viewAPI', {
   // These allow the new tab page to interact with the main process.
   loadURL: (url) => ipcRenderer.send('view:loadURL', url),
   closeTab: () => ipcRenderer.send('view:close'),
+  showInputContextMenu: () => ipcRenderer.invoke('input:show-context-menu'),
 });
