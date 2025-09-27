@@ -286,16 +286,16 @@ async function createTab(url = 'about:blank', options = {}) {
     const partition = options.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
     const tabSession = session.fromPartition(partition);
 
-    // Explicitly configure proxy settings for the new session to match the default.
-    // This MUST be awaited to prevent race conditions where navigation starts before
-    // the proxy is configured, causing ERR_PROXY_CONNECTION_FAILED.
+    // Explicitly set the session to auto-detect proxy settings. This is more
+    // robust than resolving the proxy from the default session and applying it,
+    // as it lets Chromium manage the network configuration directly. This MUST
+    // be awaited to prevent ERR_PROXY_CONNECTION_FAILED race conditions.
     try {
-        const proxy = await session.defaultSession.resolveProxy('https://www.google.com');
         if (tabSession) {
-            await tabSession.setProxy({ proxyRules: proxy });
+            await tabSession.setProxy({ autoDetect: true });
         }
     } catch (err) {
-        console.error('Failed to resolve and set proxy:', err);
+        console.error(`Failed to set auto-detect proxy for new tab ${id}:`, err);
     }
   
     configureSession(tabSession);
@@ -357,14 +357,14 @@ async function switchTab(id) {
           const partition = newTab.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
           const tabSession = session.fromPartition(partition);
           
-          // This MUST be awaited to prevent race conditions.
+          // Set proxy to auto-detect on wake-up. This is more reliable than
+          // resolving and applying rules manually.
           try {
-              const proxy = await session.defaultSession.resolveProxy('https://www.google.com');
               if (tabSession) {
-                  await tabSession.setProxy({ proxyRules: proxy });
+                  await tabSession.setProxy({ autoDetect: true });
               }
           } catch (err) {
-              console.error('Failed to resolve and set proxy on wake:', err);
+              console.error(`Failed to set auto-detect proxy on wake for tab ${id}:`, err);
           }
               
           configureSession(tabSession);
@@ -457,10 +457,21 @@ async function toggleTabSharedState(id) {
       await session.fromPartition(oldPartition).clearStorageData();
     }
 
-    const { value: userAgentString } = getUserAgentInfo();
     const newPartition = tab.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
     const newSession = session.fromPartition(newPartition);
+
+    // Set proxy to auto-detect for the new session.
+    try {
+        if (newSession) {
+            await newSession.setProxy({ autoDetect: true });
+        }
+    } catch (err) {
+        console.error(`Failed to set auto-detect proxy on toggle-share for tab ${id}:`, err);
+    }
+    
     configureSession(newSession);
+
+    const { value: userAgentString } = getUserAgentInfo();
     const newView = new BrowserView({
       webPreferences: {
         userAgent: userAgentString,
