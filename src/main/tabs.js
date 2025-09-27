@@ -8,19 +8,25 @@ const { getSerializableTabData, getRandomColor } = require('./utils');
 const { BROWSER_VIEW_WEBCONTENTS_CONFIG, CHROME_HEIGHT, SHARED_SESSION_PARTITION, USER_AGENTS, USER_AGENT_CLIENT_HINTS } = require('./constants');
 
 function getUserAgentInfo() {
-    const settings = state.settings.userAgent || { current: 'chrome-win', custom: '' };
+    const settings = state.settings.userAgent || { current: 'windows-chrome', custom: '' };
     const key = settings.current;
     let value, clientHints;
 
     if (key === 'custom' && settings.custom) {
         value = settings.custom;
         // For custom UAs, we cannot guess client hints, so we send none.
-        clientHints = null; 
+        clientHints = null;
     } else {
-        // Use predefined, fallback to default chrome-win if key is invalid
-        const effectiveKey = USER_AGENTS[key] ? key : 'chrome-win';
-        value = USER_AGENTS[effectiveKey].value;
-        clientHints = USER_AGENT_CLIENT_HINTS[effectiveKey];
+        const [os, browser] = key.split('-');
+        const uaData = USER_AGENTS[os]?.[browser];
+        if (uaData) {
+            value = uaData.value;
+            clientHints = USER_AGENT_CLIENT_HINTS[os]?.[browser] || null;
+        } else {
+            // Fallback to default if key is invalid
+            value = USER_AGENTS.windows.chrome.value;
+            clientHints = USER_AGENT_CLIENT_HINTS.windows.chrome;
+        }
     }
     return { value, clientHints };
 }
@@ -261,6 +267,8 @@ function createTab(url = 'about:blank', options = {}) {
     const partition = options.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
     const tabSession = session.fromPartition(partition);
 
+    const { value: userAgentString } = getUserAgentInfo();
+
     // Explicitly configure proxy settings for the new session to match the default.
     // This can resolve network issues like ERR_INTERNET_DISCONNECTED on some systems
     // where new sessions don't automatically inherit the correct network configuration.
@@ -276,7 +284,13 @@ function createTab(url = 'about:blank', options = {}) {
   
     configureSession(tabSession);
   
-    const view = new BrowserView({ webPreferences: { partition, ...BROWSER_VIEW_WEBCONTENTS_CONFIG } });
+    const view = new BrowserView({
+      webPreferences: {
+        userAgent: userAgentString,
+        partition,
+        ...BROWSER_VIEW_WEBCONTENTS_CONFIG
+      }
+    });
   
     const tabData = {
       id, view, session: tabSession, url, title: 'New Tab', canGoBack: false,
@@ -325,6 +339,7 @@ async function switchTab(id) {
           console.log(`Waking up tab ${id}`);
           const partition = newTab.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
           const tabSession = session.fromPartition(partition);
+          const { value: userAgentString } = getUserAgentInfo();
 
           // Explicitly configure proxy settings for the new session to match the default.
           session.defaultSession.resolveProxy('https://www.google.com')
@@ -339,7 +354,13 @@ async function switchTab(id) {
               
           configureSession(tabSession);
           
-          const view = new BrowserView({ webPreferences: { partition, ...BROWSER_VIEW_WEBCONTENTS_CONFIG } });
+          const view = new BrowserView({
+            webPreferences: {
+              userAgent: userAgentString,
+              partition,
+              ...BROWSER_VIEW_WEBCONTENTS_CONFIG
+            }
+          });
   
           newTab.view = view;
           newTab.session = tabSession;
@@ -420,10 +441,17 @@ async function toggleTabSharedState(id) {
       await session.fromPartition(oldPartition).clearStorageData();
     }
 
+    const { value: userAgentString } = getUserAgentInfo();
     const newPartition = tab.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
     const newSession = session.fromPartition(newPartition);
     configureSession(newSession);
-    const newView = new BrowserView({ webPreferences: { partition: newPartition, ...BROWSER_VIEW_WEBCONTENTS_CONFIG }});
+    const newView = new BrowserView({
+      webPreferences: {
+        userAgent: userAgentString,
+        partition: newPartition,
+        ...BROWSER_VIEW_WEBCONTENTS_CONFIG
+      }
+    });
 
     tab.view = newView;
     tab.session = newSession;

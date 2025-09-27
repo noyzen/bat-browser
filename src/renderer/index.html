@@ -150,7 +150,7 @@
               <div class="setting-item" data-keywords="user agent string browser chrome firefox safari edge">
                 <div class="setting-label">
                     <h2>User Agent</h2>
-                    <p>Choose which browser Bat Browser should identify as. Some websites may behave differently based on this setting. Changes will reload all open tabs.</p>
+                    <p>Choose which browser Bat Browser should identify as. Changes will apply to new tabs.</p>
                 </div>
                 <div class="setting-control">
                     <select id="user-agent-select"></select>
@@ -164,6 +164,15 @@
                   <div class="setting-control full-width">
                       <textarea id="user-agent-custom-input" rows="3" placeholder="e.g., Mozilla/5.0..."></textarea>
                   </div>
+              </div>
+              <div class="setting-item" data-keywords="test verify check user agent identity">
+                <div class="setting-label">
+                    <h2>Verify Identity</h2>
+                    <p>Open a new tab to a diagnostic site to see what information your browser is currently presenting to websites.</p>
+                </div>
+                <div class="setting-control">
+                    <button id="test-user-agent-btn"><i class="fa-solid fa-vial"></i> Test Current Identity</button>
+                </div>
               </div>
             </section>
             <section id="ai" class="settings-section" style="display: none;" data-keywords="ai artificial intelligence gemini api key assistant">

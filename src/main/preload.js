@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Tab Controls
   newTab: () => ipcRenderer.invoke('tab:new'),
+  newTabWithUrl: (url) => ipcRenderer.invoke('tab:new-with-url', url),
   duplicateTab: (id) => ipcRenderer.invoke('tab:duplicate', id),
   closeTab: (id) => ipcRenderer.invoke('tab:close', id),
   switchTab: (id) => ipcRenderer.invoke('tab:switch', id),

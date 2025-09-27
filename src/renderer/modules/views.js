@@ -81,6 +81,7 @@ let currentSettings = {};
 const userAgentSelect = document.getElementById('user-agent-select');
 const customUaWrapper = document.getElementById('custom-user-agent-wrapper');
 const customUaInput = document.getElementById('user-agent-custom-input');
+const testUserAgentBtn = document.getElementById('test-user-agent-btn');
 
 const aiSettingsContent = document.getElementById('ai-settings-content');
 const aiEnableToggle = document.getElementById('ai-enable-toggle');
@@ -275,16 +276,29 @@ async function populateSettings() {
 }
 
 async function populateUserAgentSettings() {
-    const uaSettings = currentSettings.userAgent || { current: 'chrome-win', custom: '' };
+    const uaSettings = currentSettings.userAgent || { current: 'windows-chrome', custom: '' };
     const predefinedUAs = await window.electronAPI.getPredefinedUserAgents();
     
     userAgentSelect.innerHTML = '';
-    for (const [key, { name }] of Object.entries(predefinedUAs)) {
-        const option = document.createElement('option');
-        option.value = key;
-        option.textContent = name;
-        userAgentSelect.appendChild(option);
+
+    const osNameMap = {
+        windows: 'Windows',
+        macos: 'macOS',
+        linux: 'Linux'
+    };
+
+    for (const [osKey, browsers] of Object.entries(predefinedUAs)) {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = osNameMap[osKey] || osKey;
+        for (const [browserKey, { name }] of Object.entries(browsers)) {
+            const option = document.createElement('option');
+            option.value = `${osKey}-${browserKey}`;
+            option.textContent = name;
+            optgroup.appendChild(option);
+        }
+        userAgentSelect.appendChild(optgroup);
     }
+    
     const customOption = document.createElement('option');
     customOption.value = 'custom';
     customOption.textContent = 'Custom...';
@@ -626,6 +640,9 @@ export function initViews({ fullRender }) {
         saveUserAgentSettings();
     });
     customUaInput.addEventListener('input', debounce(saveUserAgentSettings, 500));
+    testUserAgentBtn.addEventListener('click', () => {
+        window.electronAPI.newTabWithUrl('https://www.whatismybrowser.com/detect/what-is-my-user-agent');
+    });
     
     // -- AI
     getApiKeyBtn.addEventListener('click', () => {

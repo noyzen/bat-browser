@@ -61,6 +61,13 @@ function initializeIpc() {
         await tabsModule.switchTab(newTab.id);
     });
 
+    ipcMain.handle('tab:new-with-url', async (_, url) => {
+        const newTab = tabsModule.createTab(url);
+        state.layout.push(newTab.id);
+        state.mainWindow.webContents.send('tab:created', getSerializableTabData(newTab));
+        await tabsModule.switchTab(newTab.id);
+    });
+
     ipcMain.handle('tab:duplicate', async (_, id) => {
         const originalTab = state.tabs.get(id);
         if (!originalTab) return null;
@@ -195,6 +202,10 @@ function initializeIpc() {
             if (tab.session && !tab.session.isDestroyed()) {
                 tabsModule.configureSession(tab.session);
                 if (tab.view && !tab.view.webContents.isDestroyed() && !tab.isHibernated && tab.url !== 'about:blank') {
+                    // This is tricky. Reloading might not be enough because the webContents user agent is immutable.
+                    // A full tab recreation would be needed, which is too disruptive.
+                    // The new user agent will apply to new tabs and tabs that are woken up.
+                    // For now, we'll rely on the header spoofing for existing tabs and JS spoofing for new ones.
                     tab.view.webContents.reload();
                 }
             }
