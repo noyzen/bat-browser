@@ -318,6 +318,13 @@ function attachViewListenersToTab(tabData) {
       const { url, disposition } = details;
       const fromTabId = tabData.id;
   
+      // Check for Google OAuth popups and allow them to open as native windows.
+      // This is crucial for "Sign in with Google" on third-party sites, as it
+      // provides the separate, secure context Google's OAuth flow expects.
+      if (url.startsWith('https://accounts.google.com/')) {
+        return { action: 'allow' };
+      }
+
       if (disposition === 'new-window' || disposition === 'background-tab' || disposition === 'foreground-tab') {
         const inBackground = disposition === 'background-tab';
         openUrlInNewTab(url, fromTabId, inBackground);

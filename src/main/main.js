@@ -16,6 +16,8 @@ const { getSerializableTabData, debounce } = require('./utils');
 app.commandLine.appendSwitch('disable-gpu-rasterization');
 // Add cookie-related features to appear more like a standard, secure browser.
 app.commandLine.appendSwitch('enable-features', 'NetworkService,SameSiteByDefaultCookies,CookiesWithoutSameSiteMustBeSecure');
+// Per user suggestion, these flags can help with some popup login issues.
+app.commandLine.appendSwitch('disable-features', 'IsolateOrigins,site-per-process');
 
 // Set a global User-Agent fallback. This is a crucial step to make the browser
 // appear as a standard browser to services like Google, which block logins from
