@@ -61,9 +61,9 @@
     display: flex;
     align-items: center;
     height: 100%;
-    flex-shrink: 0;
+    flex: 0 0 auto; /* Do not grow or shrink by default */
     padding: 0 8px;
-    transition: flex-basis 200ms ease-in-out, flex-grow 200ms ease-in-out;
+    transition: flex-basis 200ms ease-in-out;
 }
 #toolbar { 
     display: flex; 
@@ -97,14 +97,14 @@
 
 /* --- Dynamic Address Bar --- */
 #titlebar.address-bar-expanded #toolbar-wrapper {
-    /* Grow to take available space, keeping content-based width as basis. */
-    flex-grow: 1;
+    /* Force the toolbar to try and take up 100% of the flex container's width. */
+    flex-basis: 100%;
 }
 #titlebar.address-bar-expanded #address-bar-container {
     max-width: none;
 }
 #titlebar.address-bar-expanded #tab-bar-wrapper {
-    flex-grow: 0;
-    flex-shrink: 1;
-    min-width: 210px; /* Reserve space for one max-width tab + padding */
+    /* Since the toolbar wants 100% width, the tab bar will be forced to shrink
+       down to its minimum allowable size to make room. */
+    min-width: 210px;
 }
