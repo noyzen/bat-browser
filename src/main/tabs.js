@@ -220,6 +220,19 @@ function createTab(url = 'about:blank', options = {}) {
     const id = existingId || `tab-${randomUUID()}`;
     const partition = options.isShared ? SHARED_SESSION_PARTITION : `persist:${id}`;
     const tabSession = session.fromPartition(partition);
+
+    // Explicitly configure proxy settings for the new session to match the default.
+    // This can resolve network issues like ERR_INTERNET_DISCONNECTED on some systems
+    // where new sessions don't automatically inherit the correct network configuration.
+    session.defaultSession.resolveProxy('https://www.google.com')
+        .then((proxy) => {
+            if (tabSession && !tabSession.isDestroyed()) {
+                tabSession.setProxy({ proxyRules: proxy });
+            }
+        })
+        .catch(err => {
+            console.error('Failed to resolve and set proxy:', err);
+        });
   
     tabSession.setUserAgent(USER_AGENT);
   
