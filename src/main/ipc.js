@@ -205,18 +205,16 @@ function initializeIpc() {
             settingsModule.debouncedSaveSettings();
         }
     });
-    ipcMain.handle('settings:set-user-agent', (_, uaSettings) => {
+    ipcMain.handle('settings:set-user-agent', async (_, uaSettings) => {
         state.settings.userAgent = uaSettings;
         settingsModule.debouncedSaveSettings();
     
+        // Apply the new User-Agent to all existing tab sessions.
         for (const tab of state.tabs.values()) {
             if (tab.session && !tab.session.isDestroyed()) {
                 tabsModule.configureSession(tab.session);
+                // Reload any active, non-hibernated tabs to immediately apply the new headers.
                 if (tab.view && !tab.view.webContents.isDestroyed() && !tab.isHibernated && tab.url !== 'about:blank') {
-                    // This is tricky. Reloading might not be enough because the webContents user agent is immutable.
-                    // A full tab recreation would be needed, which is too disruptive.
-                    // The new user agent will apply to new tabs and tabs that are woken up.
-                    // For now, we'll rely on the header spoofing for existing tabs and JS spoofing for new ones.
                     tab.view.webContents.reload();
                 }
             }
