@@ -21,84 +21,84 @@ module.exports = {
         windows: {
             chrome: {
                 name: 'Chrome',
-                value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+                value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
             },
             firefox: {
                 name: 'Firefox',
-                value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:131.0) Gecko/20100101 Firefox/131.0',
+                value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0',
             },
             edge: {
                 name: 'Edge',
-                value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0',
+                value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0',
             },
         },
         macos: {
             safari: {
                 name: 'Safari',
-                value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
+                value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/19.0 Safari/605.1.15',
             },
             chrome: {
                 name: 'Chrome',
-                value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+                value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
             },
             firefox: {
                 name: 'Firefox',
-                value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:131.0) Gecko/20100101 Firefox/131.0',
+                value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:139.0) Gecko/20100101 Firefox/139.0',
             },
         },
         linux: {
             chrome: {
                 name: 'Chrome',
-                value: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+                value: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
             },
             firefox: {
                 name: 'Firefox',
-                value: 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0',
+                value: 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:139.0) Gecko/20100101 Firefox/139.0',
             },
         },
         android: {
             chrome: {
                 name: 'Chrome Mobile',
-                value: 'Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36'
+                value: 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36'
             }
         },
         ios: {
             safari: {
                 name: 'Safari Mobile (iPhone)',
-                value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'
+                value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 19_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/19.0 Mobile/15E148 Safari/604.1'
             }
         }
     },
     USER_AGENT_CLIENT_HINTS: {
         windows: {
             chrome: {
-                brands: '"Not A;Brand";v="99", "Google Chrome";v="130", "Chromium";v="130"',
+                brands: '"Not A;Brand";v="99", "Google Chrome";v="138", "Chromium";v="138"',
                 mobile: '?0',
                 platform: '"Windows"',
             },
             edge: {
-                brands: '"Not A;Brand";v="99", "Microsoft Edge";v="130", "Chromium";v="130"',
+                brands: '"Not A;Brand";v="99", "Microsoft Edge";v="138", "Chromium";v="138"',
                 mobile: '?0',
                 platform: '"Windows"',
             },
         },
         macos: {
             chrome: {
-                brands: '"Not A;Brand";v="99", "Google Chrome";v="130", "Chromium";v="130"',
+                brands: '"Not A;Brand";v="99", "Google Chrome";v="138", "Chromium";v="138"',
                 mobile: '?0',
                 platform: '"macOS"',
             },
         },
         linux: {
             chrome: {
-                brands: '"Not A;Brand";v="99", "Google Chrome";v="130", "Chromium";v="130"',
+                brands: '"Not A;Brand";v="99", "Google Chrome";v="138", "Chromium";v="138"',
                 mobile: '?0',
                 platform: '"Linux"',
             },
         },
         android: {
             chrome: {
-                brands: '"Not A;Brand";v="99", "Google Chrome";v="130", "Chromium";v="130"',
+                brands: '"Not A;Brand";v="99", "Google Chrome";v="138", "Chromium";v="138"',
                 mobile: '?1',
                 platform: '"Android"',
             }

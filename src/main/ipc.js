@@ -211,7 +211,7 @@ function initializeIpc() {
     
         // Apply the new User-Agent to all existing tab sessions.
         for (const tab of state.tabs.values()) {
-            if (tab.session && !tab.session.isDestroyed()) {
+            if (tab.session) {
                 tabsModule.configureSession(tab.session);
                 // Reload any active, non-hibernated tabs to immediately apply the new headers.
                 if (tab.view && !tab.view.webContents.isDestroyed() && !tab.isHibernated && tab.url !== 'about:blank') {

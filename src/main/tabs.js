@@ -293,7 +293,7 @@ function createTab(url = 'about:blank', options = {}) {
     // where new sessions don't automatically inherit the correct network configuration.
     session.defaultSession.resolveProxy('https://www.google.com')
         .then((proxy) => {
-            if (tabSession && !tabSession.isDestroyed()) {
+            if (tabSession) {
                 tabSession.setProxy({ proxyRules: proxy });
             }
         })
@@ -363,7 +363,7 @@ async function switchTab(id) {
           // Explicitly configure proxy settings for the new session to match the default.
           session.defaultSession.resolveProxy('https://www.google.com')
               .then((proxy) => {
-                  if (tabSession && !tabSession.isDestroyed()) {
+                  if (tabSession) {
                       tabSession.setProxy({ proxyRules: proxy });
                   }
               })
