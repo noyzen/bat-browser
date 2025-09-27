@@ -249,6 +249,30 @@ export function scrollToTab(tabId, alignment = 'center') {
 
 function initDelegatedEventListeners() {
     // --- Main Tab Bar ---
+
+    // Handle group collapse/expand on mousedown to fix a bug where the first
+    // click was ignored after the address bar was focused and then blurred.
+    DOM.tabsContainer.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return; // Only for left clicks
+
+        const groupHeader = e.target.closest('.group-header');
+        if (groupHeader) {
+            // By handling this on mousedown, we execute the action before the
+            // address bar's blur() event can cause a layout shift and
+            // make the browser miss the 'click' event on the group header.
+            const groupId = groupHeader.dataset.id;
+            const group = getState().groups.get(groupId);
+            if (group) {
+                group.collapsed = !group.collapsed;
+                persistState();
+                fullRender();
+            }
+            // We don't preventDefault() or stopPropagation() here to allow
+            // dragging of the group to still be initiated by the subsequent
+            // 'dragstart' event.
+        }
+    });
+    
     DOM.tabsContainer.addEventListener('click', (e) => {
         const state = getState();
 
@@ -273,18 +297,7 @@ function initDelegatedEventListeners() {
             return;
         }
 
-        // Collapse/Expand group
-        const groupHeader = e.target.closest('.group-header');
-        if (groupHeader) {
-            const groupId = groupHeader.dataset.id;
-            const group = state.groups.get(groupId);
-            if (group) {
-                group.collapsed = !group.collapsed;
-                persistState();
-                fullRender();
-            }
-            return;
-        }
+        // Collapse/Expand group logic is now handled by the mousedown listener.
     });
 
     // --- All Tabs View ---
